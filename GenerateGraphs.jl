@@ -85,6 +85,7 @@ function gnp_graph(n; p=0.1, directed=True, edge_weight=1.0)
   return G
 end
 
+#=
 def sbm_graph(n, communities=4, p_within=0.2, p_between=0.05, seed=None, edge_weight=1.0, directed=True):
 
   # make array of block probabilities
@@ -138,6 +139,8 @@ def cm_graph(n, max_degree=5, directed=True, seed=None):
     G = nx.configuration_model(indegrees, seed=seed)
 
   return G
+
+  =#
 
 # TODO: add something like a feed-forward neural-network graph?
 # or something else with hierarchical or layered structure?
