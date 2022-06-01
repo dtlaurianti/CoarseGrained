@@ -1,3 +1,3 @@
-using Test
+using SimulateDynamics
 using GenerateGraphs
-include("GenerateGraphsTest.jl")
+
