@@ -47,16 +47,22 @@ function grid_graph(n, edge_weight=1.0, directed=False)
   else
     m1, m2 = mint+1, mint
   end
-  G = zeros(m1*m2, m1*m2)
-  for i in m1*m2
-    if i+n <= m1*m2
+  n = m1*m2
+  G = zeros(n, n)
+  for i in n
+    if i+m2 <= n
       G[i, i+n] = edge_weight
-    if i%m1+1 <= m2
+    if (i+1)%m1 <= m2
       G[i, i+1] = edge_weight
   end
   if !directed
-    for i, j in 1:m1, 1:m2
-      
+    for i, j in 1:n, i:n
+      G[j, i] = G[i, j]
+    end
+  end
+
+
+
   end
   return G
 end
@@ -69,7 +75,7 @@ function gnp_graph(n; p=0.1, directed=True, edge_weight=1.0)
   # Generate a random matrix which we will use to determine which edges exist
   P = rand(Float64, (n, n))
   if directed
-    for i,j in 1:n, 1:n
+    for i=1:n,j=1:n
       if P[i, j] < p
         @simd G[i, j] = edge_weight
       end
@@ -87,7 +93,6 @@ function gnp_graph(n; p=0.1, directed=True, edge_weight=1.0)
   return G
 end
 
-#=
 def sbm_graph(n, communities=4, p_within=0.2, p_between=0.05, seed=None, edge_weight=1.0, directed=True):
 
   # make array of block probabilities
@@ -141,8 +146,6 @@ def cm_graph(n, max_degree=5, directed=True, seed=None):
     G = nx.configuration_model(indegrees, seed=seed)
 
   return G
-
-  =#
 
 # TODO: add something like a feed-forward neural-network graph?
 # or something else with hierarchical or layered structure?
