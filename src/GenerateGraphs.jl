@@ -1,4 +1,3 @@
-module GenerateGraphs
 using LinearAlgebra
 using MatrixNetworks
 using LoopVectorization
@@ -80,22 +79,12 @@ end
 # random graphs
 
 function gnp_graph(n; p=0.1, directed=True, edge_weight=1.0)
-  G = zeros(n, n)
-  # Generate a random matrix which we will use to determine which edges exist
-  P = rand(Float64, (n, n))
   if directed
-    for i=1:n,j=1:n
-      if P[i, j] < p
-        @simd G[i, j] = edge_weight
-      end
-    end
+    G = erdos_renyi_directed(n, p)
+    G = G.*edge_weight
   else
-    for i=1:n, j=i:n
-      if P[i, j] < p
-        @simd G[i, j] = edge_weight
-        @simd G[j,i] = edge_weight
-      end
-    end
+    G = erdos_renyi_undirected(n, p)
+    G = G.*edge_weight
   end
   return G
 end
@@ -157,4 +146,3 @@ def cm_graph(n, max_degree=5, directed=True, seed=None):
 # TODO: add something like a feed-forward neural-network graph?
 # or something else with hierarchical or layered structure?
 
-end # module
