@@ -1,3 +1,4 @@
+module GenerateGraphs
 using LinearAlgebra
 using MatrixNetworks
 using LoopVectorization
@@ -8,11 +9,15 @@ function line_graph(n; edge_weight=1.0, directed=True)
   G = zeros(n, n)
   if directed
     # Create a directed path from the first node to the last node
-    @simd G[i,i+1 for i in 1:n-1] = edge_weight
+    for i=1:(n-1)
+      @simd G[i,i+1] = edge_weight
+    end
   else
     # Create an undirected path from the first node to the last node
-    @simd G[i,i+1 for i in 1:n-1] = edge_weight
-    @simd G[i+1,i for i in 1:n-1] = edge_weight
+    for i=1:(n-1)
+      @simd G[i,i+1] = edge_weight
+      @simd G[i+1,i] = edge_weight
+    end
   end
   return G
 end
@@ -22,12 +27,16 @@ function cycle_graph(n, edge_weight=1.0, directed=True)
   G = zeros(n, n)
   if directed
     # Create a directed cycle from the first node to the last node
-    @simd G[i, i+1 for i in 1:n-1] = edge_weight
+    for i=1:(n-1)
+      @simd G[i, i+1] = edge_weight
+    end
     @simd G[n, 1] = edge_weight
   else
     # Create an undirected cycle from the first node to the last node
-    @simd G[i,i+1 for i in 1:n-1] = edge_weight
-    @simd G[i+1,i for i in 1:n-1] = edge_weight
+    for i=1:(n-1)
+      @simd G[i,i+1] = edge_weight
+      @simd G[i+1,i] = edge_weight
+    end
     G[n, 1] = edge_weight
     G[1, n] = edge_weight
   end
@@ -49,7 +58,7 @@ function grid_graph(n, edge_weight=1.0, directed=False)
   end
   n = m1*m2
   G = zeros(n, n)
-  for i in n
+  for i=1:n
     if i+m2 <= n
       G[i, i+n] = edge_weight
     if (i+1)%m1 <= m2
@@ -90,7 +99,7 @@ function gnp_graph(n; p=0.1, directed=True, edge_weight=1.0)
   end
   return G
 end
-
+#=
 def sbm_graph(n, communities=4, p_within=0.2, p_between=0.05, seed=None, edge_weight=1.0, directed=True):
 
   # make array of block probabilities
@@ -144,6 +153,8 @@ def cm_graph(n, max_degree=5, directed=True, seed=None):
     G = nx.configuration_model(indegrees, seed=seed)
 
   return G
-
+=#
 # TODO: add something like a feed-forward neural-network graph?
 # or something else with hierarchical or layered structure?
+
+end # module

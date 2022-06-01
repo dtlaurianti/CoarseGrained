@@ -1,2 +1,2 @@
 @testset "linear_model_tests" begin
-    @test linear_model
+    @test linear_model()

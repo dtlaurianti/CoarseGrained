@@ -1,3 +1,3 @@
-using MatrixNetworks
-using LinearAlgebra
-
+using Test
+using GenerateGraphs
+include("GenerateGraphsTest.jl")
