@@ -4,37 +4,37 @@ using LoopVectorization
 using BenchmarkTools
 
 # example graphs (non random)
-function line_graph(n; edge_weight=1.0, directed=True)
+function line_graph(n; edge_weight=1.0, directed=true)
   G = zeros(n, n)
   if directed
     # Create a directed path from the first node to the last node
     for i=1:(n-1)
-      @simd G[i,i+1] = edge_weight
+      G[i,i+1] = edge_weight
     end
   else
     # Create an undirected path from the first node to the last node
     for i=1:(n-1)
-      @simd G[i,i+1] = edge_weight
-      @simd G[i+1,i] = edge_weight
+      G[i,i+1] = edge_weight
+      G[i+1,i] = edge_weight
     end
   end
   return G
 end
 
 
-function cycle_graph(n, edge_weight=1.0, directed=True)
+function cycle_graph(n, edge_weight=1.0, directed=true)
   G = zeros(n, n)
   if directed
     # Create a directed cycle from the first node to the last node
     for i=1:(n-1)
-      @simd G[i, i+1] = edge_weight
+      G[i, i+1] = edge_weight
     end
-    @simd G[n, 1] = edge_weight
+    G[n, 1] = edge_weight
   else
     # Create an undirected cycle from the first node to the last node
     for i=1:(n-1)
-      @simd G[i,i+1] = edge_weight
-      @simd G[i+1,i] = edge_weight
+      G[i,i+1] = edge_weight
+      G[i+1,i] = edge_weight
     end
     G[n, 1] = edge_weight
     G[1, n] = edge_weight
@@ -42,7 +42,7 @@ function cycle_graph(n, edge_weight=1.0, directed=True)
   return G
 end
 
-function grid_graph(n, edge_weight=1.0, directed=False)
+function grid_graph(n, edge_weight=1.0, directed=false)
   #=A square (or close to square) 2d lattice with a number of nodes close to `n`. The
   directed version of the grid graph has a source and a sink node (e.g., everything
   flows from top left to bottom right on the grid).=#
@@ -60,17 +60,15 @@ function grid_graph(n, edge_weight=1.0, directed=False)
   for i=1:n
     if i+m2 <= n
       G[i, i+n] = edge_weight
+    end
     if (i+1)%m1 <= m2
       G[i, i+1] = edge_weight
+    end
   end
   if !directed
     for i=1:n, j=1:n
       G[j, i] = G[i, j]
     end
-  end
-
-
-
   end
   return G
 end
@@ -78,7 +76,7 @@ end
 
 # random graphs
 
-function gnp_graph(n; p=0.1, directed=True, edge_weight=1.0)
+function gnp_graph(n; p=0.1, directed=true, edge_weight=1.0)
   if directed
     G = erdos_renyi_directed(n, p)
     G = G.*edge_weight
