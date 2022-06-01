@@ -39,6 +39,7 @@ function grid_graph(n, edge_weight=1.0, directed=False)
   directed version of the grid graph has a source and a sink node (e.g., everything
   flows from top left to bottom right on the grid).=#
 
+  # Choose rectangular dimensions to have a number of nodes close to n
   m = sqrt(n)
   mint = round(Int, m)
   if m == mint
@@ -46,16 +47,16 @@ function grid_graph(n, edge_weight=1.0, directed=False)
   else
     m1, m2 = mint+1, mint
   end
-  G = zeros(n, n)
-
-  if directed
-    for i, j in m1, m2
-      if i%m1 != 0
-        G[i+j]
-      end
-    end
-  else
-    nx.set_edge_attributes(G, edge_weight, "weight")
+  G = zeros(m1*m2, m1*m2)
+  for i in m1*m2
+    if i+n <= m1*m2
+      G[i, i+n] = edge_weight
+    if i%m1+1 <= m2
+      G[i, i+1] = edge_weight
+  end
+  if !directed
+    for i, j in 1:m1, 1:m2
+      
   end
   return G
 end
@@ -65,6 +66,7 @@ end
 
 function gnp_graph(n; p=0.1, directed=True, edge_weight=1.0)
   G = zeros(n, n)
+  # Generate a random matrix which we will use to determine which edges exist
   P = rand(Float64, (n, n))
   if directed
     for i,j in 1:n, 1:n
