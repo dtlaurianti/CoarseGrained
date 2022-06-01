@@ -62,11 +62,11 @@ end
 
 function foldername(dynSys_string, dynSys_args, graphModel_string, graphModel_args):
   # function to generate
-  dynSys_args_string = '_'.join([key+str(dynSys_args[key]) for key in sorted(dynSys_args.keys())])
-  graphModel_args_string = '_'.join([key+str(graphModel_args[key]) for key in sorted(graphModel_args.keys())])
+  dynSys_args_string = join([key*string(get(dynSys_args,key)) for key in sort(keys(dynSys_args))], '_')
+  graphModel_args_string = join([key*string(get(graphModel_args, key)) for key in sort(keys(graphModel_args))], '_')
 
-  string1 = dynSys_string + '_' + dynSys_args_string
-  string2 = graphModel_string + '_' + graphModel_args_string
+  string1 = dynSys_string*'_'*dynSys_args_string
+  string2 = graphModel_string*'_'*graphModel_args_string
 
   return 'data/'*string1*'/'*string2
 end
