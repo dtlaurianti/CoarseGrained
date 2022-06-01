@@ -21,13 +21,8 @@ function kuramoto_model(t, x, A, ω=nothing, K=1)
     for i in 1:n
         S = sin(x[i]*ones(n).-(x))
         dxdt += K*(A[i,:].*(S))
-<<<<<<< Updated upstream
-    end 
-    dxdt
-=======
     end
     return dxdt
->>>>>>> Stashed changes
 end
 
 function LotkaVolterra_model(t, x, A, ω)
@@ -56,4 +51,22 @@ function nonlinear_opinions(t, x, A, d=0.1, u=1, b=0)
   =#
   n = size(A, 1)
   return - d*x + u*tanh(A⋅x)) + b*ones(n)
+end
+
+function simulateODEonGraph(A, initial_condition, dynamical_function=linear_model, tmax=10, dt=0.01, **function_args):
+  t = np.arange(0, tmax, dt)
+  time_series = solve_ivp(lambda t, x: dynamical_function(t, x, A, **function_args), (0, tmax), initial_condition, t_eval=t)
+
+  return time_series
+end
+
+function foldername(dynSys_string, dynSys_args, graphModel_string, graphModel_args):
+  # function to generate
+  dynSys_args_string = '_'.join([key+str(dynSys_args[key]) for key in sorted(dynSys_args.keys())])
+  graphModel_args_string = '_'.join([key+str(graphModel_args[key]) for key in sorted(graphModel_args.keys())])
+
+  string1 = dynSys_string + '_' + dynSys_args_string
+  string2 = graphModel_string + '_' + graphModel_args_string
+
+  return 'data/'*string1*'/'*string2
 end
