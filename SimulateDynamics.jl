@@ -10,7 +10,7 @@ function SIS_model(t, x, A, γ, β)
   -γ*x + β*[(ones(n)-x).*(A⋅x)]
 end
 
-function SI_model(t, x, A, beta)
+function SI_model(t, x, A, β)
   n = size(A, 1)
-  beta*multiply((ones(n)-x), A⋅x)
+  β*multiply((ones(n)-x), A⋅x)
 end
