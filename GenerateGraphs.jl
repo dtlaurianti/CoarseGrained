@@ -16,11 +16,11 @@ function line_graph(n; edge_weight=1.0, directed=True)
 end
 
 
-function cycle_graph(n, edge_weight=1.0, directed=True):
+function cycle_graph(n, edge_weight=1.0, directed=True)
   G = zeros(n, n)
   if directed
     # Create a directed cycle from the first node to the last node
-    G[i,i+1 for i in 1:n-1] = edge_weight
+    G[i, i+1 for i in 1:n-1] = edge_weight
     G[n, 1] = edge_weight
   else
     # Create an undirected cycle from the first node to the last node
@@ -37,50 +37,34 @@ function grid_graph(n, edge_weight=1.0, directed=False)
   directed version of the grid graph has a source and a sink node (e.g., everything
   flows from top left to bottom right on the grid).=#
 
-  m = np.sqrt(n)
-  if m == np.round(m):
-    m1, m2 = int(m), int(m)
-  else:
-    m1, m2 = int(m)+1, int(m)
-  G = nx.grid_2d_graph(m1, m2, periodic=False)
+  m = sqrt(n)
+  mint = round(Int, m)
+  if m == mint
+    m1, m2 = mint, mint
+  else
+    m1, m2 = mint+1, mint
+  end
+  G = zeros(n, n)
 
-  if directed:
-    H = nx.DiGraph()
-    for e in G.edges():
-      H.add_edge(min(e), max(e), weight=edge_weight)
-    return H
-  else:
+  if directed
+    for i, j in m1, m2
+      if i%m1 != 0
+        G[i+j]
+      end
+    end
+  else
     nx.set_edge_attributes(G, edge_weight, "weight")
-    return G
+  end
+  return G
+end
 
 
 # random graphs
 
-function gnp_graph(n, p=0.1, directed=True, seed=None, edge_weight=1.0)
-  G = zeros(n, n)
-  if directed
-    for i in 1:n
-      n = rand(1:n)
-      m = rand(1:m)
-      r = rand(1:10)
-      if r == 1
-        G[n,m] = edge_weight
-      end
-    end
-  end
-  else
-    for i in 1:n
-      n = rand(1:n)
-      m = rand(1:m)
-      r = rand(1:10)
-      if r == 1
-        G[n,m] = edge_weight
-        G[m,n] = edge_weight
-      end
-    end
-  end
+def gnp_graph(n, p=0.1, directed=True, seed=None, edge_weight=1.0):
+  G = nx.gnp_random_graph(n, p, directed=directed, seed=seed)
+  nx.set_edge_attributes(G, edge_weight, "weight")
   return G
-end
 
 
 def sbm_graph(n, communities=4, p_within=0.2, p_between=0.05, seed=None, edge_weight=1.0, directed=True):
