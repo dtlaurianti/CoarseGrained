@@ -1,4 +1,2 @@
-using Pkg
-Pkg.add("MatrixNetworks")
 using MatrixNetworks
-
+using LinearAlgebra
