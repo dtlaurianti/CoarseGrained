@@ -6,25 +6,31 @@ function line_graph(n; edge_weight=1.0, directed=True)
   G = zeros(n, n)
   if directed
     # Create a directed path from the first node to the last node
-    G[i,i+1 for i in 1:n] = edge_weight
+    G[i,i+1 for i in 1:n-1] = edge_weight
   else
     # Create an undirected path from the first node to the last node
-    G[i,i+1 for i in 1:n] = edge_weight
-    G[i+1,i for i in 1:n] = edge_weight
+    G[i,i+1 for i in 1:n-1] = edge_weight
+    G[i+1,i for i in 1:n-1] = edge_weight
   end
   return G
 end
 
 
-def cycle_graph(n, edge_weight=1.0, directed=True):
-  if directed:
-    G = nx.DiGraph()
-    nx.add_cycle(G, range(n), weight=edge_weight)
-  else:
-    G = nx.Graph()
-    nx.add_cycle(G, range(n), weight=edge_weight)
+function cycle_graph(n, edge_weight=1.0, directed=True):
+  G = zeros(n, n)
+  if directed
+    # Create a directed cycle from the first node to the last node
+    G[i,i+1 for i in 1:n-1] = edge_weight
+    G[n, 1] = edge_weight
+  else
+    # Create an undirected cycle from the first node to the last node
+    G[i,i+1 for i in 1:n-1] = edge_weight
+    G[i+1,i for i in 1:n-1] = edge_weight
+    G[n, 1] = edge_weight
+    G[1, n] = edge_weight
+  end
   return G
-
+end
 
 def grid_graph(n, edge_weight=1.0, directed=False):
   '''A square (or close to square) 2d lattice with a number of nodes close to `n`. The
