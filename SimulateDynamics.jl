@@ -21,7 +21,7 @@ function kuramoto_model(t, x, A, omega=None, K=1)
     for i in 1:n
         S = sin(x[i]*ones(n).-(x))
         dxdt += K*(A[i,:].*(S))
-    end
+    end 
     dxdt
 end
 
