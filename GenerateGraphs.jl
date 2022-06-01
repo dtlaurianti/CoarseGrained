@@ -32,10 +32,10 @@ function cycle_graph(n, edge_weight=1.0, directed=True):
   return G
 end
 
-def grid_graph(n, edge_weight=1.0, directed=False):
-  '''A square (or close to square) 2d lattice with a number of nodes close to `n`. The
+function grid_graph(n, edge_weight=1.0, directed=False)
+  #=A square (or close to square) 2d lattice with a number of nodes close to `n`. The
   directed version of the grid graph has a source and a sink node (e.g., everything
-  flows from top left to bottom right on the grid).'''
+  flows from top left to bottom right on the grid).=#
 
   m = np.sqrt(n)
   if m == np.round(m):
@@ -56,10 +56,31 @@ def grid_graph(n, edge_weight=1.0, directed=False):
 
 # random graphs
 
-def gnp_graph(n, p=0.1, directed=True, seed=None, edge_weight=1.0):
-  G = nx.gnp_random_graph(n, p, directed=directed, seed=seed)
-  nx.set_edge_attributes(G, edge_weight, "weight")
+function gnp_graph(n, p=0.1, directed=True, seed=None, edge_weight=1.0)
+  G = zeros(n, n)
+  if directed
+    for i in 1:n
+      n = rand(1:n)
+      m = rand(1:m)
+      r = rand(1:10)
+      if r == 1
+        G[n,m] = edge_weight
+      end
+    end
+  end
+  else
+    for i in 1:n
+      n = rand(1:n)
+      m = rand(1:m)
+      r = rand(1:10)
+      if r == 1
+        G[n,m] = edge_weight
+        G[m,n] = edge_weight
+      end
+    end
+  end
   return G
+end
 
 
 def sbm_graph(n, communities=4, p_within=0.2, p_between=0.05, seed=None, edge_weight=1.0, directed=True):
