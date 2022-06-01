@@ -56,7 +56,7 @@ function grid_graph(n, edge_weight=1.0, directed=False)
       G[i, i+1] = edge_weight
   end
   if !directed
-    for i, j in 1:n, i:n
+    for i=1:n, j=1:n
       G[j, i] = G[i, j]
     end
   end
@@ -81,12 +81,10 @@ function gnp_graph(n; p=0.1, directed=True, edge_weight=1.0)
       end
     end
   else
-    for i in 1:n
-      for j in i:n
-        if P[i, j] < p
-          @simd G[i, j] = edge_weight
-          @simd G[j,i] = edge_weight
-        end
+    for i=1:n, j=i:n
+      if P[i, j] < p
+        @simd G[i, j] = edge_weight
+        @simd G[j,i] = edge_weight
       end
     end
   end
