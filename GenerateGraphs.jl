@@ -1,16 +1,18 @@
 using LinearAlgebra
 using MatrixNetworks
+using LoopVectorization
+using BenchmarkTools
 
 # example graphs (non random)
 function line_graph(n; edge_weight=1.0, directed=True)
   G = zeros(n, n)
   if directed
     # Create a directed path from the first node to the last node
-    G[i,i+1 for i in 1:n-1] = edge_weight
+    @simd G[i,i+1 for i in 1:n-1] = edge_weight
   else
     # Create an undirected path from the first node to the last node
-    G[i,i+1 for i in 1:n-1] = edge_weight
-    G[i+1,i for i in 1:n-1] = edge_weight
+    @simd G[i,i+1 for i in 1:n-1] = edge_weight
+    @simd G[i+1,i for i in 1:n-1] = edge_weight
   end
   return G
 end
@@ -20,12 +22,12 @@ function cycle_graph(n, edge_weight=1.0, directed=True)
   G = zeros(n, n)
   if directed
     # Create a directed cycle from the first node to the last node
-    G[i, i+1 for i in 1:n-1] = edge_weight
-    G[n, 1] = edge_weight
+    @simd G[i, i+1 for i in 1:n-1] = edge_weight
+    @simd G[n, 1] = edge_weight
   else
     # Create an undirected cycle from the first node to the last node
-    G[i,i+1 for i in 1:n-1] = edge_weight
-    G[i+1,i for i in 1:n-1] = edge_weight
+    @simd G[i,i+1 for i in 1:n-1] = edge_weight
+    @simd G[i+1,i for i in 1:n-1] = edge_weight
     G[n, 1] = edge_weight
     G[1, n] = edge_weight
   end
@@ -61,26 +63,22 @@ end
 
 # random graphs
 
-function gnp_graph(n, p=0.1, directed=True, seed=None, edge_weight=1.0)
+function gnp_graph(n; p=0.1, directed=True, edge_weight=1.0)
   G = zeros(n, n)
+  P = rand(Float64, (n, n))
   if directed
-    for i in 1:n
-      n = rand(1:n)
-      m = rand(1:m)
-      r = rand(1:10)
-      if r == 1
-        G[n,m] = edge_weight
+    for i,j in 1:n, 1:n
+      if P[i, j] < p
+        @simd G[i, j] = edge_weight
       end
     end
-  end
   else
     for i in 1:n
-      n = rand(1:n)
-      m = rand(1:m)
-      r = rand(1:10)
-      if r == 1
-        G[n,m] = edge_weight
-        G[m,n] = edge_weight
+      for j in i:n
+        if P[i, j] < p
+          @simd G[i, j] = edge_weight
+          @simd G[j,i] = edge_weight
+        end
       end
     end
   end
