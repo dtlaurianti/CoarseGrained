@@ -2,32 +2,37 @@ using MatrixNetworks
 using LinearAlgebra
 
 function linear_model(t, x, A, ϵ)
-  (ϵ*A-I)⋅x
+  return (ϵ*A-I)⋅x
 end
 
 function SIS_model(t, x, A, γ, β)
   nrow = size(A, 1)
-  -γ*x + β*[(ones(n)-x).*(A⋅x)]
+  return -γ*x + β*[(ones(n)-x).*(A⋅x)]
 end
 
 function SI_model(t, x, A, β)
   n = size(A, 1)
-  β*((ones(n)-x).*(A⋅x))
+  return β*((ones(n)-x).*(A⋅x))
 end
 
-function kuramoto_model(t, x, A, omega=None, K=1)
+function kuramoto_model(t, x, A, ω=nothing, K=1)
     n = size(A, 1)
-    dxdt = ones(n)*omega #omega.copy()
+    dxdt = ones(n)*ω
     for i in 1:n
         S = sin(x[i]*ones(n).-(x))
         dxdt += K*(A[i,:].*(S))
+<<<<<<< Updated upstream
     end 
     dxdt
+=======
+    end
+    return dxdt
+>>>>>>> Stashed changes
 end
 
-function LotkaVolterra_model(t, x, A, omega)
+function LotkaVolterra_model(t, x, A, ω)
   n = size(A, 1)
-  omega*x + (x.*(A⋅(x)))
+  return ω*x + (x.*(A⋅(x)))
 end
 
 function linear_opinions(t, x, A, c=1)
