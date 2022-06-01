@@ -14,5 +14,3 @@ function SI_model(t, x, A, beta)
   n = size(A, 1)
   beta*multiply((ones(n)-x), A⋅x)
 end
-
-
