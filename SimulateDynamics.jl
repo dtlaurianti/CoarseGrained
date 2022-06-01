@@ -11,6 +11,6 @@ function SIS_model(t, x, A, γ, β)
 end
 
 function SI_model(t, x, A, beta)
-  n = np.size(A, axis=0)
-  beta*np.multiply((np.ones(n)-x), A.dot(x))
+  n = size(A, 1)
+  beta*multiply((ones(n)-x), A⋅x)
 end
