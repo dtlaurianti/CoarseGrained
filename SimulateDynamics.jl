@@ -50,13 +50,12 @@ function nonlinear_opinions(t, x, A, d=0.1, u=1, b=0)
   For now, d, u, b are constants, but we can eventually vary by individual
   =#
   n = size(A, 1)
-  return - d*x + u*tanh(A⋅x)) + b*ones(n)
+  return - d*x + u*tanh(A⋅x) + b*ones(n)
 end
 
-function simulateODEonGraph(A, initial_condition, dynamical_function=linear_model, tmax=10, dt=0.01, **function_args):
-  t = np.arange(0, tmax, dt)
-  time_series = solve_ivp(lambda t, x: dynamical_function(t, x, A, **function_args), (0, tmax), initial_condition, t_eval=t)
-
+function simulateODEonGraph(A, initial_condition; dynamical_function=linear_model, tmax=10, dt=0.01, function_args...)
+  t = range(0, tmax, dt)
+  time_series = solve_ivp(t, x -> dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
   return time_series
 end
 
