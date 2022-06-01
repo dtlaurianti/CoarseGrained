@@ -15,7 +15,7 @@ function SI_model(t, x, A, β)
   return β*((ones(n)-x).*(A⋅x))
 end
 
-function kuramoto_model(t, x, A, ω=nothing, K=1)
+function kuramoto_model(t, x, A; ω=nothing, K=1)
     n = size(A, 1)
     dxdt = ones(n)*ω
     for i in 1:n
@@ -40,7 +40,7 @@ function linear_opinions(t, x, A, c=1)
   return -c*L⋅x
 end
 
-function nonlinear_opinions(t, x, A, d=0.1, u=1, b=0)
+function nonlinear_opinions(t, x, A; d=0.1, u=1, b=0)
   #=
   An instance of the model in https://arxiv.org/abs/2009.04332
   Parameters:
@@ -53,9 +53,9 @@ function nonlinear_opinions(t, x, A, d=0.1, u=1, b=0)
   return - d*x + u*tanh(A⋅x)) + b*ones(n)
 end
 
-function simulateODEonGraph(A, initial_condition, dynamical_function=linear_model, tmax=10, dt=0.01, **function_args):
+function simulateODEonGraph(A, initial_condition; dynamical_function=linear_model, tmax=10, dt=0.01, function_args...):
   t = np.arange(0, tmax, dt)
-  time_series = solve_ivp(lambda t, x: dynamical_function(t, x, A, **function_args), (0, tmax), initial_condition, t_eval=t)
+  time_series = solve_ivp(lambda t, x: dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
 
   return time_series
 end
