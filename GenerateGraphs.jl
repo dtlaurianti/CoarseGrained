@@ -1,15 +1,19 @@
 using LinearAlgebra
 using MatrixNetworks
 
-# example graphs (non random) 
-function line_graph(n, edge_weight=1.0, directed=True):
-  if directed:
-    G = nx.DiGraph()
-    nx.add_path(G, range(n), weight=edge_weight)
-  else:
-    G = nx.Graph()
-    nx.add_path(G, range(n), weight=edge_weight)
+# example graphs (non random)
+function line_graph(n; edge_weight=1.0, directed=True)
+  G = zeros(n, n)
+  if directed
+    # Create a directed path from the first node to the last node
+    G[i,i+1 for i in 1:n] = edge_weight
+  else
+    # Create an undirected path from the first node to the last node
+    G[i,i+1 for i in 1:n] = edge_weight
+    G[i+1,i for i in 1:n] = edge_weight
+  end
   return G
+end
 
 
 def cycle_graph(n, edge_weight=1.0, directed=True):
