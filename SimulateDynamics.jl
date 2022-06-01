@@ -15,17 +15,20 @@ function SI_model(t, x, A, β)
   beta*((ones(n)-x).*(A⋅x))
 end
 
-def kuramoto_model(t, x, A, omega=None, K=1):
-    n = np.size(A,axis=0)
-    dxdt = np.ones(n)*omega #omega.copy()
-    for i in range(n):
-        S = np.sin(np.subtract(x[i]*np.ones(n),x))
-        dxdt += K*np.multiply(A[i,:],S)
-    return dxdt
+function kuramoto_model(t, x, A, omega=None, K=1)
+    n = size(A, 1)
+    dxdt = ones(n)*omega #omega.copy()
+    for i in 1:n
+        S = sin(x[i]*ones(n).-(x))
+        dxdt += K*(A[i,:].*(S))
+    end 
+    dxdt
+end
 
-def LotkaVolterra_model(t, x, A, omega):
-  n = np.size(A, axis=0)
-  return omega*x + np.multiply(x, A.dot(x))
+function LotkaVolterra_model(t, x, A, omega)
+  n = size(A, 1)
+  omega*x + (x.*(A⋅(x)))
+end
 
 def linear_opinions(t, x, A, c=1):
   '''
