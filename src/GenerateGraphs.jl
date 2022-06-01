@@ -145,4 +145,3 @@ def cm_graph(n, max_degree=5, directed=True, seed=None):
 =#
 # TODO: add something like a feed-forward neural-network graph?
 # or something else with hierarchical or layered structure?
-
