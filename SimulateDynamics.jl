@@ -2,7 +2,7 @@ using MatrixNetworks
 using LinearAlgebra
 
 function linear_model(t, x, A, epsilon)
-    (epsilon*A-np.eye(len(A))).dot(x)
+    (epsilon*A-I)⋅x
 end
 
 function SIS_model(t, x, A, gamma, beta)
@@ -11,8 +11,8 @@ function SIS_model(t, x, A, gamma, beta)
 end
 
 function SI_model(t, x, A, beta)
-  n = np.size(A, axis=0)
-  beta*np.multiply((np.ones(n)-x), A.dot(x))
+  n = size(A, 1)
+  beta*multiply((ones(n)-x), A⋅x)
 end
 
 
