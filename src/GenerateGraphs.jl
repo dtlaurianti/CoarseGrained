@@ -3,13 +3,14 @@ using MatrixNetworks
 using LoopVectorization
 using BenchmarkTools
 using StochasticBlockModel
+using SparseArrays
 
 # example graphs (non random)
 function line_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
   if n < 0
     throw(DomainError("n must be >= 0."))
   elseif n == 0
-    return []
+    return MatrixNetwork(sparse([]))
   else
     G = zeros(n, n)
     if directed
@@ -24,7 +25,7 @@ function line_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
         G[i+1,i] = edge_weight
       end
     end
-    return G
+    return MatrixNetwork(sparse(G))
   end
 end
 
@@ -33,7 +34,7 @@ function cycle_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
   if n < 0
     throw(DomainError("n must be >= 0."))
   elseif n == 0
-    return []
+    return MatrixNetwork(sparse([]))
   else
     G = zeros(n, n)
     if directed
@@ -51,7 +52,7 @@ function cycle_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
       G[n, 1] = edge_weight
       G[1, n] = edge_weight
     end
-    return G
+    return MatrixNetwork(sparse(G))
   end
 end
 
@@ -62,7 +63,7 @@ function grid_graph(n::Int; edge_weight::Number=1.0, directed::Bool=false)
   if n < 0
     throw(DomainError("n must be >= 0."))
   elseif n == 0
-    return []
+    return MatrixNetwork(sparse([]))
   else
     # Choose rectangular dimensions to have a number of nodes close to n
     m = sqrt(n)
@@ -87,20 +88,19 @@ function grid_graph(n::Int; edge_weight::Number=1.0, directed::Bool=false)
         G[j, i] = G[i, j]
       end
     end
-    return G
+    return MatrixNetwork(sparse(G))
   end
 end
-
 
 # random graphs
 
 function gnp_graph(n::Int; p::AbstractFloat=0.1, directed::Bool=true, edge_weight::Number=1.0)
   if directed
     G = erdos_renyi_directed(n, p)
-    G = G.*edge_weight
+    G = (G.vals).*edge_weight
   else
     G = erdos_renyi_undirected(n, p)
-    G = G.*edge_weight
+    G = (G.vals).*edge_weight
   end
   return G
 end
