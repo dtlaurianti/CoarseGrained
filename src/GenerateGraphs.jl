@@ -11,7 +11,7 @@ function line_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
   if n < 0
     throw(DomainError("n must be >= 0."))
   elseif n == 0
-    return MatrixNetwork(sparse([]))
+    return MatrixNetwork(sparse(Array{Float64}(undef, 0, 0)))
   else
     G = zeros(n, n)
     if directed
@@ -35,7 +35,7 @@ function cycle_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
   if n < 0
     throw(DomainError("n must be >= 0."))
   elseif n == 0
-    return MatrixNetwork(sparse([]))
+    return MatrixNetwork(sparse(Array{Float64}(undef, 0, 0)))
   else
     G = zeros(n, n)
     if directed
@@ -64,7 +64,7 @@ function grid_graph(n::Int; edge_weight::Number=1.0, directed::Bool=false)
   if n < 0
     throw(DomainError("n must be >= 0."))
   elseif n == 0
-    return MatrixNetwork(sparse([]))
+    return MatrixNetwork(sparse(Array{Float64}(undef, 0, 0)))
   else
     # Choose rectangular dimensions to have a number of nodes close to n
     m = sqrt(n)
@@ -96,7 +96,13 @@ end
 # random graphs
 
 function gnp_graph(n::Int; p::AbstractFloat=0.1, directed::Bool=true, edge_weight::Number=1.0)
-  return MatrixNetwork(sprand(n,n,p,bitrand))
+  if directed
+    return MatrixNetwork(sprand(n,n,p,bitrand).*edge_weight)
+  else
+    G = sprand(n,n,p,bitrand)
+    # Mirroring Upper and Lower triangles to make the network undirected
+    return max.(G, G').*edge_weight
+  end
 end
 #=
 def sbm_graph(n, communities=4, p_within=0.2, p_between=0.05, seed=None, edge_weight=1.0, directed=True):
