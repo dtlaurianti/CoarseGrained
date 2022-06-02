@@ -1,46 +1,48 @@
 using MatrixNetworks
 using LinearAlgebra
 
+# t-time, x-vector of variable values corresponding to nodes,
+# A-matrix representation of a network, ϵ-the unit of change
 function linear_model(t::Number, x::Vector, A::MatrixNetwork, ϵ::Number)
-  return (ϵ.*A-I)⋅x
+  return (ϵ.*A.-I)⋅x
 end
 
-function SIS_model(t, x, A, γ, β)
+function SIS_model(t::Number, x::Vector, A::MatrixNetwork, γ::Number, β::Number)
   nrow = size(A, 1)
-  return -γ*x + β*[(ones(n)-x).*(A⋅x)]
+  return -γ.*x + β.*[(ones(n).-x).*(A⋅x)]
 end
 
-function SI_model(t, x, A, β)
+function SI_model(t::Number, x::Vector, A::MatrixNetwork, β::Number)
   n = size(A, 1)
-  return β*((ones(n)-x).*(A⋅x))
+  return β.*((ones(n).-x).*(A⋅x))
 end
 
-function kuramoto_model(t, x, A; ω=nothing, K=1)
+function kuramoto_model(t::Number, x::Vector, A; ω::Number=nothing, K::Number=1)
     n = size(A, 1)
-    dxdt = ones(n)*ω
+    dxdt = ones(n).*ω
     for i in 1:n
-        S = sin(x[i]*ones(n).-(x))
-        dxdt += K*(A[i,:].*(S))
+        S = sin(x[i].*ones(n).-(x))
+        dxdt .+= K.*(A[i,:].*(S))
     end
     return dxdt
 end
 
-function LotkaVolterra_model(t, x, A, ω)
+function LotkaVolterra_model(t::Number, x::Vector, A::MatrixNetwork, ω::Number)
   n = size(A, 1)
-  return ω*x + (x.*(A⋅(x)))
+  return ω.*x + (x.*(A⋅x))
 end
 
-function linear_opinions(t, x, A, c=1)
+function linear_opinions(t::Number, x::Vector, A::MatrixNetwork, c::Number=1)
   #=
   Simplest model of linear opinion dynamics; c = constant, for now
   =#
   Dout = diag(sum(A, 1))            # compute outdegree matrix
   Din  = diag(sum(A, 2))            # compute indegree matrix
   L =  Dout + Din - A - transpose(A)  # compute graph laplacian
-  return -c*L⋅x
+  return -c.*L⋅x
 end
 
-function nonlinear_opinions(t, x, A; d=0.1, u=1, b=0)
+function nonlinear_opinions(t::Number, x::Vector, A::MatrixNetwork; d::Number=0.1, u::Number=1, b::Number=0)
   #=
   An instance of the model in https://arxiv.org/abs/2009.04332
   Parameters:
@@ -50,10 +52,10 @@ function nonlinear_opinions(t, x, A; d=0.1, u=1, b=0)
   For now, d, u, b are constants, but we can eventually vary by individual
   =#
   n = size(A, 1)
-  return - d*x + u*tanh(A⋅x) + b*ones(n)
+  return - d.*x + u.*tanh.(A⋅x) + b.*ones(n)
 end
 
-function simulateODEonGraph(A, initial_condition; dynamical_function=linear_model, tmax=10, dt=0.01, function_args...)
+function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
   t = range(0, tmax, dt)
   time_series = solve_ivp(t, x -> dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
   return time_series
