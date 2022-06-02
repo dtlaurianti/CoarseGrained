@@ -28,11 +28,11 @@ function compressAdjacencyMatrix(A, partition)
     #Reduce matrix using spectral method from Gfeller et al. (2008).
     numGroups = length(set(partition.values()))
     groupSizes = getSupernodeSizes(partition)
-    K = np.zeros((len(groupSizes),len(A)))
-    R = np.zeros((len(A),len(groupSizes)))
-    for i in range(len(A))
+    K = zeros((length(groupSizes),length(A)))
+    R = zeros((len(A),len(groupSizes)))
+    for i in 1:length(A)
         R[i,partition[i]] = 1
         K[partition[i],i] = 1/groupSizes[partition[i]]
     end
-    return K.dot(A).dot(R)
+    return K⋅A⋅R
 end
