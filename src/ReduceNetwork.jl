@@ -36,3 +36,23 @@ function compressAdjacencyMatrix(A, partition)
     end
     return K⋅A⋅R
 end
+
+######## Partitioning ########
+function generateRandomPartitions(originalSize, reducedSize, numPartitions)
+    partitionList = list()
+    for index in range(numPartitions):
+        partitionAccepted = False
+        while not partitionAccepted:
+            partition = dict()
+            labels = random.choices(range(reducedSize), k=originalSize)
+            for node in range(originalSize)
+                partition[node] = labels[node]
+            end
+            if len(set(labels)) == reducedSize:
+                partitionAccepted = True
+            end
+        end
+        partitionList.append(partition)
+    end 
+    return partitionList
+end
