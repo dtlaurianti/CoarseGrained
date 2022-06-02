@@ -67,7 +67,8 @@ end
 
 function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
   tspan = (0, tmax)
-  prob = ODEProblem(x -> dynamical_function(t, x, A), initial_condition, tspan)
+  f(t, x, A) = dynamical_function(t, x, A)
+  prob = ODEProblem(f, initial_condition, tspan)
   sol = solve(prob, saveat=dt)
   # time_series = solve_ivp(t, x -> dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
   return sol
