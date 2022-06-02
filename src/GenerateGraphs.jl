@@ -4,6 +4,7 @@ using LoopVectorization
 using BenchmarkTools
 using StochasticBlockModel
 using SparseArrays
+using Random
 
 # example graphs (non random)
 function line_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
@@ -95,14 +96,7 @@ end
 # random graphs
 
 function gnp_graph(n::Int; p::AbstractFloat=0.1, directed::Bool=true, edge_weight::Number=1.0)
-  if directed
-    G = erdos_renyi_directed(n, p)
-    G = (G.vals).*edge_weight
-  else
-    G = erdos_renyi_undirected(n, p)
-    G = (G.vals).*edge_weight
-  end
-  return G
+  return MatrixNetwork(sprand(n,n,p,bitrand))
 end
 #=
 def sbm_graph(n, communities=4, p_within=0.2, p_between=0.05, seed=None, edge_weight=1.0, directed=True):

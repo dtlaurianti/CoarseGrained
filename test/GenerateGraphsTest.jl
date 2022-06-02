@@ -1,5 +1,5 @@
 @testset "line_graph_tests" begin
-    @test line_graph(5) == MatrixNetwork{Float64}(5, [1, 2, 3, 4, 5, 5], [2, 3, 4, 5], [1.0, 1.0, 1.0, 1.0])
+    @test norm(sparse(line_graph(5))) - norm(sparse(MatrixNetwork{Float64}(5, [1, 2, 3, 4, 5, 5], [2, 3, 4, 5], [1.0, 1.0, 1.0, 1.0]))) ≈ 0 
     @test line_graph(4; edge_weight=3) == true
     @test line_graph(3; directed=false) == true
     @test line_graph(0; directed=false) == true
@@ -20,4 +20,10 @@ end
     @test grid_graph(3) == true
     @test grid_graph(0) == true
     @test_throws DomainError grid_graph(-2; directed=false) == true
+end
+
+@testset "gnp_graph_tests" begin
+    display(sparse(gnp_graph(5)))
+    display(sparse(gnp_graph(5)))
+    display(sparse(gnp_graph(5)))
 end
