@@ -1,10 +1,20 @@
 using MatrixNetworks
 using LinearAlgebra
-
+using DifferentialEquations
+#=
 # t-time, x-vector of variable values corresponding to nodes,
 # A-matrix representation of a network, ϵ-the unit of change
 function linear_model(t::Number, x::Vector, A::MatrixNetwork, ϵ::Number)
+  println((ϵ.*A.-I)⋅x)
   return (ϵ.*A.-I)⋅x
+end
+=#
+
+# t-time, x-vector of variable values corresponding to nodes,
+# A-matrix representation of a network, ϵ-the unit of change
+function linear_model(t::Number, x::Vector, A::MatrixNetwork)
+  println("!")
+  return (A.-I)⋅x
 end
 
 function SIS_model(t::Number, x::Vector, A::MatrixNetwork, γ::Number, β::Number)
@@ -56,9 +66,11 @@ function nonlinear_opinions(t::Number, x::Vector, A::MatrixNetwork; d::Number=0.
 end
 
 function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
-  t = range(0, tmax, dt)
-  time_series = solve_ivp(t, x -> dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
-  return time_series
+  tspan = (0, tmax)
+  prob = ODEProblem(x -> dynamical_function(t, x, A), initial_condition, tspan)
+  sol = solve(prob, saveat=dt)
+  # time_series = solve_ivp(t, x -> dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
+  return sol
 end
 
 function foldername(dynSys_string, dynSys_args, graphModel_string, graphModel_args)
