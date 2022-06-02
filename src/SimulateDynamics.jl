@@ -1,7 +1,7 @@
 using MatrixNetworks
 using LinearAlgebra
 
-function linear_model(t, x, A, ϵ)
+function linear_model(t::Number, x::Vector, A::MatrixNetwork, ϵ::Number)
   return (ϵ*A-I)⋅x
 end
 
