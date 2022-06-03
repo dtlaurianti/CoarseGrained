@@ -7,15 +7,17 @@ using SparseArrays
 function linear_model(du::Vector, u::Vector, p::SparseMatrixCSC, t::Number)
   du .= (p-I)*u
 end
+
 #=
 function SIS_model(t::Number, x::Vector, A::MatrixNetwork, γ::Number, β::Number)
   nrow = size(A, 1)
   return -γ.*x + β.*[(ones(n).-x).*(A⋅x)]
 end
 =#
+
 # p = (A, γ, β)
 function SIS_model(du::Vector, u::Vector, p::Tuple{SparseMatrixCSC, Number, Number}, t::Number)
-  du .= -p[2].*u + p[3].*[(ones(n)-u).*(p[1]*u)]
+  du .= -p[2].*u + p[3].*(ones(size(u))-u).*(p[1]*u)
 end
 
 function SI_model(t::Number, x::Vector, A::MatrixNetwork, β::Number)
@@ -61,9 +63,11 @@ function nonlinear_opinions(t::Number, x::Vector, A::MatrixNetwork; d::Number=0.
   return - d.*x + u.*tanh.(A⋅x) + b.*ones(n)
 end
 
-function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector, function_args...; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01)
   tspan = (0, tmax)
-  prob = ODEProblem(dynamical_function, initial_condition, tspan, sparse(A))
+  # splat the MatrixNetwork and additional parameters into one parameters Tuple
+  p = sparse(A), function_args...
+  prob = ODEProblem(dynamical_function, initial_condition, tspan, p)
   sol = solve(prob, saveat=dt)
   # time_series = solve_ivp(t, x -> dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
   return sol
