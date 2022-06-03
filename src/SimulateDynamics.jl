@@ -3,37 +3,38 @@ using LinearAlgebra
 using DifferentialEquations
 using SparseArrays
 
-# p = A
-function linear_model(du::Vector, u::Vector, p::SparseMatrixCSC, t::Number)
-  du .= (p-I)*u
+# create a common Type for passing parameters
+Base.@kwdef struct Model_Parameters
+  A::SparseMatrixCSC
+  β::Number=0
+  γ::Number=0
+  ω::Number=0
+  K::Number=1
 end
 
-#=
-function SIS_model(t::Number, x::Vector, A::MatrixNetwork, γ::Number, β::Number)
-  nrow = size(A, 1)
-  return -γ.*x + β.*[(ones(n).-x).*(A⋅x)]
-end
-=#
-
-# p = (A, γ, β)
-function SIS_model(du::Vector, u::Vector, p::Tuple{SparseMatrixCSC, Number, Number}, t::Number)
-  du .= -p[2].*u + p[3].*(ones(size(u))-u).*(p[1]*u)
+function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+  du .= (p.A-I)*u
 end
 
-function SI_model(t::Number, x::Vector, A::MatrixNetwork, β::Number)
-  n = size(A, 1)
-  return β.*((ones(n).-x).*(A⋅x))
+function SIS_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+  du .= -p.γ.*u + p.β.*(ones(size(u))-u).*(p.A*u)
 end
 
-function kuramoto_model(t::Number, x::Vector, A; ω::Number=nothing, K::Number=1)
-    n = size(A, 1)
-    dxdt = ones(n).*ω
+function SI_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+  du .= p.β.*(ones(size(u))-u).*(p.A*u)
+end
+
+function kuramoto_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+    n = size(p.A, 1)
+    dxdt = ones(n).*p.ω
     for i in 1:n
-        S = sin(x[i].*ones(n).-(x))
-        dxdt .+= K.*(A[i,:].*(S))
+        S = sin.(u[i].*ones(n).-(u))
+        dxdt .+= p.K.*(p.A[i,:].*(S))
     end
     return dxdt
 end
+
+#TODO
 
 function LotkaVolterra_model(t::Number, x::Vector, A::MatrixNetwork, ω::Number)
   n = size(A, 1)
@@ -63,10 +64,10 @@ function nonlinear_opinions(t::Number, x::Vector, A::MatrixNetwork; d::Number=0.
   return - d.*x + u.*tanh.(A⋅x) + b.*ones(n)
 end
 
-function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector, function_args...; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01)
+function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
   tspan = (0, tmax)
   # splat the MatrixNetwork and additional parameters into one parameters Tuple
-  p = sparse(A), function_args...
+  p = Model_Parameters(A=sparse(A); function_args...)
   prob = ODEProblem(dynamical_function, initial_condition, tspan, p)
   sol = solve(prob, saveat=dt)
   # time_series = solve_ivp(t, x -> dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
