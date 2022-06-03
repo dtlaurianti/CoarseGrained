@@ -2,7 +2,6 @@ using LinearAlgebra
 using MatrixNetworks
 using LoopVectorization
 using BenchmarkTools
-using StochasticBlockModel
 using SparseArrays
 using Random
 

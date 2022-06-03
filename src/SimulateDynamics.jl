@@ -1,25 +1,21 @@
 using MatrixNetworks
 using LinearAlgebra
 using DifferentialEquations
+using SparseArrays
+
+# p = A
+function linear_model(du::Vector, u::Vector, p::SparseMatrixCSC, t::Number)
+  du .= (p-I)*u
+end
 #=
-# t-time, x-vector of variable values corresponding to nodes,
-# A-matrix representation of a network, ϵ-the unit of change
-function linear_model(t::Number, x::Vector, A::MatrixNetwork, ϵ::Number)
-  println((ϵ.*A.-I)⋅x)
-  return (ϵ.*A.-I)⋅x
-end
-=#
-
-# t-time, x-vector of variable values corresponding to nodes,
-# A-matrix representation of a network, ϵ-the unit of change
-function linear_model(t::Number, x::Vector, A::MatrixNetwork)
-  println("!")
-  return (A.-I)⋅x
-end
-
 function SIS_model(t::Number, x::Vector, A::MatrixNetwork, γ::Number, β::Number)
   nrow = size(A, 1)
   return -γ.*x + β.*[(ones(n).-x).*(A⋅x)]
+end
+=#
+# p = (A, γ, β)
+function SIS_model(du::Vector, u::Vector, p::Tuple{SparseMatrixCSC, Number, Number}, t::Number)
+  du .= -p[2].*u + p[3].*[(ones(n)-u).*(p[1]*u)]
 end
 
 function SI_model(t::Number, x::Vector, A::MatrixNetwork, β::Number)
@@ -67,8 +63,7 @@ end
 
 function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
   tspan = (0, tmax)
-  f(t, x, A) = dynamical_function(t, x, A)
-  prob = ODEProblem(f, initial_condition, tspan)
+  prob = ODEProblem(dynamical_function, initial_condition, tspan, sparse(A))
   sol = solve(prob, saveat=dt)
   # time_series = solve_ivp(t, x -> dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
   return sol
