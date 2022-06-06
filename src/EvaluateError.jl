@@ -24,7 +24,7 @@ function computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)
   numTimeSteps = size(reducedTimeSeries.y, 2)
 
   aggregatedTimeSeries = aggregateTimeSeries(originalTimeSeries.y, partition)
-  return np.sum(np.sum((reducedTimeSeries.y - aggregatedTimeSeries)^2))/numTimeSteps
+  return sum(sum((reducedTimeSeries.y - aggregatedTimeSeries)^2))/numTimeSteps
 end
 
 function computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
@@ -40,7 +40,7 @@ end
 
 function lossFunction(timeseries1, timeseries2, type="L2")
   if type == "L2"
-    return np.sum((timeseries1 - timeseries2)^2)/size(timeseries1)
+    return sum((timeseries1 - timeseries2)^2)/size(timeseries1)
   end
 end
 

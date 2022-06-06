@@ -35,5 +35,5 @@ function compressAdjacencyMatrix(A, partition)
         R[i,partition[i]] = 1
         K[partition[i],i] = 1/groupSizes[partition[i]]
     end
-    return K⋅A⋅R)
+    return K⋅A⋅R
 end
