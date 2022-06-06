@@ -154,11 +154,14 @@ function exhaustivePartition(n::Integer)
     for smaller in partitionNodes(nodeIds[2:end]):
         # insert first in each of the subpartition's subsets
         for k, subset in enumerate(smaller):
-            @yield smaller[1:k] + [[ first ] + subset] + smaller[k+1:]
+            @yield [smaller[1:k] [[ first ] subset] smaller[k+1:]]
+        end
         # put first in its own subset
-        @yield [[ first ]] + smaller
+        @yield [[[first]] smaller]
+    end
+end
 
-def kPartition(n, k):
+function kPartition(n::Integer, k::Integer)
     '''
     input: number of nodes n
     output: dictionary of all possible partitions with a specified number of supernodes (k)
