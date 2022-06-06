@@ -125,23 +125,23 @@ function exhaustivePartition(n::Integer)
     input: number of nodes n
     output: dictionary of all possible partitions
     =#
-    allPartitions = {}
+    allPartitions = Dict{Integer,Dict{Integer,Integer}}()
     nodeIds = [1:n]
 
     # compute all integer partitions
-    for (index, part) in enumerate(partitionNodes(nodeIds),1):
-        # print(index, part)
-
-        partition = dict()
-        for supernodeId, subnodeIds in enumerate(part):
-            for nodeId in subnodeIds:
+    for (index, part) in enumerate(partitionNodes(nodeIds))
+        partition = Dict{Integer,Integer}()
+        for (supernodeId, subnodeIds) in enumerate(part)
+            for nodeId in subnodeIds
                 partition[nodeId] = supernodeId
-
+            end
+        end
         allPartitions[index] = partition
-
+    end
     return allPartitions
+end
 
-@resumable function partitionNodes(nodeIds::Vector{Integer})
+@resumable function partitionNodes(nodeIds::Array{Integer})
     #=
     input:  list of nodeIds
     output: list of all possible partitions
@@ -153,7 +153,7 @@ function exhaustivePartition(n::Integer)
     first = nodeIds[1]
     for smaller in partitionNodes(nodeIds[2:end]):
         # insert first in each of the subpartition's subsets
-        for k, subset in enumerate(smaller):
+        for (k, subset) in enumerate(smaller):
             @yield [smaller[1:k] [[ first ] subset] smaller[k+1:end]]
         end
         # put first in its own subset
@@ -161,48 +161,58 @@ function exhaustivePartition(n::Integer)
     end
 end
 
-function kPartition(n::Integer, k::Integer)
-    '''
+@resumable function kPartition(n::Integer, k::Integer)
+    #=
     input: number of nodes n
     output: dictionary of all possible partitions with a specified number of supernodes (k)
-    '''
-    def kPartitionNodesAll(nodeIds, k):
-        '''
+    =#
+    @resumable function kPartitionNodesAll(nodeIds::Array{Integer}, k::Integer)
+        #=
         generate all possible partitions of nodeIds into k supernodes
         includes empty supernodes that need to be removed
-        '''
-        n = len(nodeIds)
-        if k ==1:
-            yield [nodeIds]
-        elif n == k:
-            yield [[node] for node in nodeIds]
-        else:
-            first, *rest = nodeIds
-            for subset in kPartitionNodesAll(rest, k-1):
-                yield [[first], *subset]
-            for subset in kPartitionNodesAll(rest, k):
-                for i in range(len(subset)):
-                    yield [[first] + subset[i]] + subset[:i] + subset[i+1:]
+        =#
+        n = size(nodeIds, 1)
+        if k==1
+            @yield [nodeIds]
+        elseif n == k
+            @yield [[node] for node in nodeIds]
+        else
+            first = nodeIds[1]
+            rest = nodeIds[2:end]
+            for subset in kPartitionNodesAll(rest, k-1)
+                @yield [[first] subset]
+            end
+            for subset in kPartitionNodesAll(rest, k)
+                for i in 1:size(subset,1):
+                    @yield [[[first] subset[i]] subset[1:i] subset[i+1:end]]
+                end
+            end
+        end
+    end
 
-    def kPartitionNodes(nodeIds, k):
-        '''
+    @resumable function kPartitionNodes(nodeIds::Array, k::Integer)
+        #=
         generate all possible partitions of nodeIds into k supernodes
         using kPartitionNodesAll, then remove empy supernodes
-        '''
+        =#
         # remove empty supernodes
-        for part in kPartitionNodesAll(nodeIds, k):
-            if all(supernode for supernode in part):      # check if all supernodes are populated
-                yield part
+        for part in kPartitionNodesAll(nodeIds, k)
+            if all(supernode for supernode in part)    # check if all supernodes are populated
+                @yield part
+            end
+        end
+    end
 
     # initialize
     kPartitions = []
-    nodeIds = list(range(n))
+    nodeIds = [1:n]
     # list all ways to split n nodes into k supernodes, then format as a partition
-    for index, part in enumerate(kPartitionNodes(nodeIds, k),1):
-        partition = dict() # initialize partition
-        for supernodeId, subnodeIds in enumerate(part): # for each list of partitioned nodes
-            for nodeId in subnodeIds:                   # for each node
-                partition[nodeId] = supernodeId         # assign id of the supernode it belongs to
-        kPartitions.append(partition)                   # store partition in the list of partitions
-        # kPartitions[index] = partition                # store partition in the dictionary of partitions
+    for (index, part) in enumerate(kPartitionNodes(nodeIds, k)):
+        partition = Dict{Integer,Integer}() # initialize partition
+        for (supernodeId, subnodeIds) in enumerate(part) # for each list of partitioned nodes
+            for nodeId in subnodeIds                     # for each node
+                partition[nodeId] = supernodeId          # assign id of the supernode it belongs to
+        append!(kPartitions, partition)                  # store partition in the list of partitions
+        # kPartitions[index] = partition                 # store partition in the dictionary of partitions
     return kPartitions
+end
