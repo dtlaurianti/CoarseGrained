@@ -247,8 +247,4 @@ def subplot_smoothed_surface(data, fig, ax=None):
 
 #surfaceplots(P,A,"n10_p7_s1000")
 
-<<<<<<< HEAD
-#plot_smoothed_surface("data/visualization_data/test.csv")
-=======
 # plot_smoothed_surface("data/visualization_data/test.csv")
->>>>>>> 8cf4b000d3b0996eb627efbf83d9d2447b83f887

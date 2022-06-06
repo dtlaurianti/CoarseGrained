@@ -1,5 +1,6 @@
 using MatrixNetworks
 using LinearAlgebra
+using ResumableFunctions
 
 function getSupernodeSizes(partition)
   supernodeSizes = dict()
@@ -169,24 +170,23 @@ function greedyMerge(A, Q, partition, k)
     return newPartition, maxQ
 end
 
-function partitionNodes(nodeIds)
+@resumable function partitionNodes(nodeIds)
     #=
     input:  list of nodeIds
     output: list of all possible partitions
     =#
     if length(nodeIds) == 1
-        #TODO: determine how to get python-like yield functionality in Julia 
-        yield [nodeIds]
+        @yield [nodeIds]
         return
     end
     first = nodeIds[0]
     for smaller in partitionNodes(nodeIds 1:)
         # insert first in each of the subpartition's subsets
         for k, subset in enumerate(smaller)
-            yield smaller[:k] + [[ first ] + subset] + smaller[k+1:]
+            @yield smaller[:k] + [[ first ] + subset] + smaller[k+1:]
         end
         # put first in its own subset
-        yield [[ first ]] + smaller
+        @yield [[ first ]] + smaller
     end
 end
 
@@ -220,30 +220,30 @@ function kPartition(n, k)
     input: number of nodes n
     output: dictionary of all possible partitions with a specified number of supernodes (k)
     =#
-    function kPartitionNodesAll(nodeIds, k)
+    @resumable function kPartitionNodesAll(nodeIds, k)
         #=
         generate all possible partitions of nodeIds into k supernodes
         includes empty supernodes that need to be removed
         =#
         n = len(nodeIds)
         if k ==1
-            yield [nodeIds]
+            @yield [nodeIds]
         elseif n == k
-            yield [[node] for node in nodeIds]
+            @yield [[node] for node in nodeIds]
         else
             first, *rest = nodeIds
             for subset in kPartitionNodesAll(rest, k-1)
-                yield [[first], *subset]
+                @yield [[first], *subset]
             end
             for subset in kPartitionNodesAll(rest, k)
                 for i in range(length(subset))
-                    yield [[first] + subset[i]] + subset[:i] + subset[i+1:]
+                    @yield [[first] + subset[i]] + subset[:i] + subset[i+1:]
                 end
             end
         end
     end
 
-    function kPartitionNodes(nodeIds, k)
+    @resumable function kPartitionNodes(nodeIds, k)
         #=
         generate all possible partitions of nodeIds into k supernodes
         using kPartitionNodesAll, then remove empy supernodes
@@ -251,7 +251,7 @@ function kPartition(n, k)
         # remove empty supernodes
         for part in kPartitionNodesAll(nodeIds, k)
             if all(supernode for supernode in part)      # check if all supernodes are populated
-                yield part
+                @yield part
             end
         end
     end
