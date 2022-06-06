@@ -1,6 +1,10 @@
 using MatrixNetworks
 using LinearAlgebra
+<<<<<<< Updated upstream
 using ResumableFunctions
+=======
+include("Partition.jl")
+>>>>>>> Stashed changes
 
 function getSupernodeSizes(partition)
   supernodeSizes = dict()
@@ -31,7 +35,6 @@ function compressAdjacencyMatrix(A, partition)
     groupSizes = getSupernodeSizes(partition)
     K = zeros((length(groupSizes),length(A)))
     R = zeros((length(A),length(groupSizes)))
-    for i in 1:length(A)
         R[i,partition[i]] = 1
         K[partition[i],i] = 1/groupSizes[partition[i]]
     end
