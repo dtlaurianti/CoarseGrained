@@ -52,7 +52,7 @@ function generateRandomPartitions(originalSize, reducedSize, numPartitions)
             for node in 1:originalSize
                 partition[node] = labels[node]
             end
-            if length(set(labels)) == reducedSize:
+            if length(set(labels)) == reducedSize
                 partitionAccepted = true
             end
         end
@@ -126,36 +126,44 @@ function greedyMerge(A, Q, partition, k)
             aV = 0
             for i in group1:
                 for j in group2:
-                    try:
+                    try
                         eUV += A[i,j]/m # because directed edge list
-                    except:
+                    catch
                         pass
-            for i in group1:
+                    end
+                end
+            end
+            for i in group1
                 aU += k[i]/m
-
-            for i in group2:
+            end
+            for i in group2
                 aV += k[i]/m
-
+            end
             newQ = Q + 2*(eUV - aU*aV)
 
-            if newQ > maxQ:
+            if newQ > maxQ
                 maxQ = newQ
                 maxGroupId1 = groupId1
                 maxGroupId2 = groupId2
+            end
+        end
+    end
     newPartition = dict(partition)
     for node in list(newPartition.keys()):
-        if newPartition[node] == maxGroupId2:
+        if newPartition[node] == maxGroupId2
             newPartition[node] = maxGroupId1
+        end
+    end
     return newPartition, maxQ
 end
 
 #not finished
 # WARNING: not super efficient at the moment!
-function exhaustivePartition(n):
-    '''
+function exhaustivePartition(n)
+    #=
     input: number of nodes n
     output: dictionary of all possible partitions
-    '''
+    =#
     allPartitions = {}
     nodeIds = list(range(n))
 
