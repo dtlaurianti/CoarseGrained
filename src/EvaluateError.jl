@@ -52,9 +52,9 @@ function getLoss(A, partition, initial_condition, dynamical_function, tmax, dt, 
   catch
     return np.nan
   end
-  
-  originalTimeSeries = SimulateDynamics.simulateODEonGraph(A, initial_condition, dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
-  reducedTimeSeries = SimulateDynamics.simulateODEonGraph(reducedA, compressed_initial_condition, dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
+
+  originalTimeSeries = SimulateDynamics.simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
+  reducedTimeSeries = SimulateDynamics.simulateODEonGraph(reducedA, compressed_initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
 
   loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
   #loss = computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)
