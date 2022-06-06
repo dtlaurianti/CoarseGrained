@@ -154,7 +154,7 @@ function exhaustivePartition(n::Integer)
     for smaller in partitionNodes(nodeIds[2:end]):
         # insert first in each of the subpartition's subsets
         for k, subset in enumerate(smaller):
-            @yield [smaller[1:k] [[ first ] subset] smaller[k+1:]]
+            @yield [smaller[1:k] [[ first ] subset] smaller[k+1:end]]
         end
         # put first in its own subset
         @yield [[[first]] smaller]
