@@ -79,11 +79,7 @@ end
 #  P = RN.generateRandomPartitions(10,7,100)
 #  surfaceplots(P,A)
 #
-<<<<<<< HEAD
-function surfaceplots(partitions, A, save_to_string=None):
-=======
 function surfaceplots(partitions, A, save_to_string=None)
->>>>>>> cbef35f036f5f01f8db8602e7fafe4a28826e941
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
 
@@ -270,8 +266,4 @@ end
 
 #surfaceplots(P,A,"n10_p7_s1000")
 
-<<<<<<< HEAD
-#plot_smoothed_surface("data/visualization_data/test.csv")
-=======
 # plot_smoothed_surface("data/visualization_data/test.csv")
->>>>>>> 8cf4b000d3b0996eb627efbf83d9d2447b83f887
