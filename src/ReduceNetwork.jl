@@ -64,12 +64,12 @@ end
 function spectralClustering(A, reducedSize)
     l, X = eigvals(diag(A))
     #Figure out how to do this
-    labels = k_means(X[:,:reducedSize], reducedSize, init='k-means++')[1]
+    labels = k_means(X[:,:reducedSize], reducedSize, init="k-means++")[1]
     return {i:labels[i] for i in range(len(A))}
 end
 
 function mEEP(A, reducedSize)
-    return print("under dev")
+    println("under dev")
 end
 
 # works only for undirected networks as of now.
@@ -149,13 +149,35 @@ function greedyMerge(A, Q, partition, k)
         end
     end
     newPartition = dict(partition)
-    for node in list(newPartition.keys()):
+    for node in list(newPartition.keys())
         if newPartition[node] == maxGroupId2
             newPartition[node] = maxGroupId1
         end
     end
     return newPartition, maxQ
 end
+
+function partitionNodes(nodeIds)
+    #=
+    input:  list of nodeIds
+    output: list of all possible partitions
+    =#
+    if length(nodeIds) == 1
+        #TODO: determine how to get python-like yield functionality in Julia 
+        yield [ nodeIds ]
+        return
+    end
+    first = nodeIds[0]
+    for smaller in partitionNodes(nodeIds[1:])
+        # insert first in each of the subpartition's subsets
+        for k, subset in enumerate(smaller)
+            yield smaller[:k] + [[ first ] + subset] + smaller[k+1:]
+        end
+        # put first in its own subset
+        yield [[ first ]] + smaller
+    end
+end
+
 
 #not finished
 # WARNING: not super efficient at the moment!
@@ -168,36 +190,17 @@ function exhaustivePartition(n)
     nodeIds = list(range(n))
 
     # compute all integer partitions
-    for index, part in enumerate(partitionNodes(nodeIds),1):
+    for index, part in enumerate(partitionNodes(nodeIds),1)
         # print(index, part)
 
         partition = dict()
-        for supernodeId, subnodeIds in enumerate(part):
+        for supernodeId, subnodeIds in enumerate(part)
             for nodeId in subnodeIds:
                 partition[nodeId] = supernodeId
 
         allPartitions[index] = partition
 
     return allPartitions
-end
-
-function partitionNodes(nodeIds)
-    #=
-    input:  list of nodeIds
-    output: list of all possible partitions
-    =#
-    if length(nodeIds) == 1:
-        #TODO: determine how to get python-like yield functionality in Julia 
-        yield [ nodeIds ]
-        return
-    end
-    first = nodeIds[0]
-    for smaller in partitionNodes(nodeIds[1:]):
-        # insert first in each of the subpartition's subsets
-        for k, subset in enumerate(smaller)
-            yield smaller[:k] + [[ first ] + subset] + smaller[k+1:]
-        # put first in its own subset
-        yield [[ first ]] + smaller
 end
 
 function kPartition(n, k)

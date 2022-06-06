@@ -7,9 +7,9 @@ function aggregateTimeSeries(originalTimeSeries, partition, type="average")
     if type == "average"
         supernodeSizes = ReduceNetwork.getSupernodeSizes(partition)
         reducedSize = len(supernodeSizes)
-        originalSize = np.size(originalTimeSeries, axis=0)
-        numTimeSteps = np.size(originalTimeSeries, axis=1)
-        aggregatedTimeSeries = np.zeros((reducedSize, numTimeSteps))
+        originalSize = size(originalTimeSeries, 1)
+        numTimeSteps = size(originalTimeSeries, 2)
+        aggregatedTimeSeries = zeros((reducedSize, numTimeSteps))
 
         for node in range(originalSize)
         aggregatedTimeSeries[partition[node], :] += originalTimeSeries[node, :]/supernodeSizes[partition[node]]
@@ -24,7 +24,7 @@ function computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)
   numTimeSteps = size(reducedTimeSeries.y, 2)
 
   aggregatedTimeSeries = aggregateTimeSeries(originalTimeSeries.y, partition)
-  return np.sum(np.sum(np.power(reducedTimeSeries.y - aggregatedTimeSeries, 2)))/numTimeSteps
+  return np.sum(np.sum((reducedTimeSeries.y - aggregatedTimeSeries)^2))/numTimeSteps
 end
 
 function computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
@@ -40,7 +40,7 @@ end
 
 function lossFunction(timeseries1, timeseries2, type="L2")
   if type == "L2"
-    return np.sum(np.power(timeseries1 - timeseries2, 2))/np.size(timeseries1)
+    return np.sum((timeseries1 - timeseries2)^2)/size(timeseries1)
   end
 end
 
@@ -50,7 +50,7 @@ function getLoss(A, partition, initial_condition, dynamical_function, tmax, dt, 
     compressed_initial_condition = ReduceNetwork.compressInitialCondition(initial_condition, partition)
     reducedA = ReduceNetwork.compressAdjacencyMatrix(A, partition)
   catch
-    return np.nan
+    return NaN
   end
 
   originalTimeSeries = SimulateDynamics.simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
@@ -58,5 +58,7 @@ function getLoss(A, partition, initial_condition, dynamical_function, tmax, dt, 
 
   loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
   #loss = computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)
-  print(loss, flush=True)
+  println(loss)
+  flush(stdout)
   return loss
+end
