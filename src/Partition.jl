@@ -1,17 +1,25 @@
-######## Partitioning ########
-def generateRandomPartitions(originalSize, reducedSize, numPartitions):
-    partitionList = list()
-    for index in range(numPartitions):
-        partitionAccepted = False
-        while not partitionAccepted:
-            partition = dict()
-            labels = random.choices(range(reducedSize), k=originalSize)
-            for node in range(originalSize):
+# generate numPartitions random partitions mapping a network of size originalSize
+# to a network of size reducedSize
+function generateRandomPartitions(originalSize, reducedSize, numPartitions::Integer):
+    partitionList = []
+    for index in 1:numPartitions:
+        partitionAccepted = false
+        while !partitionAccepted:
+            partition = Dict{Integer, Integer}
+            # assigns each node in the original nodes to a new node in the reduced nodes
+            labels = [1:reducedSize for i=1:originalSize]
+            for node in 1:originalSize:
                 partition[node] = labels[node]
-            if len(set(labels)) == reducedSize:
+            end
+            # check that each partition is nonempty
+            if size(Set(labels),1) == reducedSize:
                 partitionAccepted = True
-        partitionList.append(partition)
+            end
+        end
+        append!(partitionList, partition)
+    end
     return partitionList
+end
 
 def spectralClustering(A, reducedSize):
     l, X = np.linalg.eig(np.diag(A))

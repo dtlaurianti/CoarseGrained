@@ -76,7 +76,7 @@ function dict_to_array(dictionary::Array{Dict,1}):
 #  P = RN.generateRandomPartitions(10,7,100)
 #  surfaceplots(P,A)
 #
-def surfaceplots(partitions, A, save_to_string=None):
+function surfaceplots(partitions, A, save_to_string=None):
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
 
@@ -247,4 +247,8 @@ def subplot_smoothed_surface(data, fig, ax=None):
 
 #surfaceplots(P,A,"n10_p7_s1000")
 
+<<<<<<< HEAD
+#plot_smoothed_surface("data/visualization_data/test.csv")
+=======
 # plot_smoothed_surface("data/visualization_data/test.csv")
+>>>>>>> 8cf4b000d3b0996eb627efbf83d9d2447b83f887
