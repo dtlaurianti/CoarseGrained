@@ -52,7 +52,7 @@ function generateRandomPartitions(originalSize, reducedSize, numPartitions)
             for node in 1:originalSize
                 partition[node] = labels[node]
             end
-            if length(set(labels)) == reducedSize:
+            if length(set(labels)) == reducedSize
                 partitionAccepted = true
             end
         end
@@ -126,36 +126,44 @@ function greedyMerge(A, Q, partition, k)
             aV = 0
             for i in group1:
                 for j in group2:
-                    try:
+                    try
                         eUV += A[i,j]/m # because directed edge list
-                    except:
+                    catch
                         pass
-            for i in group1:
+                    end
+                end
+            end
+            for i in group1
                 aU += k[i]/m
-
-            for i in group2:
+            end
+            for i in group2
                 aV += k[i]/m
-
+            end
             newQ = Q + 2*(eUV - aU*aV)
 
-            if newQ > maxQ:
+            if newQ > maxQ
                 maxQ = newQ
                 maxGroupId1 = groupId1
                 maxGroupId2 = groupId2
+            end
+        end
+    end
     newPartition = dict(partition)
     for node in list(newPartition.keys()):
-        if newPartition[node] == maxGroupId2:
+        if newPartition[node] == maxGroupId2
             newPartition[node] = maxGroupId1
+        end
+    end
     return newPartition, maxQ
 end
 
 #not finished
 # WARNING: not super efficient at the moment!
-function exhaustivePartition(n):
-    '''
+function exhaustivePartition(n)
+    #=
     input: number of nodes n
     output: dictionary of all possible partitions
-    '''
+    =#
     allPartitions = {}
     nodeIds = list(range(n))
 
@@ -178,7 +186,7 @@ function partitionNodes(nodeIds)
     input:  list of nodeIds
     output: list of all possible partitions
     =#
-    if len(nodeIds) == 1:
+    if length(nodeIds) == 1:
         #TODO: determine how to get python-like yield functionality in Julia 
         yield [ nodeIds ]
         return
@@ -190,4 +198,62 @@ function partitionNodes(nodeIds)
             yield smaller[:k] + [[ first ] + subset] + smaller[k+1:]
         # put first in its own subset
         yield [[ first ]] + smaller
+end
+
+function kPartition(n, k)
+    #=
+    input: number of nodes n
+    output: dictionary of all possible partitions with a specified number of supernodes (k)
+    =#
+    function kPartitionNodesAll(nodeIds, k)
+        #=
+        generate all possible partitions of nodeIds into k supernodes
+        includes empty supernodes that need to be removed
+        =#
+        n = len(nodeIds)
+        if k ==1
+            yield [nodeIds]
+        elseif n == k
+            yield [[node] for node in nodeIds]
+        else
+            first, *rest = nodeIds
+            for subset in kPartitionNodesAll(rest, k-1)
+                yield [[first], *subset]
+            end
+            for subset in kPartitionNodesAll(rest, k)
+                for i in range(length(subset))
+                    yield [[first] + subset[i]] + subset[:i] + subset[i+1:]
+                end
+            end
+        end
+    end
+
+    function kPartitionNodes(nodeIds, k)
+        #=
+        generate all possible partitions of nodeIds into k supernodes
+        using kPartitionNodesAll, then remove empy supernodes
+        =#
+        # remove empty supernodes
+        for part in kPartitionNodesAll(nodeIds, k)
+            if all(supernode for supernode in part)      # check if all supernodes are populated
+                yield part
+            end
+        end
+    end
+
+    # initialize
+    kPartitions = []
+    nodeIds = list(range(n))
+    # list all ways to split n nodes into k supernodes, then format as a partition
+    for index, part in enumerate(kPartitionNodes(nodeIds, k),1)
+        partition = dict() # initialize partition
+        for supernodeId, subnodeIds in enumerate(part)  # for each list of partitioned nodes
+            for nodeId in subnodeIds                    # for each node
+                partition[nodeId] = supernodeId         # assign id of the supernode it belongs to
+            end      
+        end
+        kPartitions.append(partition)                   # store partition in the list of partitions
+        # kPartitions[index] = partition                # store partition in the dictionary of partitions
+    end                
+    return kPartitions
 end
