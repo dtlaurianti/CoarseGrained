@@ -21,7 +21,7 @@ function generateRandomPartitions(originalSize, reducedSize, numPartitions::Inte
     return partitionList
 end
 
-def spectralClustering(A, reducedSize):
+function spectralClustering(A::MatrixNetwork, reducedSize::Integer):
     l, X = np.linalg.eig(np.diag(A))
     labels = k_means(X[:,:reducedSize], reducedSize, init='k-means++')[1]
     return {i:labels[i] for i in range(len(A))}
