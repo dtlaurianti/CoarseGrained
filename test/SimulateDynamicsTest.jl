@@ -1,4 +1,9 @@
 using Plots
+using GraphRecipes
+
+@userplot NetworkPlot
+@recipe function f(np::NetworkPlot)
+end
 
 LG = line_graph(5)
 CG = cycle_graph(5)
@@ -11,7 +16,8 @@ anim1 = @animate for i=1:1000
     push!(plt1,sol1[i])
 end every 10
 display(gif(anim1))
-
+gplt1 = graphplot(sparse(LG))
+display(gplt1)
 sol2 = simulateODEonGraph(LG, x, γ=0.1, β=0.1, dynamical_function=SIS_model)
 sol3 = simulateODEonGraph(LG, x, β=0.1, dynamical_function=SI_model)
 sol4 = simulateODEonGraph(LG, x, dynamical_function=kuramoto_model)
