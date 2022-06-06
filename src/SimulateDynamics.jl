@@ -10,6 +10,9 @@ Base.@kwdef struct Model_Parameters
   γ::Number=0
   ω::Number=0
   K::Number=1
+  d::Number=0.1
+  c::Number=1
+  b::Number=0
 end
 
 function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
@@ -34,34 +37,32 @@ function kuramoto_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
     return dxdt
 end
 
-#TODO
-
-function LotkaVolterra_model(t::Number, x::Vector, A::MatrixNetwork, ω::Number)
-  n = size(A, 1)
-  return ω.*x + (x.*(A⋅x))
+function LotkaVolterra_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+  n = size(p.A, 1)
+  return p.ω.*u + (u.*(p.A⋅u))
 end
 
-function linear_opinions(t::Number, x::Vector, A::MatrixNetwork, c::Number=1)
+function linear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   #=
   Simplest model of linear opinion dynamics; c = constant, for now
   =#
-  Dout = diag(sum(A, 1))            # compute outdegree matrix
-  Din  = diag(sum(A, 2))            # compute indegree matrix
-  L =  Dout + Din - A - transpose(A)  # compute graph laplacian
+  Dout = diag(sum(p.A, 1))            # compute outdegree matrix
+  Din  = diag(sum(p.A, 2))            # compute indegree matrix
+  L =  Dout + Din - p.A - transpose(p.A)  # compute graph laplacian
   return -c.*L⋅x
 end
 
-function nonlinear_opinions(t::Number, x::Vector, A::MatrixNetwork; d::Number=0.1, u::Number=1, b::Number=0)
+function nonlinear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   #=
   An instance of the model in https://arxiv.org/abs/2009.04332
   Parameters:
       d = resistance,
-      u = attention to social influence
+      c = attention to social influence
       b = bias
-  For now, d, u, b are constants, but we can eventually vary by individual
+  For now, d, c, b are constants, but we can eventually vary by individual
   =#
-  n = size(A, 1)
-  return - d.*x + u.*tanh.(A⋅x) + b.*ones(n)
+  n = size(p.A, 1)
+  return - p.d.*u + p.c.*tanh.(p.A⋅u) + p.b.*ones(n)
 end
 
 function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
