@@ -1,6 +1,9 @@
+using SparseArrays
+using Clustering
+
 # generate numPartitions random partitions mapping a network of size originalSize
 # to a network of size reducedSize
-function generateRandomPartitions(originalSize, reducedSize, numPartitions::Integer):
+function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, numPartitions::Integer)
     partitionList = []
     for index in 1:numPartitions:
         partitionAccepted = false
@@ -21,10 +24,13 @@ function generateRandomPartitions(originalSize, reducedSize, numPartitions::Inte
     return partitionList
 end
 
-function spectralClustering(A::MatrixNetwork, reducedSize::Integer):
-    l, X = np.linalg.eig(np.diag(A))
-    labels = k_means(X[:,:reducedSize], reducedSize, init='k-means++')[1]
-    return {i:labels[i] for i in range(len(A))}
+function spectralClustering(A::MatrixNetwork, reducedSize::Integer)
+    # get the eigen decomposition of the diagonal of A
+    X = eigen(spdiagm(diag(sparse(A))
+    # compute clusters with k centroids
+    labels = kmeans(X.vectors[:,1:reducedSize], reducedSize, init=:kmpp)[1]
+    # return the partition
+    return Dict{Integer, Integer}[i => labels[i] for i in 1:size(A,1)]
 
 def mEEP(A, reducedSize):
     return print("under dev")
