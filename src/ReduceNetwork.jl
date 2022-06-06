@@ -91,7 +91,7 @@ function agglomerationReduction(A, reducedSize)
     for i in partition
         push!(items, i)
     end
-    for node, group in items
+    for (node, group) in items
         try
             partition[node] = cleanedPartition[group]
         catch
@@ -118,14 +118,26 @@ function greedyMerge(A, Q, partition, k)
             groupId1 = groupIds[groupIndex1]
             groupId2 = groupIds[groupIndex2]
 
-            group1 = [nodeId for nodeId, group in partition.items() if group == groupId1]
-            group2 = [nodeId for nodeId, group in partition.items() if group == groupId2]
+            if group == groupId1
+                for (nodeId, group) in partition.items()
+                    append!(group1, nodeId)
+                end
+            end
+
+            if group == groupId2
+                for (nodeId, group) in partition.items()
+                    append!(group2, nodeId)
+                end
+            end
+
+            #group1 = [nodeId for nodeId, group in partition.items() if group == groupId1]
+            #group2 = [nodeId for nodeId, group in partition.items() if group == groupId2]
 
             eUV = 0
             aU = 0
             aV = 0
-            for i in group1:
-                for j in group2:
+            for i in group1
+                for j in group2
                     try
                         eUV += A[i,j]/m # because directed edge list
                     catch
@@ -164,11 +176,11 @@ function partitionNodes(nodeIds)
     =#
     if length(nodeIds) == 1
         #TODO: determine how to get python-like yield functionality in Julia 
-        yield [ nodeIds ]
+        yield [nodeIds]
         return
     end
     first = nodeIds[0]
-    for smaller in partitionNodes(nodeIds[1:])
+    for smaller in partitionNodes(nodeIds 1:)
         # insert first in each of the subpartition's subsets
         for k, subset in enumerate(smaller)
             yield smaller[:k] + [[ first ] + subset] + smaller[k+1:]
