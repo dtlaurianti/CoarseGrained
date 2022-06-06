@@ -50,15 +50,15 @@ end
 #
 #Input: A list of dictionary partitions
 #Output: An array of partitions
-function dict_to_array(dictionary):
+function dict_to_array(dictionary::Array{Dict,1}):
     Arr = []
     for i in range(size(dictionary,1)):
-        s = max(values(dictionary),key=operator.itemgetter(1))[1]
-        x = [[] for i in range(s+1)]
-        for key in keys(dictionary):
+        s = findmax(dictionary[i])[1]
+        x = [[] for i in 1:(s+1)]
+        for (key, value) in dictionary:
             v = dictionary[i][key]
-            x[v].append(key)
-        Arr.append(x)
+            append!(x[v], key)
+        append!(Arr, x)
     return Arr
 
 #Function surfaceplots
