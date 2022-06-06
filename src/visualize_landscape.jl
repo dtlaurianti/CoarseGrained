@@ -14,6 +14,11 @@
 #    Fit an Interpolated surface to the data
 #    May need to smooth using Gaussian noise
 
+using Clustering
+using MultivariateStats
+using DataFrames
+using CSV
+using ScikitLearn
 include("EvaluateError.jl")
 include("ReduceNetwork.jl")
 include("GenerateGraphs.jl")
@@ -84,17 +89,18 @@ function surfaceplots(partitions, A, save_to_string=None)
     Arr = dict_to_array(partitions)
 
     #calculate distance matrix
-    num_par = len(partitions)
+    num_par = length(partitions)
     D = [[0 for i in range(num_par)] for j in range(num_par)]
     for i in range(num_par)
         for j in range(num_par)
-          D[i][j] = variation_of_information(Arr[i],Arr[j])
+          D[i][j] = varinfo(Arr[i],Arr[j])
         end
     end
 
     #calculate MDS on disimilarity matrix
+    #???
     embedding = MDS(n_components=2, dissimilarity="precomputed")
-    X_transformed = embedding.fit_transform(D)
+    X_transformed = embedding.fit_transform!(D)
 
     #Format data
     x = X_transformed[:,0]
@@ -109,12 +115,13 @@ function surfaceplots(partitions, A, save_to_string=None)
 
     #Save vector data if we want to smooth it later
     if save_to_string != None
-      df = pd.DataFrame({'x' : x, 'y' : y, 'z' : z})
+      df = DataFrame({'x' : x, 'y' : y, 'z' : z})
       loc = "data/visualization_data/" + save_to_string + ".csv"
-      df.to_csv(loc, index = False)
+      CSV.write(loc, df)
     end
 
     #Plot surface
+    #???
     triang = mtri.Triangulation(x,y)
     fig = plt.figure()
     ax = fig.add_subplot(1,2,2,projection="3d")
@@ -140,7 +147,7 @@ end
 #
 function surfaceplots2(parameters, numSamples, save_to_string=None)
     #Generate partitions
-    partitions = ReduceNetwork.generateRandomPartitions( parameters["originalSize"], parameters["reducedSize"], numSamples)
+    partitions = ReduceNetwork.generateRandomPartitions(parameters["originalSize"], parameters["reducedSize"], numSamples)
 
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
@@ -150,13 +157,13 @@ function surfaceplots2(parameters, numSamples, save_to_string=None)
     D = [[0 for i in range(num_par)] for j in range(num_par)]
     for i in range(num_par)
         for j in range(num_par)
-          D[i][j] = variation_of_information(Arr[i],Arr[j])
+          D[i][j] = varinfo(Arr[i],Arr[j])
         end
     end
 
     #calculate MDS on disimilarity matrix
     embedding = MDS(n_components=2, dissimilarity="precomputed")
-    X_transformed = embedding.fit_transform(D)
+    X_transformed = embedding.fit_transform!(D)
 
     #Format data
     x = X_transformed[:,0]
@@ -166,7 +173,7 @@ function surfaceplots2(parameters, numSamples, save_to_string=None)
     isAccepted = false
     while !isAccepted
         if parameters["graphType"] == "random"
-            G = nx.fast_gnp_random_graph(parameters["originalSize"], parameters["graphArgs"]["p"])
+            G = GenerateGraphs.gnp_graph(parameters["originalSize"], parameters["graphArgs"]["p"])
         elseif parameters["graphType"] == "cycle"
             G = GenerateGraphs.cycle_graph(parameters["originalSize"], directed=False)
         end
@@ -174,9 +181,6 @@ function surfaceplots2(parameters, numSamples, save_to_string=None)
             isAccepted = True
         end
     end
-
-    #Convert to adj matrix
-    A = nx.to_numpy_array(G)
 
     # select model
     if parameters["modelType"] == "linear_model"
@@ -196,7 +200,7 @@ function surfaceplots2(parameters, numSamples, save_to_string=None)
     #Calculate z dimension
     z = zeros(num_par)
     for i in range(num_par)
-      loss = EE.getLoss(A, partitions[i], initial_condition, modelFunc, tmax, tinc, modelArgs)
+      loss = EvaluateError.getLoss(A, partitions[i], initial_condition, modelFunc, tmax, tinc, modelArgs)
       z[i] = loss
     end
 
@@ -204,7 +208,7 @@ function surfaceplots2(parameters, numSamples, save_to_string=None)
     if save_to_string != None
       df = pd.DataFrame({'x' : x, 'y' : y, 'z' : z})
       loc = "data/visualization_data/" + save_to_string + ".csv"
-      df.to_csv(loc, index = False)
+      CSV.write(loc, df)
     end
 
     #Plot surface
