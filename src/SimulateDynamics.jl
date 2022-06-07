@@ -4,6 +4,7 @@ using DifferentialEquations
 using SparseArrays
 using Parameters
 
+<<<<<<< Updated upstream
 # create a common Type for passing parameters
 Base.@kwdef struct Model_Parameters
   A::SparseMatrixCSC
@@ -19,6 +20,24 @@ end
 function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   du .= (p.A-I)*u
 end
+=======
+  # create a common Type for passing parameters
+  Base.@kwdef struct Model_Parameters
+    A::SparseMatrixCSC
+    ϵ::Number=1
+    β::Number=0
+    γ::Number=0
+    ω::Number=0
+    K::Number=1
+    d::Number=0.1
+    c::Number=1
+    b::Number=0
+  end
+
+  function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+    du .= (p.ϵ.*p.A-I)*u
+  end
+>>>>>>> Stashed changes
 
 function SIS_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   du .= -p.γ.*u + p.β.*(ones(length(u))-u).*(p.A*u)
@@ -84,5 +103,11 @@ function foldername(dynSys_string, dynSys_args, graphModel_string, graphModel_ar
   string1 = dynSys_string*"_"*dynSys_args_string
   string2 = graphModel_string*"_"*graphModel_args_string
 
+<<<<<<< Updated upstream
   return "data/"*string1*"/"*string2
 end
+=======
+    return "data/"*string1*"/"*string2
+  end
+end
+>>>>>>> Stashed changes

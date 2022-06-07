@@ -25,25 +25,46 @@ include("GenerateGraphs.jl")
 include("SimulateDynamics.jl")
 
 
+# convert a partition from our dictionary supernode format to a nested array format
+# functionality changed from the dict_to_array function because our distance formula
+# does not need the resulting array to be ordered properly
+function partition_dict_to_array(partition::Dict{Integer,Integer})
+    # the quantity of nodes in each supernode
+    supernodeSizes = ReduceNetwork.getSupernodeSizes(partition)
+    # create an array of supernodes where each supernode is represented as an array of the nodes in its partition
+    partitionArray = [[] for i in 1:length(supernodeSizes)]
+    # add each node to its supernodes array
+    for (node, supernode) in partition
+        push!(partitionArray[supernode], node)
+    end
+    return partitionArray
+end
 
 #Function variation_of_information
 #
-#Input: Two partitions
+#Input: Two partitions in nested array format
 #Output: The distance between the two partitions
 #
 # Meila, M. (2007). Comparing clusterings-an information
 #   based distance. Journal of Multivariate Analysis, 98,
 #   873-895. doi:10.1016/j.jmva.2006.11.013
 # https://gist.github.com/jwcarr/626cbc80e0006b526688
-function variation_of_information(X, Y)
+
+
+function variation_of_information(X::Array{Array{}},Y::Array{Array{}})
   n = float(sum([size(x,1) for x in X]))
   σ = 0.0
   for x in X
+    # p = the ratio of nodes in the supernode x to nodes in the graph
     p = size(x,1) / n
     for y in Y
+      # q = the ratio of nodes in the supernode y to nodes in the graph
       q = size(y,1) / n
-      r = size(Set(x) & Set(y)) / n
+      # r = the ratio of nodes in both x & y to nodes in the graph
+      r = size(intersect(Set(x), Set(y)) / n
+      # if x & y share at least one node they are seen as comparable supernodes
       if r > 0.0
+        # add to the distance between partitions
         σ += r * (log(r / p, 2) + log(r / q, 2))
       end
     end
@@ -51,6 +72,7 @@ function variation_of_information(X, Y)
   return abs(σ)
 end
 
+#=
 #Function dict_to_array
 #
 #Input: A list of dictionary partitions
@@ -68,6 +90,7 @@ function dict_to_array(dictionary::Array{Dict,1})
     end
   return Arr
 end
+=#
 
 #Function surfaceplots
 #
@@ -84,21 +107,22 @@ end
 #  P = RN.generateRandomPartitions(10,7,100)
 #  surfaceplots(P,A)
 #
-function surfaceplots(partitions, A, save_to_string=None)
+function surfaceplots(partitions::Array{Dict{Integer,Integer},1}, A::MatrixNetwork, save_to_string=None)
     #convert dictionary to an array
-    Arr = dict_to_array(partitions)
+    Arr = partition_dict_to_array().partitions
 
     #calculate distance matrix
     num_par = length(partitions)
-    D = [[0 for i in range(num_par)] for j in range(num_par)]
-    for i in range(num_par)
-        for j in range(num_par)
-          D[i][j] = varinfo(Arr[i],Arr[j])
+    D = [[0 for i in 1:num_par] for j in 1:num_par]
+    for i in 1:num_par
+        for j in 1:num_par
+            # the distance between partitions i & j
+            D[i][j] = variation_of_information(Arr[i],Arr[j])
         end
     end
 
     #calculate MDS on disimilarity matrix
-    #???
+    #??? TODO MDS
     embedding = MDS(n_components=2, dissimilarity="precomputed")
     X_transformed = embedding.fit_transform!(D)
 
@@ -108,8 +132,8 @@ function surfaceplots(partitions, A, save_to_string=None)
 
     #Calculate z dimension
     z = zeros(num_par)
-    for i in range(num_par)
-      loss = EvaluateError.getLoss(A, partitions[i], ones(10), SimulateDynamics.linear_model, 10, 0.01, {"epsilon":-0.3})
+    for i in 1:num_par
+      loss = EvaluateError.getLoss(A, partitions[i], ones(10), SimulateDynamics.linear_model, 10, 0.01, ϵ=-0.3})
       z[i] = loss
     end
 

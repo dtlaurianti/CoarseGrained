@@ -10,7 +10,7 @@ function aggregateTimeSeries(originalTimeSeries::ODESolution, partition::Dict{In
         numTimeSteps = size(originalTimeSeries,2)
         aggregatedTimeSeries = zeros((reducedSize, numTimeSteps))
 
-        for node in range(originalSize)
+        for node in 1:originalSize
         aggregatedTimeSeries[partition[node], :] .+= originalTimeSeries[node, :]./supernodeSizes[partition[node]]
         end
     end
