@@ -1,7 +1,6 @@
 using SparseArrays
 using Clustering
 using ResumableFunctions
-using Parameters
 
 # generate numPartitions random partitions mapping a network of size originalSize
 # to a network of size reducedSize
