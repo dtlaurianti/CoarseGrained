@@ -133,6 +133,7 @@ function surfaceplots(partitions::Array{Dict{Integer, Integer}}, A, save_to_stri
     #Calculate z dimension
     z = zeros(num_par)
     for i in 1:num_par
+        # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
       loss = EvaluateError.getLoss(A, partitions[i], ones(10), SimulateDynamics.linear_model, 10, 0.01, ϵ=-0.3)
       z[i] = loss
     end
@@ -144,12 +145,17 @@ function surfaceplots(partitions::Array{Dict{Integer, Integer}}, A, save_to_stri
       CSV.write(loc, df)
     end
 
-    #Plot surface
-    #??? TODO
+    # plot surface
+    #=
+    # ??? TODO
+    # generate triangles from the x,y points
     triang = mtri.Triangulation(x,y)
+    # create a blank plot for our data
     fig = plt.figure()
     ax = fig.add_subplot(1,2,2,projection="3d")
+    # generate a surface using the trianges, x, y and now the z, coordinates to plot our loss
     surf = ax.plot_trisurf(triang,z,cmap=plt.cm.CMRmap,antialiased=True)
+    =#
 
     plt.show()
 end
