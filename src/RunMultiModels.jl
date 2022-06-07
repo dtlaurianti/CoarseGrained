@@ -107,13 +107,15 @@ for id in range(length(listModelType))
 
         # specify folder and check if it already exists
         foldername = SimulateDynamics.foldername(modelType, modelArgs, graphType, graphArgs)
-        if not os.path.exists( foldername ): os.makedirs( foldername ) # make folder if it doesn't exist
+        if !isdir(foldername)
+             mkdir(foldername) # make folder if it doesn't exist
+        end
 
         # prep filename and data
-        filename = foldername + '/' + str(originalSize) + '_' + str(reducedSize) + "_run" + str(run)
+        filename = foldername * "/" * string(originalSize) * "_" * string(reducedSize) * "_run" * string(run)
 
         data = {}
-        data['A'] = A
+        data["A"] = A
         data["partitions"] = listOfPartitions
         data["losses"] = losses
         data["parameters"] = parameters
@@ -124,3 +126,5 @@ for id in range(length(listModelType))
         end
     end
 end
+
+
