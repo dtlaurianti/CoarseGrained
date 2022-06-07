@@ -25,6 +25,7 @@ end
 
 # Reduce Networks with a partition
 function compressAdjacencyMatrix(A::MatrixNetwork, partition::Dict{Integer,Integer})
+    A = sparse(A)
     #Reduce matrix using spectral method from Gfeller et al. (2008).
     numGroups = length(Set(values(partition)))
     groupSizes = getSupernodeSizes(partition)
@@ -34,5 +35,5 @@ function compressAdjacencyMatrix(A::MatrixNetwork, partition::Dict{Integer,Integ
         R[i,partition[i]] = 1
         K[partition[i],i] = 1/groupSizes[partition[i]]
     end
-    return K⋅A⋅R
+    return MatrixNetwork(K⋅A⋅R)
 end
