@@ -14,7 +14,7 @@ end
 # Reduce Initial Conditions - REQUIRES SEQUENTIAL (no missing) SUPERNODE LABELS
 function compressInitialCondition(initialConditions::Vector, partition::Dict{Integer,Integer})
     supernodeSizes = getSupernodeSizes(partition)
-    compressedInitialConditions = zeros(length(supernodeSizes,1))
+    compressedInitialConditions = zeros(length(supernodeSizes))
     for i in 1:length(initialConditions)
         # scales the initial variables of each node by the number of nodes incorporated into the supernode
         # and then sets the initial variables of the supernode as a combination of all nodes in its partition

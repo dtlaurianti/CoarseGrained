@@ -93,6 +93,7 @@ function greedyMerge(A::MatrixNetwork, partition::Dict)
                     catch
                     end
                 end
+            end
             for i in group1
                 aU += k[i]/m
             end
@@ -149,6 +150,7 @@ end
     if length(nodeIds) == 1
         @yield nodeIds
         return
+    end
 
     first = nodeIds[1]
     for smaller in partitionNodes(nodeIds[2:end])
@@ -212,7 +214,10 @@ end
         for (supernodeId, subnodeIds) in enumerate(part) # for each list of partitioned nodes
             for nodeId in subnodeIds                     # for each node
                 partition[nodeId] = supernodeId          # assign id of the supernode it belongs to
+            end
+        end         
         append!(kPartitions, partition)                  # store partition in the list of partitions
         # kPartitions[index] = partition                 # store partition in the dictionary of partitions
+    end                
     return kPartitions
 end
