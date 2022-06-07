@@ -32,7 +32,7 @@ function computeIndividualError(originalTimeSeries::ODESolution, reducedTimeSeri
   return loss
 end
 
-function lossFunction(timeseries1::, timeseries2, type="L2")
+function lossFunction(timeseries1::ODESolution, timeseries2::ODESolution, type="L2")
   if type == "L2"
     return sum((timeseries1 - timeseries2)^2)/size(timeseries1, 1)
   end

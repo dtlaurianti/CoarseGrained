@@ -61,7 +61,7 @@ function variation_of_information(X::Array{Array{}},Y::Array{Array{}})
       # q = the ratio of nodes in the supernode y to nodes in the graph
       q = size(y,1) / n
       # r = the ratio of nodes in both x & y to nodes in the graph
-      r = size(intersect(Set(x), Set(y)) / n
+      r = size(intersect(Set(x), Set(y)) / n)
       # if x & y share at least one node they are seen as comparable supernodes
       if r > 0.0
         # add to the distance between partitions
@@ -125,8 +125,13 @@ function surfaceplots(partitions::Dict{Integer, }, A, save_to_string=None)
 
     #Calculate z dimension
     z = zeros(num_par)
+<<<<<<< HEAD
     for i in range(num_par)
       loss = EvaluateError.getLoss(A, partitions[i], ones(10), SimulateDynamics.linear_model, 10, 0.01, {"epsilon":-0.3})
+=======
+    for i in 1:num_par
+      loss = EvaluateError.getLoss(A, partitions[i], ones(10), SimulateDynamics.linear_model, 10, 0.01, ϵ=-0.3)
+>>>>>>> 8da3d63adf11c4e712684d887d248be8a1f42cf3
       z[i] = loss
     end
 
