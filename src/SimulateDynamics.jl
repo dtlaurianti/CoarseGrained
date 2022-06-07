@@ -2,7 +2,6 @@ using MatrixNetworks
 using LinearAlgebra
 using DifferentialEquations
 using SparseArrays
-using Parameters
 
 # create a common Type for passing parameters
 Base.@kwdef struct Model_Parameters
