@@ -26,8 +26,35 @@ include("SimulateDynamics.jl")
 
 
 # convert a partition from our dictionary supernode format to a nested array format
-# functionality changed from the dict_to_array function because our distance formula
-# does not need the resulting array to be ordered properly
+# functionality changed from the dict_to_array function because our dissimilarity formula
+# is impartial to the ordering of the nodes.
+#= Old:
+#Function dict_to_array
+#
+#Input: A list of dictionary partitions
+#Output: An array of partitions
+function dict_to_array(dictionary::Array{Dict,1})
+    Arr = []
+    for i in range(size(dictionary,1))
+        s = findmax(dictionary[i])[1]
+        x = [[] for i in 1:(s+1)]
+        for (key, value) in dictionary
+            v = dictionary[i][key]
+            append!(x[v], key)
+        end
+        append!(Arr, x)
+    end
+  return Arr
+end
+=#
+function dict_to_array(partitions::Array{Dict{Integer,Integer}})
+    Arr = []
+    for i in 1:length(partitions)
+        partition = partition_dict_to_array(partitions[i])
+        append!(Arr, partition)
+    end
+    return Arr
+end
 function partition_dict_to_array(partition::Dict{Integer,Integer})
     # the quantity of nodes in each supernode
     supernodeSizes = ReduceNetwork.getSupernodeSizes(partition)
@@ -72,26 +99,6 @@ function variation_of_information(X::Array{Array{}},Y::Array{Array{}})
   return abs(σ)
 end
 
-#=
-#Function dict_to_array
-#
-#Input: A list of dictionary partitions
-#Output: An array of partitions
-function dict_to_array(dictionary::Array{Dict,1})
-    Arr = []
-    for i in range(size(dictionary,1))
-        s = findmax(dictionary[i])[1]
-        x = [[] for i in 1:(s+1)]
-        for (key, value) in dictionary
-            v = dictionary[i][key]
-            append!(x[v], key)
-        end
-        append!(Arr, x)
-    end
-  return Arr
-end
-=#
-
 #Function surfaceplots
 #
 #Inputs:
@@ -101,23 +108,23 @@ end
 #Outputs:
 #  Plots a choppy 3D Surface
 #
-function surfaceplots(partitions::Dict{Integer, }, A, save_to_string=None)
+function surfaceplots(partitions::Array{Dict{Integer, Integer}}, A, save_to_string=None)
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
 
     #calculate distance matrix
     num_par = length(partitions)
-    D = [[0 for i in range(num_par)] for j in range(num_par)]
-    for i in range(num_par)
-        for j in range(num_par)
+    D = [[0 for i in 1:num_par] for j in 1:num_par]
+    for i in 1:num_par
+        for j in 1:num_par
             # the dissimilarity matrix
-            D[i][j] = varinfo(Arr[i],Arr[j])
+            D[i][j] = variation_of_information(Arr[i],Arr[j])
         end
     end
 
     #calculate MDS on disimilarity matrix
-    embedding = fit(MDS, )
-    X_transformed = embedding.fit_transform!(D)
+    embedding = fit(MDS, D, distances=true, maxoutdim=2)
+    X_transformed = predict(embedding)
 
     #Format data
     x = X_transformed[:,0]
@@ -125,13 +132,8 @@ function surfaceplots(partitions::Dict{Integer, }, A, save_to_string=None)
 
     #Calculate z dimension
     z = zeros(num_par)
-<<<<<<< HEAD
-    for i in range(num_par)
-      loss = EvaluateError.getLoss(A, partitions[i], ones(10), SimulateDynamics.linear_model, 10, 0.01, {"epsilon":-0.3})
-=======
     for i in 1:num_par
       loss = EvaluateError.getLoss(A, partitions[i], ones(10), SimulateDynamics.linear_model, 10, 0.01, ϵ=-0.3)
->>>>>>> 8da3d63adf11c4e712684d887d248be8a1f42cf3
       z[i] = loss
     end
 
