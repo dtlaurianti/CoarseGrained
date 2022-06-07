@@ -16,7 +16,7 @@ function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, n
                 partition[node] = labels[node]
             end
             # check that each partition is nonempty
-            if size(Set(labels),1) == reducedSize
+            if length(Set(labels)) == reducedSize
                 partitionAccepted = True
             end
         end
@@ -48,7 +48,7 @@ function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
         partition[nodeId] = nodeId
     end
 
-    while size(Set(values(partition),1)) > reducedSize
+    while length(Set(values(partition))) > reducedSize
         partition, Q = greedyMerge(A, partition)
     end
     cleanedPartition = Dict{Integer, Integer}()
@@ -73,7 +73,7 @@ function greedyMerge(A::MatrixNetwork, partition::Dict)
     m = sum(k)
     # iterate over unigue groups
     groupIds = collect(Set(values(partition)))
-    numGroups = size(groupIds,1)
+    numGroups = length(groupIds)
     maxQ = -Inf
     for groupIndex1 in 1:numGroups
         for groupIndex2 in 1:groupIndex1
@@ -146,7 +146,7 @@ end
     input:  list of nodeIds
     output: list of all possible partitions
     =#
-    if size(nodeIds,1) == 1
+    if length(nodeIds) == 1
         @yield nodeIds
         return
 
@@ -171,7 +171,7 @@ end
         generate all possible partitions of nodeIds into k supernodes
         includes empty supernodes that need to be removed
         =#
-        n = size(nodeIds, 1)
+        n = length(nodeIds)
         if k==1
             @yield [nodeIds]
         elseif n == k
@@ -183,7 +183,7 @@ end
                 @yield [[first] subset]
             end
             for subset in kPartitionNodesAll(rest, k)
-                for i in 1:size(subset,1):
+                for i in 1:length(subset):
                     @yield [[[first] subset[i]] subset[1:i] subset[i+1:end]]
                 end
             end

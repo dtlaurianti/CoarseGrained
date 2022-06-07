@@ -20,11 +20,11 @@ function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
 end
 
 function SIS_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
-  du .= -p.γ.*u + p.β.*(ones(size(u))-u).*(p.A*u)
+  du .= -p.γ.*u + p.β.*(ones(length(u))-u).*(p.A*u)
 end
 
 function SI_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
-  du .= p.β.*(ones(size(u))-u).*(p.A*u)
+  du .= p.β.*(ones(length(u))-u).*(p.A*u)
 end
 
 function kuramoto_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
