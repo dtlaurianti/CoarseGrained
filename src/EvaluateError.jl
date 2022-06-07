@@ -34,11 +34,11 @@ end
 
 function lossFunction(timeseries1::, timeseries2, type="L2")
   if type == "L2"
-    return sum((timeseries1 - timeseries2)^2)/size(timeseries1)
+    return sum((timeseries1 - timeseries2)^2)/size(timeseries1, 1)
   end
 end
 
-function getLoss(A, partition, initial_condition, dynamical_function, tmax, dt, function_args)
+function getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
   #These functions are in the parallelized function to hopefully reduce the amount of single threaded tasks
   try
     compressed_initial_condition = ReduceNetwork.compressInitialCondition(initial_condition, partition)
