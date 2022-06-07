@@ -145,7 +145,9 @@ function surfaceplots(partitions::Array{Dict{Integer, Integer}}, A, save_to_stri
       CSV.write(loc, df)
     end
 
-    # plot surface
+    # plot surface, not sure if this is exactly what we want
+    surf = surface(x, y, z)
+    display(plot(surf))
     #=
     # ??? TODO
     # generate triangles from the x,y points
@@ -155,7 +157,7 @@ function surfaceplots(partitions::Array{Dict{Integer, Integer}}, A, save_to_stri
     ax = fig.add_subplot(1,2,2,projection="3d")
     # generate a surface using the trianges, x, y and now the z, coordinates to plot our loss
     surf = ax.plot_trisurf(triang,z,cmap=plt.cm.CMRmap,antialiased=True)
-    =#
+
 
     plt.show()
 end
