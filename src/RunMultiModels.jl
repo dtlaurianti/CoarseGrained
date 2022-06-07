@@ -100,7 +100,7 @@ for id in range(length(listModelType))
         for partition in listOfPartitions
             argList.append(A, partition, initial_condition, modelFunc, tmax, tinc, modelArgs)
         end
-
+        #TODO: figure out this parallelisation on Julia
         mp.Pool(processes=numProcesses) do pool
             losses = pool.starmap(EvaluateError.getLoss, argList)
         end
