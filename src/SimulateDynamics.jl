@@ -1,5 +1,4 @@
 module SD
-
   using MatrixNetworks
   using LinearAlgebra
   using DifferentialEquations
