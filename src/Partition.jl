@@ -163,47 +163,48 @@ end
     end
 end
 
-@resumable function kPartition(n::Integer, k::Integer)
+@resumable function kPartitionNodesAll(nodeIds::Array{Integer}, k::Integer)
+    #=
+    generate all possible partitions of nodeIds into k supernodes
+    includes empty supernodes that need to be removed
+    =#
+    n = length(nodeIds)
+    if k==1
+        @yield [nodeIds]
+    elseif n == k
+        @yield [[node] for node in nodeIds]
+    else
+        first = nodeIds[1]
+        rest = nodeIds[2:end]
+        for subset in kPartitionNodesAll(rest, k-1)
+            @yield [[first] subset]
+        end
+        for subset in kPartitionNodesAll(rest, k)
+            for i in 1:length(subset)
+                @yield [[[first] subset[i]] subset[1:i] subset[i+1:end]]
+            end
+        end
+    end
+end
+
+@resumable function kPartitionNodes(nodeIds::Array, k::Integer)
+    #=
+    generate all possible partitions of nodeIds into k supernodes
+    using kPartitionNodesAll, then remove empy supernodes
+    =#
+    # remove empty supernodes
+    for part in kPartitionNodesAll(nodeIds, k)
+        if all(supernode for supernode in part)    # check if all supernodes are populated
+            @yield part
+        end
+    end
+end
+
+function kPartition(n::Integer, k::Integer)
     #=
     input: number of nodes n
     output: dictionary of all possible partitions with a specified number of supernodes (k)
     =#
-    @resumable function kPartitionNodesAll(nodeIds::Array{Integer}, k::Integer)
-        #=
-        generate all possible partitions of nodeIds into k supernodes
-        includes empty supernodes that need to be removed
-        =#
-        n = length(nodeIds)
-        if k==1
-            @yield [nodeIds]
-        elseif n == k
-            @yield [[node] for node in nodeIds]
-        else
-            first = nodeIds[1]
-            rest = nodeIds[2:end]
-            for subset in kPartitionNodesAll(rest, k-1)
-                @yield [[first] subset]
-            end
-            for subset in kPartitionNodesAll(rest, k)
-                for i in 1:length(subset)
-                    @yield [[[first] subset[i]] subset[1:i] subset[i+1:end]]
-                end
-            end
-        end
-    end
-
-    @resumable function kPartitionNodes(nodeIds::Array, k::Integer)
-        #=
-        generate all possible partitions of nodeIds into k supernodes
-        using kPartitionNodesAll, then remove empy supernodes
-        =#
-        # remove empty supernodes
-        for part in kPartitionNodesAll(nodeIds, k)
-            if all(supernode for supernode in part)    # check if all supernodes are populated
-                @yield part
-            end
-        end
-    end
 
     # initialize
     kPartitions = []
