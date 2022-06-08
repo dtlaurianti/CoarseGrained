@@ -11,7 +11,7 @@ function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, n
         while !partitionAccepted
             partition = Dict{Integer, Integer}
             # assigns each node in the original nodes to a new node in the reduced nodes
-            labels = [1:reducedSize for i=1:originalSize]
+            labels = [rand(1:reducedSize) for i=1:originalSize]
             for node in 1:originalSize
                 partition[node] = labels[node]
             end
@@ -216,9 +216,9 @@ function kPartition(n::Integer, k::Integer)
             for nodeId in subnodeIds                     # for each node
                 partition[nodeId] = supernodeId          # assign id of the supernode it belongs to
             end
-        end         
+        end
         append!(kPartitions, partition)                  # store partition in the list of partitions
         # kPartitions[index] = partition                 # store partition in the dictionary of partitions
-    end                
+    end
     return kPartitions
 end

@@ -16,9 +16,9 @@ options for graphType, graphArgs
     "cycle", {}:       --> generates G = GenerateGraphs.cycle_graph(originalSize, directed=False)
     "line", {}:        --> generates G = GenerateGraphs.line_graph(originalSize, directed=False)
 =#
-# graphType, graphArgs = "random", {'p': 0.4}
-# graphType, graphArgs = "cycle", {}
-graphType, graphArgs = "line", {}
+# graphType, graphArgs = "random", (p=0.4)
+# graphType, graphArgs = "cycle", ()
+graphType, graphArgs = "line", ()
 
 # model parameters
 #=
@@ -36,7 +36,7 @@ options for modelType, modelArgs
 # select models
 listModelType   = ["linear_model"]
 listModelAbbrev = ["Lin"]
-listModelArgs   = [{ϵ:-3/originalSize}]
+listModelArgs   = [(ϵ=-3/originalSize)]
 
 # simulation parameters
 tmax    = 10
@@ -48,19 +48,20 @@ numRuns = 100 # number of initial conditions to simulate
 listOfPartitions  = ReduceNetwork.kPartition(originalSize, reducedSize)
 
 # Generate a list of initial conditions
-listOfICs = [rand(originalSize) for run in range(numRuns)]
+listOfICs = [rand(originalSize) for run in 1:numRuns]
 
-for id in range(length(listModelType))
+for id in 1:length(listModelType)
     # specify model parameters
     modelType = listModelType[id]
     modelAbbrev, modelArgs = listModelAbbrev[id], listModelArgs[id]
 
     # store parameters
-    parameters = {"originalSize": originalSize, "reducedSize": reducedSize, "graphType": graphType, "graphArgs": graphArgs,
-    "modelType": modelType, "modelArgs": modelArgs, "modelAbbrev": modelAbbrev, "tmax": tmax, "tinc": tinc}
+    parameters = (originalSize=originalSize, reducedSize=reducedSize,
+        graphType=graphType,graphArgs=graphArgs, modelType=modelType,
+        modelArgs=modelArgs, modelAbbrev=modelAbbrev, tmax=tmax, tinc=tinc)
 
     # select model
-    if modelType == "linear_model" 
+    if modelType == "linear_model"
         modelFunc = SimulateDynamics.linear_model
     elseif modelType == "SIS_model"
         modelFunc = SimulateDynamics.SIS_model
@@ -74,31 +75,32 @@ for id in range(length(listModelType))
         modelFunc = SimulateDynamics.nonlinear_opinions
     end
 
+
     # Construct network
     isAccepted = False
     while !isAccepted
         if graphType == "random"
-            G = GenerateGraphs.gnp_graph(originalSize, graphArgs["p"])
+            G = GenerateGraphs.gnp_graph(originalSize, graphArgs[:p])
         elseif graphType == "cycle"
             G = GenerateGraphs.cycle_graph(originalSize, directed=False)
         elseif graphType == "line"
             G = GenerateGraphs.line_graph(originalSize, directed=False)
         end
-        if nx.is_connected(G)
+        if GenerateGraohs.is_connected(G)
             isAccepted = True
         end
     end
 
     # Run simulations numRuns times with different initial conditions
-    for run in range(numRuns)
+    for run in 1:numRuns
 
         # initial_condition = np.random.rand(originalSize)
         # initial_condition = np.concatenate((np.ones(1),np.zeros(originalSize-1)))
         initial_condition = listOfICs[run]
 
-        argList = list()
+        argList = []
         for partition in listOfPartitions
-            argList.append(A, partition, initial_condition, modelFunc, tmax, tinc, modelArgs)
+            append!(arglist, [A, partition, initial_condition, modelFunc, tmax, tinc, modelArgs...])
         end
         #TODO: figure out this parallelisation on Julia
         mp.Pool(processes=numProcesses) do pool
@@ -126,5 +128,3 @@ for id in range(length(listModelType))
         end
     end
 end
-
-
