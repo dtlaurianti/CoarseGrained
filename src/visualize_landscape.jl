@@ -146,6 +146,8 @@ function surfaceplots(partitions::Array{Dict{Integer, Integer}}, A, save_to_stri
     end
 
     # plot surface
+    surf = surface(x,y,z)
+    display(plot(surf))
     #=
     # ??? TODO
     # generate triangles from the x,y points
