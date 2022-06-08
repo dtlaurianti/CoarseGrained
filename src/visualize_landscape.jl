@@ -57,7 +57,7 @@ function dict_to_array(partitions::Array{Dict{Integer,Integer}})
 end
 function partition_dict_to_array(partition::Dict{Integer,Integer})
     # the quantity of nodes in each supernode
-    supernodeSizes = ReduceNetwork.getSupernodeSizes(partition)
+    supernodeSizes = getSupernodeSizes(partition)
     # create an array of supernodes where each supernode is represented as an array of the nodes in its partition
     partitionArray = [[] for i in 1:length(supernodeSizes)]
     # add each node to its supernodes array
@@ -140,7 +140,7 @@ function surfaceplots(partitions::Array{Dict{Integer, Integer}}, A, save_to_stri
 
     #Save vector data if we want to smooth it later
     if save_to_string != None
-      df = DataFrame({'x' : x, 'y' : y, 'z' : z})
+      df = DataFrame(['x' => x, 'y' => y, 'z' => z])
       loc = "data/visualization_data/" + save_to_string + ".csv"
       CSV.write(loc, df)
     end
@@ -148,6 +148,7 @@ function surfaceplots(partitions::Array{Dict{Integer, Integer}}, A, save_to_stri
     # plot surface
     surf = surface(x,y,z)
     display(plot(surf))
+
     #=
     # ??? TODO
     # generate triangles from the x,y points
@@ -238,7 +239,7 @@ function surfaceplots2(parameters, numSamples, save_to_string=None)
 
     #Save vector data if we want to smooth it later
     if save_to_string != None
-      df = pd.DataFrame({'x' : x, 'y' : y, 'z' : z})
+      df = pd.DataFrame(['x' => x, 'y' => y, 'z' => z])
       loc = "data/visualization_data/" + save_to_string + ".csv"
       CSV.write(loc, df)
     end
