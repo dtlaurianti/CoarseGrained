@@ -27,7 +27,7 @@ end
 
 function spectralClustering(A::MatrixNetwork, reducedSize::Integer)
     # get the eigen decomposition of the diagonal of A
-    X = eigen(spdiagm(diag(sparse(A))
+    X = eigen(spdiagm(diag(sparse(A))))
     # compute clusters with k centroids
     labels = kmeans(X.vectors[:,1:reducedSize], reducedSize, init=:kmpp)[1]
     # return the partition
@@ -52,7 +52,7 @@ function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
         partition, Q = greedyMerge(A, partition)
     end
     cleanedPartition = Dict{Integer, Integer}()
-    for (node, group) in partition:
+    for (node, group) in partition
         try
             partition[node] = cleanedPartition[group]
         catch
@@ -93,17 +93,18 @@ function greedyMerge(A::MatrixNetwork, partition::Dict)
                     catch
                     end
                 end
-            for i in group1:
+            end
+            for i in group1
                 aU += k[i]/m
             end
 
-            for i in group2:
+            for i in group2
                 aV += k[i]/m
             end
 
             newQ = Q + 2*(eUV - aU*aV)
 
-            if newQ > maxQ:
+            if newQ > maxQ
                 maxQ = newQ
                 maxGroupId1 = groupId1
                 maxGroupId2 = groupId2
@@ -151,9 +152,9 @@ end
         return
 
     first = nodeIds[1]
-    for smaller in partitionNodes(nodeIds[2:end]):
+    for smaller in partitionNodes(nodeIds[2:end])
         # insert first in each of the subpartition's subsets
-        for (k, subset) in enumerate(smaller):
+        for (k, subset) in enumerate(smaller)
             @yield [smaller[1:k] [[ first ] subset] smaller[k+1:end]]
         end
         # put first in its own subset
@@ -161,7 +162,7 @@ end
     end
 end
 
-@resumable function kPartition(n::Integer, k::Integer)
+function kPartition(n::Integer, k::Integer)
     #=
     input: number of nodes n
     output: dictionary of all possible partitions with a specified number of supernodes (k)
@@ -183,7 +184,7 @@ end
                 @yield [[first] subset]
             end
             for subset in kPartitionNodesAll(rest, k)
-                for i in 1:length(subset):
+                for i in 1:length(subset)
                     @yield [[[first] subset[i]] subset[1:i] subset[i+1:end]]
                 end
             end
@@ -207,7 +208,7 @@ end
     kPartitions = []
     nodeIds = [1:n]
     # list all ways to split n nodes into k supernodes, then format as a partition
-    for (index, part) in enumerate(kPartitionNodes(nodeIds, k)):
+    for (index, part) in enumerate(kPartitionNodes(nodeIds, k))
         partition = Dict{Integer,Integer}() # initialize partition
         for (supernodeId, subnodeIds) in enumerate(part) # for each list of partitioned nodes
             for nodeId in subnodeIds                     # for each node
