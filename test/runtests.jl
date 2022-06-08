@@ -5,4 +5,5 @@ include("../src/ReduceNetwork.jl")
 include("../src/Partition.jl")
 #include("SimulateDynamicsTest.jl")
 #include("GenerateGraphsTest.jl")
-include("GenerateGraphsTest.jl")
+include("ReduceNetworkTest.jl")
+

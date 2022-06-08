@@ -1,26 +1,29 @@
 using SparseArrays
 using Clustering
 using ResumableFunctions
+using Random
 
 # generate numPartitions random partitions mapping a network of size originalSize
 # to a network of size reducedSize
 function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, numPartitions::Integer)
     partitionList = []
+    Random.seed!(trunc(Int, time() * 1000000))
     for index in 1:numPartitions
         partitionAccepted = false
         while !partitionAccepted
-            partition = Dict{Integer, Integer}
+            partition = Dict{Integer, Integer}()
             # assigns each node in the original nodes to a new node in the reduced nodes
-            labels = [rand(1:reducedSize) for i=1:originalSize]
+            labels = [rand(1:reducedSize) for i in 1:originalSize]
+            display(labels)
             for node in 1:originalSize
                 partition[node] = labels[node]
             end
             # check that each partition is nonempty
             if length(Set(labels)) == reducedSize
-                partitionAccepted = True
+                partitionAccepted = true
+                append!(partitionList, partition)
             end
         end
-        append!(partitionList, partition)
     end
     return partitionList
 end
@@ -216,9 +219,9 @@ function kPartition(n::Integer, k::Integer)
             for nodeId in subnodeIds                     # for each node
                 partition[nodeId] = supernodeId          # assign id of the supernode it belongs to
             end
-        end
+        end         
         append!(kPartitions, partition)                  # store partition in the list of partitions
         # kPartitions[index] = partition                 # store partition in the dictionary of partitions
-    end
+    end                
     return kPartitions
 end
