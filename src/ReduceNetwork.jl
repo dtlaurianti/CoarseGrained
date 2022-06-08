@@ -31,9 +31,9 @@ function compressAdjacencyMatrix(A::MatrixNetwork, partition::Dict{Integer,Integ
     groupSizes = getSupernodeSizes(partition)
     K = zeros((length(groupSizes),size(A,1)))
     R = zeros((size(A,1),length(groupSizes)))
-    for i in range(size(A,1))
+    for i in 1:size(A,1)
         R[i,partition[i]] = 1
         K[partition[i],i] = 1/groupSizes[partition[i]]
     end
-    return MatrixNetwork(K⋅A⋅R)
+    return MatrixNetwork(sparse(K*A*R))
 end
