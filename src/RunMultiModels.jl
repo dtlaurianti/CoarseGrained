@@ -100,7 +100,8 @@ for id in 1:length(listModelType)
 
         argList = []
         for partition in listOfPartitions
-            append!(arglist, [A, partition, initial_condition, modelFunc, tmax, tinc, modelArgs...])
+            # Doubly wrapped in an Array because append tries to splat it
+            append!(arglist, [[A, partition, initial_condition, modelFunc, tmax, tinc, modelArgs...]])
         end
         #TODO: figure out this parallelisation on Julia
         mp.Pool(processes=numProcesses) do pool

@@ -15,9 +15,7 @@ function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, n
             partition = Dict{Integer, Integer}()
             # assigns each node in the original nodes to a new node in the reduced nodes
             labels = sample(1:reducedSize, originalSize)
-            display(labels)
             for node in 1:originalSize
-                display(labels[node])
                 partition[node] = labels[node]
             end
             # check that each partition is nonempty
@@ -74,12 +72,13 @@ end
 
 function greedyMerge(A::MatrixNetwork, partition::Dict)
     k = sum(A, dims=1)
-    Q = -sum(k.^2)/m^2
     m = sum(k)
+    Q = -sum(k.^2)/m^2
     # iterate over unigue groups
     groupIds = collect(Set(values(partition)))
     numGroups = length(groupIds)
     maxQ = -Inf
+    # loop over all supernodes and find the two most closely connected ?
     for groupIndex1 in 1:numGroups
         for groupIndex2 in 1:groupIndex1
             groupId1 = groupIds[groupIndex1]
@@ -94,19 +93,23 @@ function greedyMerge(A::MatrixNetwork, partition::Dict)
             for i in group1
                 for j in group2
                     try
+                        # the edge between the two supernodes
                         eUV += sparse(A)[i,j]/m # because directed edge list
                     catch
                     end
                 end
             end
+            # calculate the magnitude of supernode U
             for i in group1
                 aU += k[i]/m
             end
 
+            # calculate the magnitude of supernode V
             for i in group2
                 aV += k[i]/m
             end
 
+            # calculate the change in the graph
             newQ = Q + 2*(eUV - aU*aV)
 
             if newQ > maxQ
@@ -222,7 +225,7 @@ function kPartition(n::Integer, k::Integer)
                 partition[nodeId] = supernodeId          # assign id of the supernode it belongs to
             end
         end
-        append!(kPartitions, partition)                  # store partition in the list of partitions
+        append!(kPartitions, [partition])                  # store partition in the list of partitions
         # kPartitions[index] = partition                 # store partition in the dictionary of partitions
     end
     return kPartitions
