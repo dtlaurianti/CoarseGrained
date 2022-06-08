@@ -14,9 +14,10 @@ function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, n
         while !partitionAccepted
             partition = Dict{Integer, Integer}()
             # assigns each node in the original nodes to a new node in the reduced nodes
-            labels = [sample(1:reducedSize, originalSize)]
+            labels = sample(1:reducedSize, originalSize)
             display(labels)
             for node in 1:originalSize
+                display(labels[node])
                 partition[node] = labels[node]
             end
             # check that each partition is nonempty
