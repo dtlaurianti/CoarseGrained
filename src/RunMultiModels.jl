@@ -86,7 +86,7 @@ for id in 1:length(listModelType)
         elseif graphType == "line"
             G = GenerateGraphs.line_graph(originalSize, directed=False)
         end
-        if GenerateGraohs.is_connected(G)
+        if GenerateGraphs.is_connected(G)
             isAccepted = True
         end
     end
