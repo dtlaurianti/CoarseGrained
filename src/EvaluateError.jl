@@ -2,9 +2,9 @@ include("ReduceNetwork.jl")
 include("SimulateDynamics.jl")
 
 # Given how the original nodes are mapped to the supernodes with partitions, returns the aggregated error
-function aggregateTimeSeries(originalTimeSeries::ODESolution, partition::Dict{Integer,Integer}, type="average")
+function aggregateTimeSeries(originalTimeSeries, partition::Dict{Integer,Integer}, type="average")
     if type == "average"
-        supernodeSizes = ReduceNetwork.getSupernodeSizes(partition)
+        supernodeSizes = getSupernodeSizes(partition)
         reducedSize = length(supernodeSizes)
         originalSize = size(originalTimeSeries,1)
         numTimeSteps = size(originalTimeSeries,2)
@@ -32,7 +32,7 @@ function computeIndividualError(originalTimeSeries::ODESolution, reducedTimeSeri
   return loss
 end
 
-function lossFunction(timeseries1::ODESolution, timeseries2::ODESolution, type="L2")
+function lossFunction(timeseries1, timeseries2, type="L2")
   if type == "L2"
     return sum((timeseries1 - timeseries2)^2)/size(timeseries1, 1)
   end

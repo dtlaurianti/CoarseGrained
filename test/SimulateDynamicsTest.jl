@@ -11,7 +11,7 @@ GG = grid_graph(4; directed=true)
 
 x = [1, 1, 1, 1, 0]
 sol1 = simulateODEonGraph(CG, x)
-plt1 = plot(5,xlim=(0,1000),ylim=(0,1),title="line_graph linear_model")
+plt1 = plot(5,xlim=(0,1000),ylim=(0,1),title="cycle_graph linear_model")
 anim1 = @animate for i=1:1000
     push!(plt1,sol1[i])
 end every 10

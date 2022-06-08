@@ -30,8 +30,9 @@ end
 
 function spectralClustering(A::MatrixNetwork, reducedSize::Integer)
     # get the eigen decomposition of the diagonal of A
-    X = eigen(spdiagm(diag(sparse(A))))
+    X = eigen(Diagonal(diag(sparse(A))))
     # compute clusters with k centroids
+    # TODO figure out how to label each node with the centroid its closest to
     labels = kmeans(X.vectors[:,1:reducedSize], reducedSize, init=:kmpp)[1]
     # return the partition
     return Dict{Integer, Integer}[i => labels[i] for i in 1:size(A,1)]
