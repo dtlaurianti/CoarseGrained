@@ -8,6 +8,5 @@ include("../src/visualize_landscape.jl")
 #include("SimulateDynamicsTest.jl")
 #include("GenerateGraphsTest.jl")
 #include("ReduceNetworkTest.jl")
-#include("EvaluateErrorTest.jl")
-include("VisualizeLandscapeTest.jl")
-
+include("EvaluateErrorTest.jl")
+#include("VisualizeLandscapeTest.jl")
