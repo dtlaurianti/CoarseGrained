@@ -19,6 +19,8 @@ using MultivariateStats
 using DataFrames
 using CSV
 using ScikitLearn
+using StatsBase
+using Plots
 include("EvaluateError.jl")
 include("ReduceNetwork.jl")
 include("GenerateGraphs.jl")
@@ -78,7 +80,7 @@ end
 # https://gist.github.com/jwcarr/626cbc80e0006b526688
 
 
-function variation_of_information(X::Array{Array{}},Y::Array{Array{}})
+function variation_of_information(X::Vector{Vector{Any}},Y::Vector{Vector{Any}})
   n = float(sum([size(x,1) for x in X]))
   σ = 0.0
   for x in X
@@ -88,11 +90,11 @@ function variation_of_information(X::Array{Array{}},Y::Array{Array{}})
       # q = the ratio of nodes in the supernode y to nodes in the graph
       q = size(y,1) / n
       # r = the ratio of nodes in both x & y to nodes in the graph
-      r = size(intersect(Set(x), Set(y)) / n)
+      r = (length(intersect(Set(x), Set(y))) / n)
       # if x & y share at least one node they are seen as comparable supernodes
       if r > 0.0
         # add to the distance between partitions
-        σ += r * (log(r / p, 2) + log(r / q, 2))
+        σ += r * (log(2, r / p) + log(2, r / q))
       end
     end
   end
@@ -108,39 +110,39 @@ end
 #Outputs:
 #  Plots a choppy 3D Surface
 #
-function surfaceplots(partitions::Array{Dict{Integer, Integer}}, A, save_to_string=None)
+function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, save_to_string="")
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
 
     #calculate distance matrix
     num_par = length(partitions)
-    D = [[0 for i in 1:num_par] for j in 1:num_par]
+    D = zeros(num_par, num_par)
     for i in 1:num_par
         for j in 1:num_par
             # the dissimilarity matrix
-            D[i][j] = variation_of_information(Arr[i],Arr[j])
+            D[i, j] = variation_of_information(Arr[i],Arr[j])
         end
     end
 
     #calculate MDS on disimilarity matrix
-    embedding = fit(MDS, D, distances=true, maxoutdim=2)
-    X_transformed = predict(embedding)
+    embedding = StatsBase.fit(MDS, D, distances=true, maxoutdim=2)
+    X_transformed = StatsBase.predict(embedding)
 
     #Format data
-    x = X_transformed[:,0]
-    y = X_transformed[:,1]
+    x = X_transformed[1,:]
+    y = X_transformed[2,:]
 
     #Calculate z dimension
     z = zeros(num_par)
     for i in 1:num_par
         # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
-      loss = EvaluateError.getLoss(A, partitions[i], ones(10), SimulateDynamics.linear_model, 10, 0.01, ϵ=-0.3)
+      loss = getLoss(A, partitions[i], ones(10), linear_model, 10, 0.01, ϵ=-0.3)
       z[i] = loss
     end
 
     #Save vector data if we want to smooth it later
-    if save_to_string != None
-      df = DataFrame(['x' => x, 'y' => y, 'z' => z])
+    if !isempty(save_to_string)
+      df = DataFrame(["x" => x, "y" => y, "z" => z])
       loc = "data/visualization_data/" + save_to_string + ".csv"
       CSV.write(loc, df)
     end
@@ -159,8 +161,6 @@ function surfaceplots(partitions::Array{Dict{Integer, Integer}}, A, save_to_stri
     # generate a surface using the trianges, x, y and now the z, coordinates to plot our loss
     surf = ax.plot_trisurf(triang,z,cmap=plt.cm.CMRmap,antialiased=True)
     =#
-
-    plt.show()
 end
 
 #Function surfaceplots2
