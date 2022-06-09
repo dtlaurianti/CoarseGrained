@@ -6,6 +6,7 @@ using SparseArrays
 # create a common Type for passing parameters
 Base.@kwdef struct Model_Parameters
   A::SparseMatrixCSC
+  ϵ::Number=1
   β::Number=0
   γ::Number=0
   ω::Number=0
@@ -16,7 +17,7 @@ Base.@kwdef struct Model_Parameters
 end
 
 function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
-  du .= (p.A-I)*u
+  du .= (p.ϵ.*p.A-I)*u
 end
 
 function SIS_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
