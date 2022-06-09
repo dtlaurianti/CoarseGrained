@@ -148,8 +148,11 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, save_to_str
     end
 
     # plot surface
-    surf = surface(x,y,z)
-    display(plot(surf))
+    display(x)
+    display(y)
+    display(z)
+    plt = plot(x, y, z, st=:surface)
+    display(plt)
 
     #=
     # ??? TODO

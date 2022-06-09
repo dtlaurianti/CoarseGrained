@@ -41,13 +41,14 @@ end
 function getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
   #These functions are in the parallelized function to hopefully reduce the amount of single threaded tasks
   try
-    compressed_initial_condition = ReduceNetwork.compressInitialCondition(initial_condition, partition)
-    reducedA = ReduceNetwork.compressAdjacencyMatrix(A, partition)
-  catch
+    compressed_initial_condition = compressInitialCondition(initial_condition, partition)
+    reducedA = compressAdjacencyMatrix(A, partition)
+  catch e
+    showerror(stdout, e)
     return NaN
   end
-  originalTimeSeries = SimulateDynamics.simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
-  reducedTimeSeries = SimulateDynamics.simulateODEonGraph(reducedA, compressed_initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
+  originalTimeSeries = simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
+  reducedTimeSeries = simulateODEonGraph(reducedA, compressed_initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
 
   loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
   #loss = computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)
