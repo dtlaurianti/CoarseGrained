@@ -51,7 +51,7 @@ function dict_to_array(partitions::Array{Dict{Integer,Integer}})
     Arr = []
     for i in 1:length(partitions)
         partition = partition_dict_to_array(partitions[i])
-        append!(Arr, partition)
+        append!(Arr, [partition])
     end
     return Arr
 end
