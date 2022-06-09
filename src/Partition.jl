@@ -43,6 +43,7 @@ end
 
 # works only for undirected networks as of now.
 function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
+    A = sparse(A)
     partition = Dict{Integer, Integer}()
     n = size(A, 1)
     nodeIds = 1:n
@@ -70,7 +71,7 @@ function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
     return partition
 end
 
-function greedyMerge(A::MatrixNetwork, partition::Dict)
+function greedyMerge(A::SparseMatrixCSC, partition::Dict)
     k = sum(A, dims=1)
     m = sum(k)
     Q = -sum(k.^2)/m^2
@@ -79,6 +80,8 @@ function greedyMerge(A::MatrixNetwork, partition::Dict)
     numGroups = length(groupIds)
     maxQ = -Inf
     # loop over all supernodes and find the two most closely connected ?
+    maxGroupId1 = 1
+    maxGroupId2 = 1
     for groupIndex1 in 1:numGroups
         for groupIndex2 in 1:groupIndex1
             groupId1 = groupIds[groupIndex1]
