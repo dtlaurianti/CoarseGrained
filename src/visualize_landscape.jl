@@ -136,7 +136,7 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, save_to_str
     z = zeros(num_par)
     for i in 1:num_par
         # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
-      loss = getLoss(A, partitions[i], ones(50), linear_model, 10, 0.01, ϵ=-0.3)
+      loss = getLoss(A, partitions[i], ones(10), linear_model, 10, 0.01, ϵ=-0.3)
       z[i] = loss
     end
 
@@ -148,6 +148,7 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, save_to_str
     end
 
     # plot surface
+    pyplot()
     plt = plot(x, y, z, st=:surface)
     display(plt)
 
