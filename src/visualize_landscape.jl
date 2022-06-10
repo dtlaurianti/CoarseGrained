@@ -110,7 +110,7 @@ end
 #Outputs:
 #  Plots a choppy 3D Surface
 #
-function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, save_to_string="")
+function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A; save_to_string="")
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
 
@@ -143,13 +143,13 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, save_to_str
     #Save vector data if we want to smooth it later
     if !isempty(save_to_string)
       df = DataFrame(["x" => x, "y" => y, "z" => z])
-      loc = "data/visualization_data/" + save_to_string + ".csv"
+      loc = "../data/visualization_data/" * save_to_string * ".csv"
       CSV.write(loc, df)
     end
 
     # plot surface
     pyplot()
-    plt = plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.9, 0.05, 0.05, 0.9])))
+    plt = plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.85, 0.05, 0.05, 0.9])))
     display(plt)
 
     #=
