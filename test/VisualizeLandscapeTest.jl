@@ -16,8 +16,8 @@ end
 end
 
 @testset "surfaceplots" begin
-    Part = generateRandomPartitions(10, 7, 10)
+    Part = generateRandomPartitions(10, 7, 50)
     LG = line_graph(10)
     GNP = gnp_graph(10;p=0.5)
-    surfaceplots(Part, GNP, save_to_string="test")
+    surfaceplots(Part, GNP, 10, save_to_string="bigtest")
 end

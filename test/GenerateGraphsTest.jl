@@ -27,3 +27,7 @@ end
     display(sparse(gnp_graph(5;p=0.5)))
     display(sparse(gnp_graph(5;directed=false)))
 end
+
+@testset "sbm_graph_tests" begin
+    display(Matrix(sparse(sbm_graph(64))))
+end

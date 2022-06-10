@@ -110,7 +110,7 @@ end
 #Outputs:
 #  Plots a choppy 3D Surface
 #
-function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A; save_to_string="")
+function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; save_to_string="")
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
 
@@ -136,7 +136,7 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A; save_to_str
     z = zeros(num_par)
     for i in 1:num_par
         # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
-      loss = getLoss(A, partitions[i], ones(10), linear_model, 10, 0.01, ϵ=-0.3)
+      loss = getLoss(A, partitions[i], ones(10), linear_model, NumOriginalNodes, 0.01, ϵ=-0.3)
       z[i] = loss
     end
 

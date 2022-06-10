@@ -112,21 +112,37 @@ function gnp_graph(n::Int; p::AbstractFloat=0.1, directed::Bool=true, edge_weigh
     return max.(G, G').*edge_weight
   end
 end
+
+function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, edge_weight=1.0, directed=true)
+  if communities == 1
+    G = gnp_graph(n, p=p_within)
+    return G
+  end
+  G = sparse(gnp_graph(n÷communities, p=p_within))
+  i = 1
+  while i != communities
+    G = blockdiag(G, sparse(gnp_graph(n÷communities, p=p_within)))
+    i += 1
+  end
+  return MatrixNetwork(G)
+end
+
 #=
-def sbm_graph(n, communities=4, p_within=0.2, p_between=0.05, seed=None, edge_weight=1.0, directed=True):
+function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, seed=None, edge_weight=1.0, directed=True)
 
   # make array of block probabilities
-  p = (p_within*np.eye(communities)
-       +p_between*(np.ones(communities)-np.eye(communities)))
+  p = (p_within.*I(communities)+p_between.*(ones(communities).-I(communities)))
 
   # make list of community sizes
-  size = int(n/communities)
-  sizes = size*np.ones(communities, dtype=int)
-  for s in sizes:
-    if sum(sizes) < n:
+  size = floor(Int, (n/communities))
+  sizes = size.*ones(communities)
+  for s in sizes
+    if sum(sizes) < n
       s += 1
-    else:
+    else
       break
+    end
+  end
 
   # make graph
   G = nx.stochastic_block_model(sizes, p, nodelist=None, seed=seed,
@@ -134,6 +150,7 @@ def sbm_graph(n, communities=4, p_within=0.2, p_between=0.05, seed=None, edge_we
   nx.set_edge_attributes(G, edge_weight, "weight")
 
   return G
+end
 
 
 def cm_graph(n, max_degree=5, directed=True, seed=None):
