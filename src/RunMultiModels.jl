@@ -1,4 +1,5 @@
 using Pickle
+using Distributed
 include("ReduceNetwork.jl")
 include("SimulateDynamics.jl")
 include("EvaluateError.jl")

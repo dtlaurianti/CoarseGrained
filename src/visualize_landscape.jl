@@ -149,7 +149,7 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, save_to_str
 
     # plot surface
     pyplot()
-    plt = plot(x, y, z, st=:surface)
+    plt = plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.9, 0.05, 0.05, 0.9])))
     display(plt)
 
     #=

@@ -53,6 +53,7 @@ function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
     end
 
     while length(Set(values(partition))) > reducedSize
+        println(partition)
         partition, Q = greedyMerge(A, partition)
     end
     cleanedPartition = Dict{Integer, Integer}()

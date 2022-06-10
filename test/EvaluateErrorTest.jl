@@ -3,7 +3,7 @@ using GraphRecipes
 include("../src/ReduceNetwork.jl")
 @testset "aggregateTimeSeries_test" begin
     Random.seed!(trunc(Int, time() * 1000000))
-    n = 50
+    n = 10
     cn = trunc(Int64, n/2)
     MatNet = gnp_graph(n)
     x = rand(n)
