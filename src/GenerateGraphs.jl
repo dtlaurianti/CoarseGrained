@@ -114,17 +114,65 @@ function gnp_graph(n::Int; p::AbstractFloat=0.1, directed::Bool=true, edge_weigh
 end
 
 function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, edge_weight=1.0, directed=true)
-  if communities == 1
-    G = gnp_graph(n, p=p_within)
-    return G
+  if directed
+    if communities == 1
+      G = gnp_graph(n, p=p_within)
+      return G
+    end
+    G = sparse(gnp_graph(n÷communities, p=p_within))
+    i = 1
+    while i != communities
+      if (i + 1) == communities
+        G = blockdiag(G, sparse(gnp_graph(n÷communities + n%communities, p=p_within)))
+        i += 1
+      else
+        G = blockdiag(G, sparse(gnp_graph(n÷communities, p=p_within)))
+        i += 1
+      end
+    end
+  else
+    if communities == 1
+      G = gnp_graph(n, p=p_within, directed=false)
+      return G
+    end
+    G = sparse(gnp_graph(n÷communities, p=p_within, directed=false))
+    i = 1
+    while i != communities
+      if (i + 1) == communities
+        G = blockdiag(G, sparse(gnp_graph(n÷communities + n%communities, p=p_within, directed=false)))
+        i += 1
+      else
+        G = blockdiag(G, sparse(gnp_graph(n÷communities, p=p_within, directed=false)))
+        i += 1
+      end
+    end
   end
-  G = sparse(gnp_graph(n÷communities, p=p_within))
   i = 1
+  mask = sparse(ones(n÷communities, n÷communities))
   while i != communities
-    G = blockdiag(G, sparse(gnp_graph(n÷communities, p=p_within)))
-    i += 1
+    if (i + 1) == communities
+      mask = blockdiag(mask, sparse(ones(n÷communities + n%communities, n÷communities + n%communities)))
+      i+= 1
+    else
+      mask = blockdiag(mask, sparse(ones(n÷communities, n÷communities)))
+      i+= 1
+    end
   end
-  return MatrixNetwork(G)
+  G = Matrix(G)
+  mask = Matrix(mask)
+  num_rows = n
+  num_columns = n
+  for i in 1:num_rows
+    for j in 1:num_columns
+      if G[i, j] == 0 || G[i, j] == 0.0 && mask[i, j] == 0 || mask[i, j] == 0.0
+        portion = p_between * 10000
+        if rand(big.(1:10000)) <= portion
+          G[i, j] = 1
+        end
+      end
+    end
+  end
+  return MatrixNetwork(sparse(G))
 end
 
 #=

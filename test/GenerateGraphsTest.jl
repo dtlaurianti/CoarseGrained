@@ -30,4 +30,7 @@ end
 
 @testset "sbm_graph_tests" begin
     display(Matrix(sparse(sbm_graph(64))))
+    display(Matrix(sparse(sbm_graph(64, p_within = 1.0, p_between = 0.5))))
+    display(Matrix(sparse(sbm_graph(27, communities = 2))))
+    display(Matrix(sparse(sbm_graph(27, communities = 1))))
 end
