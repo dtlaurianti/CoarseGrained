@@ -1,8 +1,8 @@
 using SparseArrays
 using Clustering
-using ResumableFunctions
 using Random
 using StatsBase
+using Distributed
 
 # generate numPartitions random partitions mapping a network of size originalSize
 # to a network of size reducedSize
@@ -27,6 +27,30 @@ function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, n
     end
     return partitionList
 end
+# generate numPartitions random partitions mapping a network of size originalSize
+# to a network of size reducedSize
+function generateRandomPartitionsFast(originalSize::Integer, reducedSize::Integer, numPartitions::Integer)
+    @everywhere partitionList = Array{Dict{Integer,Integer}, 1}(undef, numPartitions)
+    Random.seed!(trunc(Int, time() * 1000000))
+    @distributed for index in 1:numPartitions
+        partitionAccepted = false
+        while !partitionAccepted
+            partition = Dict{Integer, Integer}()
+            # assigns each node in the original nodes to a new node in the reduced nodes
+            labels = StatsBase.sample(1:reducedSize, originalSize)
+            for node in 1:originalSize
+                partition[node] = labels[node]
+            end
+            # check that each partition is nonempty
+            if length(Set(labels)) == reducedSize
+                partitionAccepted = true
+                partitionList[index]=partition
+            end
+        end
+    end
+    return partitionList
+end
+
 
 function spectralClustering(A::MatrixNetwork, reducedSize::Integer)
     # get the eigen decomposition of the diagonal of A
@@ -59,8 +83,12 @@ function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
     while length(Set(values(partition))) > reducedSize
         partition, Q = greedyMerge(A, partition, Q, k)
     end
+    return cleanPartition(partition)
 
-    # make the supernode IDs number 1:n
+end
+
+# make the supernode IDs number 1:n
+function cleanPartition(partition::Dict{Integer, Integer})
     cleanedPartition = Dict{Integer, Integer}()
     for (node, group) in partition
         try
@@ -134,18 +162,55 @@ function greedyMerge(A::SparseMatrixCSC, partition::Dict, Q::Number, k::Matrix)
     return newPartition, maxQ
 end
 
+# Takes the number of nodes n and returns a Dictionary of all possible partitions
+function exhaustivePartition(n::Integer)
+    allPartitions = Dict{Integer,Dict{Integer,Integer}}()
+    nodeIds = collect(1:n)
+    for (index, part) in enumerate(partitionNodes(nodeIds))
+        partition = Dict{Integer,Integer}()
+        for (supernodeId, subnodeIds) in enumerate(part)
+            for nodeId in subnodeIds
+                partition[nodeId] = supernodeId
+            end
+        end
+        allPartitions[index] = cleanPartition(partition)
+    end
+    return allPartitions
+end
+
+# recursive function to generate all possible partitions of the given nodeIds
+function partitionNodes(nodeIds::Vector{})
+    partitions = []
+    if length(nodeIds) == 1
+        return [nodeIds]
+    end
+    first = nodeIds[1]
+    # recursivly get all possible partitions of n-1 nodes
+    for partition in partitionNodes(nodeIds[2:end])
+        # create the partition made by inserting first into each supernode in all possible partitions of n-1 nodes
+        for (index, supernode) in enumerate(partition)
+            append!(partitions, [vcat(partition[1:index-1], [vcat([first], supernode)], partition[(index+1):end])])
+        end
+        # create the partition made by having first as its own supernode in all possible partitions of n-1 nodes
+        append!(partitions, [vcat([first], partition)])
+    end
+    return partitions
+end
+#=
 # WARNING: not super efficient at the moment!
 function exhaustivePartition(n::Integer)
+    println("n: ",n)
     #=
     input: number of nodes n
     output: dictionary of all possible partitions
     =#
     allPartitions = Dict{Integer,Dict{Integer,Integer}}()
-    nodeIds = 1:n
+    nodeIds = collect(1:n)
 
     # compute all integer partitions
     println("start")
-    display(partitionNodes(nodeIds))
+    partitions = partitionNodes(nodeIds)
+    println(partitions)
     println("helloout")
     for (index, part) in enumerate(partitionNodes(nodeIds))
         println("iter")
@@ -155,12 +220,12 @@ function exhaustivePartition(n::Integer)
                 partition[nodeId] = supernodeId
             end
         end
-        allPartitions[index] = partition
+        allPartitions[index+1] = partition
     end
     return allPartitions
 end
 
-@resumable function partitionNodes(nodeIds)
+@resumable function partitionNodes(nodeIds::Vector{Int64})
     println("call")
     #=
     input:  list of nodeIds
@@ -168,60 +233,72 @@ end
     =#
     if length(nodeIds) == 1
         println("exit")
-        @yield nodeIds
+        @yield [nodeIds]
         return
     end
 
     first = nodeIds[1]
+    println("about to loop")
+    #TODO it is erroring on trying to iterate over the output of partitionNodes
     for smaller in partitionNodes(nodeIds[2:end])
+        println("smaller", smaller)
         # insert first in each of the subpartition's subsets
         for (k, subset) in enumerate(smaller)
             println("hello")
-            display([smaller[1:k] [[ first ] subset] smaller[k+1:end]])
-            @yield [smaller[1:k] [[ first ] subset] smaller[k+1:end]]
+            display(vcat(smaller[1:k], vcat([first], subset), smaller[k+1:end]))
+            @yield vcat(smaller[1:k], vcat([first], subset), smaller[k+1:end])
         end
         # put first in its own subset
-        display([[[first]] smaller])
-        @yield [[[first]] smaller]
+        display(vcat([first], smaller))
+        @yield vcat([first], smaller)
     end
     println("done")
 end
+=#
 
-@resumable function kPartitionNodesAll(nodeIds, k::Integer)
+function kPartitionNodesAll(nodeIds::Vector, k::Integer)
     #=
     generate all possible partitions of nodeIds into k supernodes
     includes empty supernodes that need to be removed
     =#
     n = length(nodeIds)
     if k==1
-        @yield [nodeIds]
+        return [[nodeIds]]
     elseif n == k
-        @yield [[node] for node in nodeIds]
+        return [[[node] for node in nodeIds]]
     else
+        kpartitions = []
         first = nodeIds[1]
         rest = nodeIds[2:end]
         for subset in kPartitionNodesAll(rest, k-1)
-            @yield [[first] subset]
+            append!(kpartitions, [vcat([[first]], subset)])
         end
         for subset in kPartitionNodesAll(rest, k)
             for i in 1:length(subset)
-                @yield [[[first] subset[i]] subset[1:i] subset[i+1:end]]
+                append!(kpartitions, [vcat(
+                [vcat([first], subset[i])],
+                 subset[1:i-1],
+                 subset[i+1:end])
+                 ])
             end
         end
+        return kpartitions
     end
 end
 
-@resumable function kPartitionNodes(nodeIds, k::Integer)
+function kPartitionNodes(nodeIds::Vector, k::Integer)
     #=
     generate all possible partitions of nodeIds into k supernodes
     using kPartitionNodesAll, then remove empy supernodes
     =#
     # remove empty supernodes
+    kpartitions = []
     for part in kPartitionNodesAll(nodeIds, k)
-        if all(supernode for supernode in part)    # check if all supernodes are populated
-            @yield part
+        if all(!isempty(supernode) for supernode in part)    # check if all supernodes are populated
+            append!(kpartitions,[part])
         end
     end
+    return kpartitions
 end
 
 function kPartition(n::Integer, k::Integer)
@@ -232,7 +309,7 @@ function kPartition(n::Integer, k::Integer)
 
     # initialize
     kPartitions = []
-    nodeIds = [1:n]
+    nodeIds = collect(1:n)
     # list all ways to split n nodes into k supernodes, then format as a partition
     for (index, part) in enumerate(kPartitionNodes(nodeIds, k))
         partition = Dict{Integer,Integer}() # initialize partition
