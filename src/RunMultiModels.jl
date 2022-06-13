@@ -2,7 +2,7 @@ using Pickle
 using Distributed
 include("ReduceNetwork.jl")
 include("SimulateDynamics.jl")
-include("EvaluateError.jl")
+@everywhere include("EvaluateError.jl")
 include("GenerateGraphs.jl")
 
 ###### PARAMETERS TO TWEAK ######
@@ -94,7 +94,6 @@ for id in 1:length(listModelType)
 
     # Run simulations numRuns times with different initial conditions
     for run in 1:numRuns
-
         # initial_condition = np.random.rand(originalSize)
         # initial_condition = np.concatenate((np.ones(1),np.zeros(originalSize-1)))
         initial_condition = listOfICs[run]
@@ -105,8 +104,7 @@ for id in 1:length(listModelType)
             append!(arglist, [[A, partition, initial_condition, modelFunc, tmax, tinc, modelArgs...]])
         end
         #TODO: figure out this parallelisation on Julia
-        mp.Pool(processes=numProcesses) do pool
-            losses = pool.starmap(EvaluateError.getLoss, argList)
+        losses = @spawnat :any EvaluateError.getLoss(argList)
         end
 
         # specify folder and check if it already exists
@@ -121,7 +119,7 @@ for id in 1:length(listModelType)
         data = {}
         data["A"] = A
         data["partitions"] = listOfPartitions
-        data["losses"] = losses
+        data["losses"] = fetch(losses)
         data["parameters"] = parameters
         data["initial_condition"] = initial_condition
 
