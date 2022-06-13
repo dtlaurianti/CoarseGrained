@@ -52,30 +52,33 @@ function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
         partition[nodeId] = nodeId
     end
 
+    k = sum(A, dims=1)
+    m = sum(k)
+    Q = -sum(k.^2)/m^2
+
     while length(Set(values(partition))) > reducedSize
-        println(partition)
-        partition, Q = greedyMerge(A, partition)
+        partition, Q = greedyMerge(A, partition, Q, k)
     end
+
+    # make the supernode IDs number 1:n
     cleanedPartition = Dict{Integer, Integer}()
     for (node, group) in partition
         try
             partition[node] = cleanedPartition[group]
         catch
             try
-                cleanedPartition[group] = max(cleanedPartition.values()) + 1
+                cleanedPartition[group] = maximum(collect(values(cleanedPartition))) + 1
             catch
-                cleanedPartition[group] = 0
-            partition[node] = cleanedPartition[group]
+                cleanedPartition[group] = 1
             end
+            partition[node] = cleanedPartition[group]
         end
     end
     return partition
 end
 
-function greedyMerge(A::SparseMatrixCSC, partition::Dict)
-    k = sum(A, dims=1)
+function greedyMerge(A::SparseMatrixCSC, partition::Dict, Q::Number, k::Matrix)
     m = sum(k)
-    Q = -sum(k.^2)/m^2
     # iterate over unigue groups
     groupIds = collect(Set(values(partition)))
     numGroups = length(groupIds)
@@ -84,7 +87,7 @@ function greedyMerge(A::SparseMatrixCSC, partition::Dict)
     maxGroupId1 = 1
     maxGroupId2 = 1
     for groupIndex1 in 1:numGroups
-        for groupIndex2 in 1:groupIndex1
+        for groupIndex2 in 1:(groupIndex1-1)
             groupId1 = groupIds[groupIndex1]
             groupId2 = groupIds[groupIndex2]
 
@@ -98,7 +101,7 @@ function greedyMerge(A::SparseMatrixCSC, partition::Dict)
                 for j in group2
                     try
                         # the edge between the two supernodes
-                        eUV += sparse(A)[i,j]/m # because directed edge list
+                        eUV += A[i,j]/m # because directed edge list
                     catch
                     end
                 end
@@ -115,7 +118,6 @@ function greedyMerge(A::SparseMatrixCSC, partition::Dict)
 
             # calculate the change in the graph
             newQ = Q + 2*(eUV - aU*aV)
-
             if newQ > maxQ
                 maxQ = newQ
                 maxGroupId1 = groupId1
@@ -139,10 +141,14 @@ function exhaustivePartition(n::Integer)
     output: dictionary of all possible partitions
     =#
     allPartitions = Dict{Integer,Dict{Integer,Integer}}()
-    nodeIds = [1:n]
+    nodeIds = 1:n
 
     # compute all integer partitions
+    println("start")
+    display(partitionNodes(nodeIds))
+    println("helloout")
     for (index, part) in enumerate(partitionNodes(nodeIds))
+        println("iter")
         partition = Dict{Integer,Integer}()
         for (supernodeId, subnodeIds) in enumerate(part)
             for nodeId in subnodeIds
@@ -154,12 +160,14 @@ function exhaustivePartition(n::Integer)
     return allPartitions
 end
 
-@resumable function partitionNodes(nodeIds::Array{Integer})
+@resumable function partitionNodes(nodeIds)
+    println("call")
     #=
     input:  list of nodeIds
     output: list of all possible partitions
     =#
     if length(nodeIds) == 1
+        println("exit")
         @yield nodeIds
         return
     end
@@ -168,14 +176,18 @@ end
     for smaller in partitionNodes(nodeIds[2:end])
         # insert first in each of the subpartition's subsets
         for (k, subset) in enumerate(smaller)
+            println("hello")
+            display([smaller[1:k] [[ first ] subset] smaller[k+1:end]])
             @yield [smaller[1:k] [[ first ] subset] smaller[k+1:end]]
         end
         # put first in its own subset
+        display([[[first]] smaller])
         @yield [[[first]] smaller]
     end
+    println("done")
 end
 
-@resumable function kPartitionNodesAll(nodeIds::Array{Integer}, k::Integer)
+@resumable function kPartitionNodesAll(nodeIds, k::Integer)
     #=
     generate all possible partitions of nodeIds into k supernodes
     includes empty supernodes that need to be removed
@@ -199,7 +211,7 @@ end
     end
 end
 
-@resumable function kPartitionNodes(nodeIds::Array, k::Integer)
+@resumable function kPartitionNodes(nodeIds, k::Integer)
     #=
     generate all possible partitions of nodeIds into k supernodes
     using kPartitionNodesAll, then remove empy supernodes
