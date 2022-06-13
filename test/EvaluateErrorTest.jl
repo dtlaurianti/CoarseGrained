@@ -3,7 +3,7 @@ using GraphRecipes
 include("../src/ReduceNetwork.jl")
 @testset "aggregateTimeSeries_test" begin
     Random.seed!(trunc(Int, time() * 1000000))
-    n = 10
+    n = 50
     cn = trunc(Int64, n/2)
     MatNet = gnp_graph(n)
     x = rand(n)
@@ -17,7 +17,6 @@ include("../src/ReduceNetwork.jl")
     method=:stress
     scale = 1/log(n)
     colors = collect(values(sort(Partition1)))
-    dump(colors)
     gplt1 = graphplot(sparse(MatNet), title="uncompressed initial", method=method,
         node_weights=x, markercolor = colors, thickness_scaling=scale, palette=distinguishable_colors(n))
     gplt2 = graphplot(sparse(MatNet), title="uncompressed final", method=method,
