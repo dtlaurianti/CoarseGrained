@@ -174,16 +174,39 @@ function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, edge_weight=1
   end
   return MatrixNetwork(sparse(G))
 end
-
 #=
-function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, seed=None, edge_weight=1.0, directed=True)
+function cm_graph(n, max_degree=5, directed=true)
+  G = zeros(n, n)
+  A = ones(n)
+  if directed
+    for j in 1:(max_degree÷n)
+      for i in 1:(max_degree÷n)
+        @label start
+        temp = rand(big.(1:n))
+        if A[temp] != 1.0
+          @goto start
+        else
+          A[temp] = 0.0
+          for k in 1:n
+            num = i
+            while num > 0
 
-  # make array of block probabilities
-  p = (p_within.*I(communities)+p_between.*(ones(communities).-I(communities)))
+              G[temp, n] = 1.0
+
+  end
+end
+=#
+#=
+function cm_graph(n, max_degree=5, directed=true)
+  #=(Directed) configuration model where there is roughly the same number of
+  nodes with (in-)degree 1 as with (in-)degree 2 ... as with (in-)degree
+  `max_degree`. For directed networks, the out-degree distribution is the same
+  as the in-degree distribution but the in-degree and out-degree of a node are 
+  uncorrelated.=#
 
   # make list of community sizes
-  size = floor(Int, (n/communities))
-  sizes = size.*ones(communities)
+  size = int(n/max_degree)
+  sizes = size*np.ones(max_degree, dtype=int)
   for s in sizes
     if sum(sizes) < n
       s += 1
@@ -191,46 +214,21 @@ function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, seed=None, ed
       break
     end
   end
-
-  # make graph
-  G = nx.stochastic_block_model(sizes, p, nodelist=None, seed=seed,
-                                directed=directed, selfloops=False, sparse=False)
-  nx.set_edge_attributes(G, edge_weight, "weight")
-
-  return G
-end
-
-
-def cm_graph(n, max_degree=5, directed=True, seed=None):
-  '''(Directed) configuration model where there is roughly the same number of
-  nodes with (in-)degree 1 as with (in-)degree 2 ... as with (in-)degree
-  `max_degree`. For directed networks, the out-degree distribution is the same
-  as the in-degree distribution but the in-degree and out-degree of a node are u
-  ncorrelated.'''
-
-  # make list of community sizes
-  size = int(n/max_degree)
-  sizes = size*np.ones(max_degree, dtype=int)
-  for s in sizes:
-    if sum(sizes) < n:
-      s += 1
-    else:
-      break
-
   # make degree sequence
   indegrees = np.concatenate([(i+1)*np.ones(s, dtype=int) for i, s in enumerate(sizes)])
-  if directed:
+  if directed
     outdegrees = np.copy(indegrees)
     np.random.shuffle(outdegrees)
 
     # make graph
     G = nx.directed_configuration_model(indegrees, outdegrees, create_using=nx.DiGraph(), seed=seed)
 
-  else:
+  else
     # make graph
     G = nx.configuration_model(indegrees, seed=seed)
-
+  end
   return G
+end
 =#
 # TODO: add something like a feed-forward neural-network graph?
 # or something else with hierarchical or layered structure?

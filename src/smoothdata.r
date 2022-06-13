@@ -1,0 +1,27 @@
+library(tidyverse) # install.packages("tidyverse")
+library(geometry)  # install.packages("geometry")
+
+#' @param samples, a data frame with columns x, y, and z. 
+#' @param resolution, the resolution of the rectangular grid on which to compute the surface
+#' @param bandwidth, the bandwidth of the smoother. Smaller bandwidth -> more wiggly smoothers
+#' @return grid, a truncated grid of points on which the loess smoother is evaluated. 
+smoothed_surface <- function(samples, resolution, bandwidth){
+	# compute convex hull of x and y points
+	ch <- convhulln(cbind(samples$x, samples$y))	
+	# create the grid
+	grid <- expand.grid(x = seq(min(samples$x), max(samples$x), by = resolution), 
+											y = seq(min(samples$y), max(samples$y), by = resolution), 
+											stringsAsFactors = FALSE) %>% 
+		tibble()
+	# for each point, check whether it's in the convex hull
+	grid["in_grid"] <- inhulln(ch, cbind(grid$x, grid$y)) 
+	grid <- grid %>% filter(in_grid) 
+	# fit the smoother
+	fit <- loess(z ~ x + y, data = samples, span = 0.05)
+	# add smoother predictions to the grid
+	grid <- broom::augment(fit, newdata = data.frame(grid)) %>% 
+		mutate(z_ = .fitted) 
+	# return the grid
+	grid %>% 
+		select(x, y, z_)
+}
