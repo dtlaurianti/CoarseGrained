@@ -134,21 +134,11 @@ function greedyMerge(A::SparseMatrixCSC, partition::Dict, Q::Number, k::Matrix)
     return newPartition, maxQ
 end
 
-# WARNING: not super efficient at the moment!
+# Takes the number of nodes n and returns a Dictionary of all possible partitions
 function exhaustivePartition(n::Integer)
-    #=
-    input: number of nodes n
-    output: dictionary of all possible partitions
-    =#
     allPartitions = Dict{Integer,Dict{Integer,Integer}}()
-    nodeIds = 1:n
-
-    # compute all integer partitions
-    println("start")
-    display(partitionNodes(nodeIds))
-    println("helloout")
+    nodeIds = collect(1:n)
     for (index, part) in enumerate(partitionNodes(nodeIds))
-        println("iter")
         partition = Dict{Integer,Integer}()
         for (supernodeId, subnodeIds) in enumerate(part)
             for nodeId in subnodeIds
@@ -160,7 +150,52 @@ function exhaustivePartition(n::Integer)
     return allPartitions
 end
 
-@resumable function partitionNodes(nodeIds)
+function partitionNodes(nodeIds::Vector{Integer})
+    partitions = []
+    if length(nodeIds) == 1
+        return [nodeIds]
+    end
+    first = nodeIds[0]
+    for partition in partitionNodes(nodeIds[2:end])
+        # create the partition made by inserting first into each supernode in all possible partitions of n-1 nodes
+        for (index, supernode) in partition
+            append!(partitions, [vcat(smaller[1:k], vcat([first], subset), smaller[k+1:end])])
+        end
+        # create the partition made by having first as its own supernode in all possible partitions of n-1 nodes
+        append!(partitions, [vcat([first], smaller)])
+    end
+    return partitions
+end
+#=
+# WARNING: not super efficient at the moment!
+function exhaustivePartition(n::Integer)
+    println("n: ",n)
+    #=
+    input: number of nodes n
+    output: dictionary of all possible partitions
+    =#
+    allPartitions = Dict{Integer,Dict{Integer,Integer}}()
+    nodeIds = collect(1:n)
+
+    # compute all integer partitions
+    println("start")
+    partitions = partitionNodes(nodeIds)
+    println(partitions)
+    println("helloout")
+    for (index, part) in enumerate(partitionNodes(nodeIds))
+        println("iter")
+        partition = Dict{Integer,Integer}()
+        for (supernodeId, subnodeIds) in enumerate(part)
+            for nodeId in subnodeIds
+                partition[nodeId] = supernodeId
+            end
+        end
+        allPartitions[index+1] = partition
+    end
+    return allPartitions
+end
+
+@resumable function partitionNodes(nodeIds::Vector{Int64})
     println("call")
     #=
     input:  list of nodeIds
@@ -168,24 +203,28 @@ end
     =#
     if length(nodeIds) == 1
         println("exit")
-        @yield nodeIds
+        @yield [nodeIds]
         return
     end
 
     first = nodeIds[1]
+    println("about to loop")
+    #TODO it is erroring on trying to iterate over the output of partitionNodes
     for smaller in partitionNodes(nodeIds[2:end])
+        println("smaller", smaller)
         # insert first in each of the subpartition's subsets
         for (k, subset) in enumerate(smaller)
             println("hello")
-            display([smaller[1:k] [[ first ] subset] smaller[k+1:end]])
-            @yield [smaller[1:k] [[ first ] subset] smaller[k+1:end]]
+            display(vcat(smaller[1:k], vcat([first], subset), smaller[k+1:end]))
+            @yield vcat(smaller[1:k], vcat([first], subset), smaller[k+1:end])
         end
         # put first in its own subset
-        display([[[first]] smaller])
-        @yield [[[first]] smaller]
+        display(vcat([first], smaller))
+        @yield vcat([first], smaller)
     end
     println("done")
 end
+=#
 
 @resumable function kPartitionNodesAll(nodeIds, k::Integer)
     #=

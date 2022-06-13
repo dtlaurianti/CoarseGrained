@@ -106,7 +106,8 @@ for id in 1:length(listModelType)
         #TODO: figure out this parallelisation on Julia
         losses = @spawnat :any EvaluateError.getLoss(argList)
         end
-
+    end
+    for run in 1:numRuns
         # specify folder and check if it already exists
         foldername = SimulateDynamics.foldername(modelType, modelArgs, graphType, graphArgs)
         if !isdir(foldername)
