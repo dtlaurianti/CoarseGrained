@@ -5,10 +5,14 @@
 #
 ################################################################################
 
-setwd("~/Documents/GitHub/supernodes") # to be updated later
+#setwd("~/CoarseGrained") # to be updated later
+install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+install.packages("geometry", repos = "http://cran.us.r-project.org")
 
 library(tidyverse) # install.packages("tidyverse")
 library(geometry)  # install.packages("geometry")
+
+args <- commandArgs(trailingOnly = TRUE)
 
 #' @param samples, a data frame with columns x, y, and z. 
 #' @param resolution, the resolution of the rectangular grid on which to compute the surface
@@ -36,8 +40,8 @@ smoothed_surface <- function(samples, resolution, bandwidth){
     mutate(z = z_)
 }
 
-filename <- "data/visualization_data/n10_p2_s1000_cycle"
-  
+filename <- paste0("data/visualization_data/", args[1])
+
 samples <- read_csv( paste0(filename, ".csv") )
 the_grid <- smoothed_surface(samples, 0.1, 0.1)
 

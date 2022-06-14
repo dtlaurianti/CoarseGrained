@@ -1,3 +1,5 @@
+using Dates
+
 @testset "dict_to_array_test" begin
     Part = generateRandomPartitions(10, 7, 10)
     Partition1 = Part[1]
@@ -19,5 +21,13 @@ end
     Part = generateRandomPartitions(10, 7, 100)
     LG = line_graph(10)
     GNP = gnp_graph(10;p=0.5)
-    surfaceplots(Part, GNP, 10, save_to_string="bigtest")
+    dt = now()
+    DT = Dates.format(dt, "mm-dd-yy_HH:MM:SS")
+    string = "test" * DT
+    surfaceplots(Part, GNP, 10, save_to_string=string)
+    println(string)
+    #=In normal terminal, (with R installed)
+    call Rscript --vanilla ~/Documents/GitHub/CoarseGrained/src/make_smoothdata.R string"
+    to make smooth data. Then plot it with the function invokation below=#
+    #:33:30" * "_smooth.csv")
 end

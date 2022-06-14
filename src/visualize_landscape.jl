@@ -21,6 +21,7 @@ using CSV
 using ScikitLearn
 using StatsBase
 using Plots
+using PyPlot
 include("EvaluateError.jl")
 include("ReduceNetwork.jl")
 include("GenerateGraphs.jl")
@@ -149,19 +150,10 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
 
     # plot surface
     pyplot()
+    pygui(true)
     plt = plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.85, 0.05, 0.05, 0.9])))
     display(plt)
 
-    #=
-    # ??? TODO
-    # generate triangles from the x,y points
-    triang = mtri.Triangulation(x,y)
-    # create a blank plot for our data
-    fig = plt.figure()
-    ax = fig.add_subplot(1,2,2,projection="3d")
-    # generate a surface using the trianges, x, y and now the z, coordinates to plot our loss
-    surf = ax.plot_trisurf(triang,z,cmap=plt.cm.CMRmap,antialiased=True)
-    =#
 end
 
 #Function surfaceplots2
@@ -260,18 +252,16 @@ end
 #Output: No output, just a plot
 function plot_smoothed_surface(data)
   #Grab data from file
-  data = pd.read_csv(data)
-  x = data['x']
-  y = data['y']
-  z = data['z']
+  df = DataFrame(CSV.File(data))
+  x = df.x
+  y = df.y
+  z = df.z
 
-  #Plot surface
-  triang = mtri.Triangulation(x,y)
-  fig = plt.figure()
-  ax = fig.add_subplot(1,2,2,projection="3d")
-  surf = ax.plot_trisurf(triang,z,cmap=plt.cm.CMRmap,antialiased=True)
-
-  plt.show()
+  # plot surface
+  pyplot()
+  pygui(true)
+  plt = plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.85, 0.05, 0.05, 0.9])))
+  display(plt)
 end
 
 
