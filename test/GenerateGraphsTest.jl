@@ -34,3 +34,9 @@ end
     display(Matrix(sparse(sbm_graph(27, communities = 2, p_within = 1.0))))
     display(Matrix(sparse(sbm_graph(27, communities = 1))))
 end
+
+@testset "cm_graph_tests" begin
+    display((cm_graph(10, 5)))
+    display((cm_graph(20, 4)))
+    display((cm_graph(28, 7)))
+end
