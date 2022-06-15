@@ -44,7 +44,7 @@ function mEEP(A::MatrixNetwork, reducedSize::Integer)
 end
 
 # works only for undirected networks as of now.
-#=
+#= replaced by multithreaded version
 function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
     A = sparse(A)
     partition = Dict{Integer, Integer}()
@@ -82,7 +82,7 @@ function cleanPartition(partition::Dict{Integer, Integer})
     end
     return partition
 end
-#=
+#= replaced by multithreaded version
 function greedyMerge(A::SparseMatrixCSC, partition::Dict, Q::Number, k::Matrix)
     m = sum(k)
     # iterate over unigue groups
