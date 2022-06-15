@@ -13,7 +13,12 @@
 end
 =#
 @testset "Efficiency Testing" begin
-    display(@benchmark generateRandomPartitions(10, 5, 100))
-    println(nprocs())
-    display(@benchmark generateRandomPartitionsFast(10, 5, 100))
+    #display(@benchmark generateRandomPartitions(10, 5, 1000))
+    display(@benchmark agglomerationReduction(gnp, 50) setup=(gnp=gnp_graph(100)) seconds=10)
+    display(@benchmark agglomerationReductionFast(gnp, 50) setup=(gnp=gnp_graph(100)) seconds=10)
+    @profiler begin
+        for i=1:100
+            agglomerationReductionFast(gnp_graph(100), 50)
+        end
+    end
 end

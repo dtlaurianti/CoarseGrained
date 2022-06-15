@@ -3,13 +3,15 @@ using Clustering
 using Random
 using StatsBase
 using Distributed
+using SharedArrays
+using Base.Threads
 
 # generate numPartitions random partitions mapping a network of size originalSize
 # to a network of size reducedSize
 function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, numPartitions::Integer)
     partitionList = Array{Dict{Integer,Integer}, 1}(undef, numPartitions)
     Random.seed!(trunc(Int, time() * 1000000))
-    for index in 1:numPartitions
+    @threads for index in 1:numPartitions
         partitionAccepted = false
         while !partitionAccepted
             partition = Dict{Integer, Integer}()
@@ -19,7 +21,7 @@ function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, n
                 partition[node] = labels[node]
             end
             # check that each partition is nonempty
-            if length(Set(labels)) == reducedSize
+            if length(unique(labels)) == reducedSize
                 partitionAccepted = true
                 partitionList[index]=partition
             end
@@ -27,30 +29,6 @@ function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, n
     end
     return partitionList
 end
-# generate numPartitions random partitions mapping a network of size originalSize
-# to a network of size reducedSize
-function generateRandomPartitionsFast(originalSize::Integer, reducedSize::Integer, numPartitions::Integer)
-    @everywhere partitionList = Array{Dict{Integer,Integer}, 1}(undef, numPartitions)
-    Random.seed!(trunc(Int, time() * 1000000))
-    @distributed for index in 1:numPartitions
-        partitionAccepted = false
-        while !partitionAccepted
-            partition = Dict{Integer, Integer}()
-            # assigns each node in the original nodes to a new node in the reduced nodes
-            labels = StatsBase.sample(1:reducedSize, originalSize)
-            for node in 1:originalSize
-                partition[node] = labels[node]
-            end
-            # check that each partition is nonempty
-            if length(Set(labels)) == reducedSize
-                partitionAccepted = true
-                partitionList[index]=partition
-            end
-        end
-    end
-    return partitionList
-end
-
 
 function spectralClustering(A::MatrixNetwork, reducedSize::Integer)
     # get the eigen decomposition of the diagonal of A
@@ -66,6 +44,7 @@ function mEEP(A::MatrixNetwork, reducedSize::Integer)
 end
 
 # works only for undirected networks as of now.
+#=
 function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
     A = sparse(A)
     partition = Dict{Integer, Integer}()
@@ -80,13 +59,12 @@ function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
     m = sum(k)
     Q = -sum(k.^2)/m^2
 
-    while length(Set(values(partition))) > reducedSize
+    while length(unique(values(partition))) > reducedSize
         partition, Q = greedyMerge(A, partition, Q, k)
     end
     return cleanPartition(partition)
-
 end
-
+=#
 # make the supernode IDs number 1:n
 function cleanPartition(partition::Dict{Integer, Integer})
     cleanedPartition = Dict{Integer, Integer}()
@@ -104,11 +82,11 @@ function cleanPartition(partition::Dict{Integer, Integer})
     end
     return partition
 end
-
+#=
 function greedyMerge(A::SparseMatrixCSC, partition::Dict, Q::Number, k::Matrix)
     m = sum(k)
     # iterate over unigue groups
-    groupIds = collect(Set(values(partition)))
+    groupIds = collect(unique(values(partition)))
     numGroups = length(groupIds)
     maxQ = -Inf
     # loop over all supernodes and find the two most closely connected ?
@@ -160,6 +138,94 @@ function greedyMerge(A::SparseMatrixCSC, partition::Dict, Q::Number, k::Matrix)
         end
     end
     return newPartition, maxQ
+end
+=#
+
+# works only for undirected networks as of now.
+function agglomerationReductionFast(A::MatrixNetwork, reducedSize::Integer)
+    A = sparse(A)
+    partition = Dict{Integer, Integer}()
+    n = size(A, 1)
+    nodeIds = 1:n
+    # populate the partition
+    for nodeId in nodeIds
+        partition[nodeId] = nodeId
+    end
+
+    k = sum(A, dims=1)
+    m = sum(k)
+    Q = -sum(k.^2)/m^2
+
+    groupIds = collect(unique(values(partition)))
+    numGroups = length(groupIds)
+    orderedPartition = [[] for i=1:numGroups]
+    for (nodeId, groupId) in partition
+        append!(orderedPartition[groupId], nodeId)
+    end
+
+    while length(orderedPartition) > reducedSize
+        orderedPartitionpartition, Q = greedyMergeFast(A, orderedPartition, Q, k)
+    end
+
+    aggPartition = Dict{Integer, Integer}()
+    for supernode in 1:length(orderedPartition)
+        for node in orderedPartition[supernode]
+            aggPartition[node] = supernode
+        end
+    end
+    return aggPartition
+
+end
+
+function greedyMergeFast(A::SparseMatrixCSC, orderedPartition::Vector{Vector{Any}}, Q::Number, k::Matrix)
+    m = sum(k)
+    numGroups = length(orderedPartition)
+    lk = ReentrantLock()
+    maxQ = Dict(i=>-Inf for i=1:nthreads())
+    # loop over all supernodes and find the two most closely connected ?
+    maxGroupId1 = Dict(i=>1 for i=1:nthreads())
+    maxGroupId2 = Dict(i=>1 for i=1:nthreads())
+
+    @threads for groupIndex1 in 1:numGroups
+        for groupIndex2 in 1:(groupIndex1-1)
+            eUV = 0
+            aU = 0
+            aV = 0
+            for i in orderedPartition[groupIndex1]
+                for j in orderedPartition[groupIndex2]
+                    try
+                        # the edge between the two supernodes
+                        eUV += A[i,j]/m # because directed edge list
+                    catch
+                    end
+                end
+            end
+            # calculate the magnitude of supernode U
+            for i in orderedPartition[groupIndex1]
+                aU += k[i]/m
+            end
+
+            # calculate the magnitude of supernode V
+            for i in orderedPartition[groupIndex2]
+                aV += k[i]/m
+            end
+
+            # calculate the change in the graph
+            newQ = Q + 2*(eUV - aU*aV)
+            id = threadid()
+            if newQ > maxQ[id]
+                maxQ[id] = newQ
+                maxGroupId1[id] = groupIndex1
+                maxGroupId2[id] = groupIndex2
+            end
+        end
+    end
+    maxQInd = maximum(maxQ)[1]
+    # merge the two nodes into one supernode
+    node = orderedPartition[maxGroupId1[maxQInd]]
+    deleteat!(orderedPartition, maxGroupId1[maxQInd])
+    append!(orderedPartition[maxGroupId2[maxQInd]], node)
+    return orderedPartition, maxQ[maxQInd]
 end
 
 # Takes the number of nodes n and returns a Dictionary of all possible partitions

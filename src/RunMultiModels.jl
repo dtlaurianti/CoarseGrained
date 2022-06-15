@@ -91,7 +91,7 @@ for id in 1:length(listModelType)
             isAccepted = True
         end
     end
-
+    losses = SharedArray{Float64}(numRuns)
     # Run simulations numRuns times with different initial conditions
     for run in 1:numRuns
         # initial_condition = np.random.rand(originalSize)
@@ -104,7 +104,7 @@ for id in 1:length(listModelType)
             append!(arglist, [[A, partition, initial_condition, modelFunc, tmax, tinc, modelArgs...]])
         end
         #TODO: figure out this parallelisation on Julia
-        losses = @spawnat :any EvaluateError.getLoss(argList)
+        losses[run] = @spawnat :any EvaluateError.getLoss(argList)
         end
     end
     for run in 1:numRuns
@@ -120,7 +120,7 @@ for id in 1:length(listModelType)
         data = {}
         data["A"] = A
         data["partitions"] = listOfPartitions
-        data["losses"] = fetch(losses)
+        data["losses"] = fetch(losses[run])
         data["parameters"] = parameters
         data["initial_condition"] = initial_condition
 

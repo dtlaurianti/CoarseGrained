@@ -90,7 +90,7 @@ function variation_of_information(X::Vector{Vector{Any}},Y::Vector{Vector{Any}})
       # q = the ratio of nodes in the supernode y to nodes in the graph
       q = size(y,1) / n
       # r = the ratio of nodes in both x & y to nodes in the graph
-      r = (length(intersect(Set(x), Set(y))) / n)
+      r = (length(intersect(unique(x), unique(y))) / n)
       # if x & y share at least one node they are seen as comparable supernodes
       if r > 0.0
         # add to the distance between partitions
