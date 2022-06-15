@@ -142,7 +142,7 @@ end
 =#
 
 # works only for undirected networks as of now.
-function agglomerationReductionFast(A::MatrixNetwork, reducedSize::Integer)
+function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
     A = sparse(A)
     partition = Dict{Integer, Integer}()
     n = size(A, 1)
@@ -164,7 +164,7 @@ function agglomerationReductionFast(A::MatrixNetwork, reducedSize::Integer)
     end
 
     while length(orderedPartition) > reducedSize
-        orderedPartitionpartition, Q = greedyMergeFast(A, orderedPartition, Q, k)
+        orderedPartitionpartition, Q = greedyMerge(A, orderedPartition, Q, k)
     end
 
     aggPartition = Dict{Integer, Integer}()
@@ -174,10 +174,9 @@ function agglomerationReductionFast(A::MatrixNetwork, reducedSize::Integer)
         end
     end
     return aggPartition
-
 end
 
-function greedyMergeFast(A::SparseMatrixCSC, orderedPartition::Vector{Vector{Any}}, Q::Number, k::Matrix)
+function greedyMerge(A::SparseMatrixCSC, orderedPartition::Vector{Vector{Any}}, Q::Number, k::Matrix)
     m = sum(k)
     numGroups = length(orderedPartition)
     lk = ReentrantLock()
