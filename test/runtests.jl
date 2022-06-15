@@ -1,6 +1,7 @@
 using Distributed
 rmprocs(procs()[2:end])
-addprocs(6)
+const numCores = 6
+addprocs(numCores)
 @everywhere begin
     using Test
     using BenchmarkTools
