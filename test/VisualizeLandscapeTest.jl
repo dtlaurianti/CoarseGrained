@@ -22,7 +22,7 @@ end
     LG = line_graph(10)
     GNP = gnp_graph(10;p=0.5)
     dt = now()
-    DT = Dates.format(dt, "mm-dd-yy_HH:MM:SS")
+    DT = Dates.format(dt, "mm-dd_HH-MM-SS")
     string = "test" * DT
     surfaceplots(Part, GNP, 10, save_to_string=string)
     println(string)
