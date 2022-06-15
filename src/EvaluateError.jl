@@ -48,7 +48,6 @@ function getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_co
 
   loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
   #loss = computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)
-  println(loss)
   flush(stdout)
   return loss
 end

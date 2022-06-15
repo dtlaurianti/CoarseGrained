@@ -1,3 +1,5 @@
+using Profile, PProf
+#=
 @testset "line_graph_tests" begin
     @test norm(sparse(line_graph(5))) - norm(sparse(MatrixNetwork{Float64}(5, [1, 2, 3, 4, 5, 5], [2, 3, 4, 5], [1.0, 1.0, 1.0, 1.0]))) ≈ 0
     @test norm(sparse(line_graph(4; edge_weight=3))) - norm(sparse(MatrixNetwork{Float64}(4, [1, 2, 3, 4, 4], [2, 3, 4], [3.0, 3.0, 3.0]))) ≈ 0
@@ -39,4 +41,16 @@ end
     display((cm_graph(10, 5)))
     display((cm_graph(20, 4)))
     display((cm_graph(28, 7)))
+end
+=#
+@testset "Efficiency Testing" begin
+    #display(@benchmark line_graph(15))
+    #@profile line_graph(15)
+    #pprof(;webport=58699)
+    display(@benchmark cycle_graph(1000000))
+    @profile cycle_graph(1000000)
+    pprof(;webport=58699)
+    #display(@benchmark sbm_graph(64, p_within = 1.0, p_between = 0.5))
+    #@profile sbm_graph(64, p_within = 1.0, p_between = 0.5)
+    #pprof(;webport=58699)
 end

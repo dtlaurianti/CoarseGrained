@@ -151,99 +151,9 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
     # plot surface
     pyplot()
     pygui(true)
-    plt = plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.85, 0.05, 0.05, 0.9])))
+    plt = Plots.plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.85, 0.05, 0.05, 0.9])))
     display(plt)
 
-end
-
-#Function surfaceplots2
-#
-#Inputs:
-#  partitions is a dictionary of partitions
-#  A is an adjacency matrix for a graph
-#  parameters is a dictionary of simulation parameters (see PlotLandscape.py for example)
-#Outputs:
-#  Plots a choppy 3D Surface
-#
-#Example of how to run:
-#  G = nx.fast_gnp_random_graph(10, 0.3)
-#  A = nx.to_numpy_array(G)
-#  P = RN.generateRandomPartitions(10,7,100)
-#  surfaceplots(P,A)
-#
-function surfaceplots2(parameters, numSamples, save_to_string=None)
-    #Generate partitions
-    partitions = ReduceNetwork.generateRandomPartitions(parameters["originalSize"], parameters["reducedSize"], numSamples)
-
-    #convert dictionary to an array
-    Arr = dict_to_array(partitions)
-
-    #calculate distance matrix
-    num_par = length(partitions)
-    D = [[0 for i in range(num_par)] for j in range(num_par)]
-    for i in range(num_par)
-        for j in range(num_par)
-          D[i][j] = varinfo(Arr[i],Arr[j])
-        end
-    end
-
-    #calculate MDS on disimilarity matrix
-    embedding = MDS(n_components=2, dissimilarity="precomputed")
-    X_transformed = embedding.fit_transform!(D)
-
-    #Format data
-    x = X_transformed[:,0]
-    y = X_transformed[:,1]
-
-    #Generate graph (must be connected)
-    isAccepted = false
-    while !isAccepted
-        if parameters["graphType"] == "random"
-            G = GenerateGraphs.gnp_graph(parameters["originalSize"], parameters["graphArgs"]["p"])
-        elseif parameters["graphType"] == "cycle"
-            G = GenerateGraphs.cycle_graph(parameters["originalSize"], directed=False)
-        end
-        if nx.is_connected(G)
-            isAccepted = True
-        end
-    end
-
-    # select model
-    if parameters["modelType"] == "linear_model"
-        modelFunc = SimulateDynamics.linear_model
-    elseif parameters["modelType"] == "SIS"
-        modelFunc = SimulateDynamics.SIS_model
-    elseif parameters["modelType"] == "SI"
-        modelFunc = SimulateDynamics.SI_model
-    elseif parameters["modelType"] == "kuramoto_model"
-        modelFunc = SimulateDynamics.kuramoto_model
-    end
-
-    tmax, tinc = parameters["tmax"], parameters["tinc"]
-    modelArgs  = parameters["modelArgs"]
-    initial_condition = ones(10)
-
-    #Calculate z dimension
-    z = zeros(num_par)
-    for i in range(num_par)
-      loss = EvaluateError.getLoss(A, partitions[i], initial_condition, modelFunc, tmax, tinc, modelArgs)
-      z[i] = loss
-    end
-
-    #Save vector data if we want to smooth it later
-    if save_to_string != None
-      df = pd.DataFrame(['x' => x, 'y' => y, 'z' => z])
-      loc = "data/visualization_data/" + save_to_string + ".csv"
-      CSV.write(loc, df)
-    end
-
-    #Plot surface
-    triang = mtri.Triangulation(x,y)
-    fig = plt.figure()
-    ax = fig.add_subplot(1,2,2,projection="3d")
-    surf = ax.plot_trisurf(triang,z,cmap=plt.cm.CMRmap,antialiased=True)
-
-    plt.show()
 end
 
 #function plot_smoothed_surface
@@ -260,7 +170,7 @@ function plot_smoothed_surface(data)
   # plot surface
   pyplot()
   pygui(true)
-  plt = plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.85, 0.05, 0.05, 0.9])))
+  plt = Plots.plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.85, 0.05, 0.05, 0.9])))
   display(plt)
 end
 

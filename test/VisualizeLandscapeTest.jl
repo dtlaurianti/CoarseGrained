@@ -18,7 +18,7 @@ end
 end
 
 @testset "surfaceplots" begin
-    Part = generateRandomPartitions(10, 7, 100)
+    Part = generateRandomPartitions(10, 7, 500)
     LG = line_graph(10)
     GNP = gnp_graph(10;p=0.5)
     dt = now()
