@@ -1,5 +1,5 @@
 
-# Given how the original nodes are mapped to the supernodes with partitions, returns the aggregated error
+# Given how the original nodes are mapped to the supernodes with partitions, returns the aggregated series
 function aggregateTimeSeries(originalTimeSeries, partition::Dict{Integer,Integer}, type="average")
     if type == "average"
         supernodeSizes = getSupernodeSizes(partition)
@@ -37,7 +37,6 @@ function lossFunction(timeseries1, timeseries2, type="L2")
 end
 
 function getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
-  #These functions are in the parallelized function to hopefully reduce the amount of single threaded tasks
 
   compressed_initial_condition = compressInitialCondition(initial_condition, partition)
   reducedA = compressAdjacencyMatrix(A, partition)
@@ -46,6 +45,5 @@ function getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_co
 
   loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
   #loss = computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)
-  flush(stdout)
   return loss
 end

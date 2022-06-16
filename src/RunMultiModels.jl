@@ -1,9 +1,9 @@
-using Pickle
+using JLD2
 using Distributed
 
 # network parameters
 originalSize = 10
-reducedSize  = 5
+reducedSize  = 9
 #=
 options for graphType, graphArgs
     'random', {'p': p} --> generates G = GenerateGraphs.gnp_graph(originalSize, p)
@@ -12,7 +12,7 @@ options for graphType, graphArgs
 =#
 # graphType, graphArgs = "random", (p=0.4)
 # graphType, graphArgs = "cycle", ()
-graphType, graphArgs = "line", ()
+graphType, graphArgs = "line", Dict()
 
 # model parameters
 #=
@@ -30,12 +30,12 @@ options for modelType, modelArgs
 # select models
 listModelType   = ["linear_model"]
 listModelAbbrev = ["Lin"]
-listModelArgs   = [(ϵ=-3/originalSize,)]
+listModelArgs   = [Dict(:ϵ=>-3/originalSize)]
 
 # simulation parameters
 tmax    = 10
 tinc    = 0.1
-numRuns = 100 # number of initial conditions to simulate
+numRuns = 1 # number of initial conditions to simulate
 
 ###### NO NEED TO TOUCH BELOW ######
 # Generate a list of partitions to test
@@ -56,69 +56,87 @@ for id in 1:length(listModelType)
 
     # select model
     if modelType == "linear_model"
-        modelFunc = SimulateDynamics.linear_model
+        modelFunc = linear_model
     elseif modelType == "SIS_model"
-        modelFunc = SimulateDynamics.SIS_model
+        modelFunc = SIS_model
     elseif modelType == "SI_model"
-        modelFunc = SimulateDynamics.SI_model
+        modelFunc = SI_model
     elseif modelType == "kuramoto_model"
-        modelFunc = SimulateDynamics.kuramoto_model
+        modelFunc = kuramoto_model
     elseif modelType == "linear_opinions"
-        modelFunc = SimulateDynamics.linear_opinions
+        modelFunc = linear_opinions
     elseif modelType == "nonlinear_opinions"
-        modelFunc = SimulateDynamics.nonlinear_opinions
+        modelFunc = nonlinear_opinions
     end
 
 
-    # Construct network
-    isAccepted = False
+    # construct network
+    isAccepted = false
+    # declare A outside loop so it stays in scope
+    A = nothing
+    # generate a graph with the specified parameters, making sure it is connected
     while !isAccepted
         if graphType == "random"
-            G = GenerateGraphs.gnp_graph(originalSize, graphArgs[:p])
+            A = gnp_graph(originalSize, graphArgs...)
         elseif graphType == "cycle"
-            G = GenerateGraphs.cycle_graph(originalSize, directed=False)
+            A = cycle_graph(originalSize, directed=false)
         elseif graphType == "line"
-            G = GenerateGraphs.line_graph(originalSize, directed=False)
+            A = line_graph(originalSize, directed=false)
         end
-        if GenerateGraphs.isConnected(G)
-            isAccepted = True
+        if isConnected(A)
+            isAccepted = true
         end
     end
-    losses = SharedArray{Float64}(numRuns)
     # Run simulations numRuns times with different initial conditions
     for run in 1:numRuns
+        losses=[]
         # initial_condition = np.random.rand(originalSize)
         # initial_condition = np.concatenate((np.ones(1),np.zeros(originalSize-1)))
         initial_condition = listOfICs[run]
-
-        argList = []
+        # for each partition, create a task to solve for the loss, and pass the Future to the task to the losses RemoteChannel
         for partition in listOfPartitions
-            # Doubly wrapped in an Array because append tries to splat it
-            append!(arglist, [[A, partition, initial_condition, modelFunc, tmax, tinc, modelArgs...]])
-        end
-        #TODO: figure out this parallelisation on Julia
-        losses[run] = @spawnat :any EvaluateError.getLoss(argList)
-        end
-    end
-    for run in 1:numRuns
-        # specify folder and check if it already exists
-        foldername = SimulateDynamics.foldername(modelType, modelArgs, graphType, graphArgs)
-        if !isdir(foldername)
-             mkdir(foldername) # make folder if it doesn't exist
+            results = @spawnat :any getLoss(A, partition, initial_condition, modelFunc, tmax, tinc; modelArgs...)
+            push!(losses, results)
         end
 
+        # specify folder and check if it already exists
+        modelArgsString = ""
+        for (key,value) in modelArgs
+            modelArgsString *= "_"*string(key)*"="*string(value)
+        end
+        graphArgsString = ""
+        for (key,value) in graphArgs
+            graphArgsString *= "_"*string(key)*"="*string(value)
+        end
+
+        foldername = "data/model_data/"*modelType*modelArgsString*"/"*graphType*graphArgsString
+        if !isdir(foldername)
+             mkpath(foldername) # make folder if it doesn't exist
+        end
         # prep filename and data
         filename = foldername * "/" * string(originalSize) * "_" * string(reducedSize) * "_run" * string(run)
 
-        data = {}
+        jldsave("$filename.jld2";
+            A,
+            partitions = listOfPartitions,
+            losses = [fetch(losses[i]) for i=1:length(listOfPartitions)],
+            parameters,
+            initial_condition
+        )
+
+        #=
+        data = Dict()
         data["A"] = A
         data["partitions"] = listOfPartitions
-        data["losses"] = fetch(losses[run])
+        # get all the loss data from the RemoteChannel for this run
+        data["losses"] = [fetch(losses[i]) for i=1:length(listOfPartitions)]
         data["parameters"] = parameters
         data["initial_condition"] = initial_condition
+        store("./data/model_data/testid$(id)run$(run).pkl", dump(data))
 
-        open(filename, "wb") do file
-            pickle.dump(data, file)
-        end
+        #open(filename, "wb") do file
+        #    pickle.dump(data, file)
+        #end
+        =#
     end
 end

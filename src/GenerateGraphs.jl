@@ -10,10 +10,10 @@ using Graphs
 function isConnected(A::MatrixNetwork)
   A = sparse(A)
   n = size(A,1)
-  # sum the number of k-walks between each node pair
-  Asum = sum(A^k for k=1:(n-1))
+  # sum the number of k-walks between each node pair, add I to not require a path from a node to itself
+  Asum = sum(A^k for k=1:(n-1)) + I
   # check if any of the nodes have no path between them
-  return !(Asum .≈ 0)
+  return sum(Asum .≈ 0) == 0
 end
 
 # example graphs (non random)
