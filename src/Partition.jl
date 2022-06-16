@@ -65,23 +65,6 @@ function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
     return cleanPartition(partition)
 end
 =#
-# make the supernode IDs number 1:n
-function cleanPartition(partition::Dict{Integer, Integer})
-    cleanedPartition = Dict{Integer, Integer}()
-    for (node, group) in partition
-        try
-            partition[node] = cleanedPartition[group]
-        catch
-            try
-                cleanedPartition[group] = maximum(collect(values(cleanedPartition))) + 1
-            catch
-                cleanedPartition[group] = 1
-            end
-            partition[node] = cleanedPartition[group]
-        end
-    end
-    return partition
-end
 #= replaced by multithreaded version
 function greedyMerge(A::SparseMatrixCSC, partition::Dict, Q::Number, k::Matrix)
     m = sum(k)
@@ -227,6 +210,24 @@ function greedyMerge(A::SparseMatrixCSC, orderedPartition::Vector{Vector{Any}}, 
     return orderedPartition, maxQ[maxQInd]
 end
 
+# make the supernode IDs number 1:n
+function cleanPartition(partition::Dict{Integer, Integer})
+    cleanedPartition = Dict{Integer, Integer}()
+    for (node, group) in partition
+        try
+            partition[node] = cleanedPartition[group]
+        catch
+            try
+                cleanedPartition[group] = maximum(collect(values(cleanedPartition))) + 1
+            catch
+                cleanedPartition[group] = 1
+            end
+            partition[node] = cleanedPartition[group]
+        end
+    end
+    return partition
+end
+
 # Takes the number of nodes n and returns a Dictionary of all possible partitions
 function exhaustivePartition(n::Integer)
     allPartitions = Dict{Integer,Dict{Integer,Integer}}()
@@ -238,6 +239,7 @@ function exhaustivePartition(n::Integer)
                 partition[nodeId] = supernodeId
             end
         end
+        # The most expensive part of this function by far, ~75%
         allPartitions[index] = cleanPartition(partition)
     end
     return allPartitions

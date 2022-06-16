@@ -15,10 +15,10 @@ end
 @testset "Efficiency Testing" begin
     #display(@benchmark generateRandomPartitions(10, 5, 1000))
     #display(@benchmark agglomerationReduction(gnp, 50) setup=(gnp=gnp_graph(100)) seconds=10)
-    display(@benchmark exhaustivePartition(3))
+    display(@benchmark exhaustivePartition(10))
     @profiler begin
-        for i=1:100
-            exhaustivePartition(3)
+        for i=1:10
+            exhaustivePartition(10)
         end
     end
 end

@@ -1,12 +1,9 @@
 using Pickle
 using Distributed
 
-###### PARAMETERS TO TWEAK ######
-numProcesses = 4 # len(os.sched_getaffinity(0)) # sched_getaffinity doesn't work on Macs
-
 # network parameters
 originalSize = 10
-reducedSize  = 2
+reducedSize  = 5
 #=
 options for graphType, graphArgs
     'random', {'p': p} --> generates G = GenerateGraphs.gnp_graph(originalSize, p)
@@ -33,7 +30,7 @@ options for modelType, modelArgs
 # select models
 listModelType   = ["linear_model"]
 listModelAbbrev = ["Lin"]
-listModelArgs   = [(ϵ=-3/originalSize)]
+listModelArgs   = [(ϵ=-3/originalSize,)]
 
 # simulation parameters
 tmax    = 10
@@ -42,7 +39,7 @@ numRuns = 100 # number of initial conditions to simulate
 
 ###### NO NEED TO TOUCH BELOW ######
 # Generate a list of partitions to test
-listOfPartitions  = ReduceNetwork.kPartition(originalSize, reducedSize)
+listOfPartitions  = kPartition(originalSize, reducedSize)
 
 # Generate a list of initial conditions
 listOfICs = [rand(originalSize) for run in 1:numRuns]

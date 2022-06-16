@@ -1,7 +1,9 @@
 using Distributed
-rmprocs(procs()[2:end])
 const numCores = 6
-addprocs(numCores)
+if (nworkers() != numCores)
+    rmprocs(procs()[2:end])
+    addprocs(numCores)
+end
 @everywhere begin
     using Test
     using BenchmarkTools
