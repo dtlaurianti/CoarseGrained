@@ -1,9 +1,5 @@
 using Pickle
 using Distributed
-include("ReduceNetwork.jl")
-include("SimulateDynamics.jl")
-@everywhere include("EvaluateError.jl")
-include("GenerateGraphs.jl")
 
 ###### PARAMETERS TO TWEAK ######
 numProcesses = 4 # len(os.sched_getaffinity(0)) # sched_getaffinity doesn't work on Macs
@@ -87,7 +83,7 @@ for id in 1:length(listModelType)
         elseif graphType == "line"
             G = GenerateGraphs.line_graph(originalSize, directed=False)
         end
-        if GenerateGraphs.is_connected(G)
+        if GenerateGraphs.isConnected(G)
             isAccepted = True
         end
     end

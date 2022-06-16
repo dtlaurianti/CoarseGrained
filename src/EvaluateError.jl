@@ -1,5 +1,3 @@
-include("ReduceNetwork.jl")
-include("SimulateDynamics.jl")
 
 # Given how the original nodes are mapped to the supernodes with partitions, returns the aggregated error
 function aggregateTimeSeries(originalTimeSeries, partition::Dict{Integer,Integer}, type="average")
@@ -44,7 +42,7 @@ function getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_co
   compressed_initial_condition = compressInitialCondition(initial_condition, partition)
   reducedA = compressAdjacencyMatrix(A, partition)
   originalTimeSeries = simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
-  reducedTimeSeries = simulateODEonGraph(reducedA, compressed_initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)  
+  reducedTimeSeries = simulateODEonGraph(reducedA, compressed_initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
 
   loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
   #loss = computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)

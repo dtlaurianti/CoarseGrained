@@ -7,7 +7,7 @@ using Random
 using Graphs
 
 # returns true if A has paths between every node pair
-function is_connected(A::MatrixNetwork)
+function isConnected(A::MatrixNetwork)
   A = sparse(A)
   n = size(A,1)
   # sum the number of k-walks between each node pair
@@ -15,6 +15,7 @@ function is_connected(A::MatrixNetwork)
   # check if any of the nodes have no path between them
   return !(Asum .≈ 0)
 end
+
 # example graphs (non random)
 function line_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
   if n < 0
