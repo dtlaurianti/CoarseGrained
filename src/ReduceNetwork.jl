@@ -1,6 +1,5 @@
 using MatrixNetworks
 using LinearAlgebra
-include("Partition.jl")
 
 # counts the number of nodes in each supernode of a partition
 function getSupernodeSizes(partition::Dict{Integer,Integer})
