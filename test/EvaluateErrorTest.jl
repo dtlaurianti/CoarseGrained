@@ -1,6 +1,9 @@
 using Plots
 using GraphRecipes
 include("../src/ReduceNetwork.jl")
+include("../src/GenerateGraphs.jl")
+include("../src/Partition.jl")
+
 @testset "aggregateTimeSeries_test" begin
     Random.seed!(trunc(Int, time() * 1000000))
     n = 50
@@ -30,17 +33,30 @@ include("../src/ReduceNetwork.jl")
     display(gplt1c)
     display(gplt2c)
 
-    plt1 = plot(n,xlim=(0,1000),ylim=(0,25),title="line_graph linear_model", legend=false)
-    plt2 = plot(cn,xlim=(0,1000),ylim=(0,25),title="line_graph linear_model compressed",legend=false)
+    plt1 = Plots.plot(n,xlim=(0,1000),ylim=(0,25),title="line_graph linear_model", legend=false)
+    plt2 = Plots.plot(cn,xlim=(0,1000),ylim=(0,25),title="line_graph linear_model compressed",legend=false)
     agg = aggregateTimeSeries(sol, Partition1)
-    plt3 = plot(cn,xlim=(0,1000),ylim=(0,25),title="aggregate error",legend=false)
+    plt3 = Plots.plot(cn,xlim=(0,1000),ylim=(0,25),title="aggregate error",legend=false)
     anim2 = @animate for i=1:1000
         push!(plt1,sol[i])
         push!(plt2,csol[i])
         push!(plt3,agg[:,i])
-        plt = plot(plt1, plt2, plt3, layout = (3, 1))
+        plt = Plots.plot(plt1, plt2, plt3, layout = (3, 1))
     end every 10
 
     #display(gif(anim1))
     display(gif(anim2))
 end
+
+#=
+Part = generateRandomPartitions(10, 7, 10)
+Partition1 = Part[1]
+LG = line_graph(10)
+
+@testset "Efficiency Testing" begin
+    display(@benchmark getLoss(LG, Partition1, ones(10), linear_model, 10, 0.01, ϵ=-0.3))
+    @profile getLoss(LG, Partition1, ones(10), linear_model, 10, 0.01, ϵ=-0.3)
+    pprof(;webport=58697)
+end
+
+=#

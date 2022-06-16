@@ -1,5 +1,5 @@
 using Dates
-
+#=
 @testset "dict_to_array_test" begin
     Part = generateRandomPartitions(10, 7, 10)
     Partition1 = Part[1]
@@ -31,6 +31,13 @@ end
 
     #=In normal terminal, (with R installed)
     call Rscript --vanilla ~/Documents/GitHub/CoarseGrained/src/make_smoothdata.R string"
-    to make smooth data. Then plot it with the function invokation below=#
+    to make smooth data. Then plot it with the function invokation below (justreplace the name)=#
     #plot_smoothed_surface("../data/visualization_data/test06-16_12-01-35_smooth.csv")
+end
+=#
+
+@testset "Efficiency Testing" begin
+    display(@benchmark generateRandomPartitions(15, 10, 500))
+    display(@benchmark line_graph(15))
+    display(@benchmark surfaceplots(generateRandomPartitions(15, 10, 500), line_graph(15), 15))
 end
