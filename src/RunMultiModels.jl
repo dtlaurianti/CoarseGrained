@@ -105,7 +105,6 @@ for id in 1:length(listModelType)
         end
         #TODO: figure out this parallelisation on Julia
         losses[run] = @spawnat :any EvaluateError.getLoss(argList)
-        end
     end
     for run in 1:numRuns
         # specify folder and check if it already exists

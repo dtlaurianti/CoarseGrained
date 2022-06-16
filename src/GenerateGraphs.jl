@@ -176,25 +176,7 @@ function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, edge_weight=1
   return MatrixNetwork(sparse(G))
 end
 
-function cm_graph(n; max_degree=5)
-  nodesPerDegree = n ÷ max_degree
-  degreeArray = Array{Int64, 1}(undef, n)
-  degree = 1
-  iterator = 1
-  for i in 1:n
-    degreeArray[i] = degree
-    #push!(degreeArray, degree)
-    if iterator >= nodesPerDegree
-      if i == (n-1)
-        degree -= 1
-      end
-      iterator = 1
-      degree += 1
-      @goto skip
-    end
-    iterator += 1
-    @label skip
-  end
+function cm_graph(n, degreeArray)
   G = random_configuration_model(n, degreeArray)
   return MatrixNetwork(sparse((G)))
 end
