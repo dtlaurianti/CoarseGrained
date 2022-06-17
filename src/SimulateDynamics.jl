@@ -20,12 +20,22 @@ function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   du .= (p.ϵ.*p.A-I)*u
 end
 
-function SIS_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
-  du .= -p.γ.*u + p.β.*(ones(length(u))-u).*(p.A*u)
-end
+#=
+function SIS_model(t, x, A, gamma, beta)
+  n = np.size(A, axis=0)
+  return -gamma*x + beta*np.multiply((np.ones(n)-x), A.dot(x))
+  =#
 
+function SIS_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+  du .= -p.γ.*u + p.β.*((ones(length(u))-u).*(p.A*u))
+end
+#=
+function SI_model(t, x, A, beta)
+  n = np.size(A, axis=0)
+  return beta*np.multiply((np.ones(n)-x), A.dot(x))
+=#
 function SI_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
-  du .= p.β.*(ones(length(u))-u).*(p.A*u)
+  du .= p.β.*((ones(length(u))-u).*(p.A*u))
 end
 
 function kuramoto_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
@@ -40,17 +50,17 @@ end
 
 function LotkaVolterra_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   n = size(p.A, 1)
-  return p.ω.*u + (u.*(p.A⋅u))
+  return p.ω.*u + (u.*sum((p.A.*u), dims=2))
 end
 
-function linear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+function linear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number; c=1)
   #=
   Simplest model of linear opinion dynamics; c = constant, for now
   =#
-  Dout = diag(sum(p.A, 1))            # compute outdegree matrix
-  Din  = diag(sum(p.A, 2))            # compute indegree matrix
-  L =  Dout + Din - p.A - transpose(p.A)  # compute graph laplacian
-  return -c.*L⋅x
+  Dout = diag(sum(p.A, dims=1))            # compute outdegree matrix
+  Din  = diag(sum(p.A, dims=2))            # compute indegree matrix
+  L =  Dout .+ Din .- p.A .- transpose(p.A)  # compute graph laplacian
+  return -c.*sum((L*u), dims=2)
 end
 
 function nonlinear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number)
