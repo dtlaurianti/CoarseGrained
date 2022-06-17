@@ -105,11 +105,8 @@ function greedyMerge(A::SparseMatrixCSC, orderedPartition::Vector{Vector{Any}}, 
             aV = 0
             for i in orderedPartition[groupIndex1]
                 for j in orderedPartition[groupIndex2]
-                    try
-                        # the edge between the two supernodes
-                        eUV += A[i,j]/m # because directed edge list
-                    catch
-                    end
+                    # the edge between the two supernodes
+                    eUV += A[i,j]/m # because directed edge list
                 end
             end
             # calculate the magnitude of supernode U
@@ -172,6 +169,9 @@ function exhaustivePartition(n::Integer)
             end
         end
         c += 1
+
+        # this line is the slow part of this function, but no speedup was to be had by simply working inside allPartitions from the start
+        # not sure if there is a better way to do this
         allPartitions[c] = copy(curPartition)
     end
     return allPartitions
