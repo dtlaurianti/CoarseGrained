@@ -50,6 +50,13 @@ function dict_to_array(dictionary::Array{Dict,1})
   return Arr
 end
 =#
+
+#Function: dict_to_array
+#Parameters: partitions, an array of dictionaries each representing a partition from some number of nodes to some 
+#            smaller number of nodes.
+#Purpose: to create an array of arrays each containing smaller arrays representing nodes in the reduced network.
+#         These smaller arrays contain all of the original nodes that were mapped to that node in the reduced network.
+#Return value: An array of arrays representing the reduced network for each partition in the original partitions array.
 function dict_to_array(partitions::Array{Dict{Integer,Integer}})
     Arr = []
     for i in 1:length(partitions)
@@ -58,6 +65,15 @@ function dict_to_array(partitions::Array{Dict{Integer,Integer}})
     end
     return Arr
 end
+
+#Function: partition_dict_to_array
+#Parameters: partition, a dictionary representing a partition from some number of nodes to some 
+#            smaller number of nodes.
+#Purpose: to create an array of smaller arrays representing nodes in the reduced network.
+#         These smaller arrays contain all of the original nodes that were mapped to that node in the reduced network.
+#         This function performs the same task as dict_to_array, but for just one partition dictionary as opposed to 
+#         an array of them.
+#Return value: An array representing the nodes of the reduced network defined in the partition dictionary
 function partition_dict_to_array(partition::Dict{Integer,Integer})
     # the quantity of nodes in each supernode
     supernodeSizes = getSupernodeSizes(partition)
@@ -80,7 +96,12 @@ end
 #   873-895. doi:10.1016/j.jmva.2006.11.013
 # https://gist.github.com/jwcarr/626cbc80e0006b526688
 
-
+#Function: variation_of_information
+#Parameters: X, an array of arrays of integers
+#            Y, an array of arrays of integers
+#Purpose: To provide a measure of the difference between two partitions
+#Return value: a positive, floating point value that is higher the more different
+#              X and Y are.
 function variation_of_information(X::Vector{Vector{Any}},Y::Vector{Vector{Any}})
   n = float(sum([size(x,1) for x in X]))
   σ = 0.0
@@ -102,16 +123,17 @@ function variation_of_information(X::Vector{Vector{Any}},Y::Vector{Vector{Any}})
   return abs(σ)
 end
 
-#Function surfaceplots
-#
-#Inputs:
-#  partitions is a dictionary of partitions
-#  A is an adjacency matrix for a graph
-#
-#Outputs:
-#  Plots a choppy 3D Surface
-#
-function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; save_to_string="")
+#Function: surfaceplots
+#Parameters: partitions, an array of dictionaries representing network partitions
+#            A, MatrixNetwork representation of a network
+#            NumOriginalNodes, the number of nodes in A, which should be the same as the number
+#            of original nodes in all of the partitions.
+#            save_to_string, (optional) name of the string that the plotted data should be saved to
+#            in CSV format. If left empty, the data will not be saved to a file.
+#Purpose: To plot a 3d surface representing the loss landscape of a range of partitions
+#Return value: none. Plots a graph and saves the (x, y, z) data in a CSV file if save_to_string
+#              is provided a value.
+function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; save_to_string="", modelType::Function=linear_model)
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
 
@@ -137,7 +159,7 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
     z = zeros(num_par)
     for i in 1:num_par
         # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
-      loss = getLoss(A, partitions[i], ones(NumOriginalNodes), linear_model, NumOriginalNodes, 0.01, ϵ=-0.3)
+      loss = getLoss(A, partitions[i], ones(NumOriginalNodes), modelType, NumOriginalNodes, 0.01, ϵ=-0.3)
       z[i] = loss
     end
 

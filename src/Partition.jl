@@ -8,6 +8,17 @@ using Base.Threads
 
 # generate numPartitions random partitions mapping a network of size originalSize
 # to a network of size reducedSize
+
+#Function: generateRandomPartitions
+#Parameters: originalSize, integer number of nodes in original network
+#            reducedSize, integer number of nodes to map the original nodes to. Should be smaller than originalSize
+#            numPartitions, integer number of different partitions to make from originalSize nodes to reducedSize nodes
+#Purpose: To generate numPartitions many mappings from originalSize nodes to reducedSize nodes.
+#Return value: An array of dictionaries where there are originalSize many keys associated with reducedSize
+#              many values such that multiple keys will be associated with the same value(s) representing
+#              multiple nodes in the original network being mapped to the same "supernode" in the reduced network.
+#              There are numPartitions many dictionaries in the array, each representing a different mapping of
+#              originalSize many nodes to reducedSize many nodes.
 function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, numPartitions::Integer)
     partitionList = Array{Dict{Integer,Integer}, 1}(undef, numPartitions)
     Random.seed!(trunc(Int, time() * 1000000))
@@ -391,7 +402,7 @@ end
 function kPartitionNodes(nodeIds::Vector, k::Integer)
     #=
     generate all possible partitions of nodeIds into k supernodes
-    using kPartitionNodesAll, then remove empy supernodes
+    using kPartitionNodesAll, then remove empty supernodes
     =#
     # remove empty supernodes
     kpartitions = []
