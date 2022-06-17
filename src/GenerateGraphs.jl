@@ -16,6 +16,12 @@ function isConnected(A::MatrixNetwork)
   return sum(Asum .≈ 0) == 0
 end
 
+#Function: line_graph
+#Parameters: n, integer number of nodes
+#            edge_weight, (optional) integer/floating point weight of edges in graph
+#            directed, (optional) bloolean (true/false) denoting whether the graph should be directed
+#Purpose: To generate a line graph with n nodes connected in a line.
+#Return value: MatrixNetwork representation of a line graph
 # example graphs (non random)
 function line_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
   if n < 0
@@ -40,7 +46,13 @@ function line_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
   end
 end
 
-
+#Function: cycle_graph
+#Parameters: n, integer number of nodes
+#            edge_weight, (optional) integer/floating point weight of edges in graph
+#            directed, (optional) bloolean (true/false) denoting whether the graph should be directed
+#Purpose: To generate a cycle graph with n nodes connected in a cycle that includes all nodes. 
+#         All nodes have degree 2.
+#Return value: MatrixNetwork representation of a cycle graph
 function cycle_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
   if n < 0
     throw(DomainError("n must be >= 0."))
@@ -67,6 +79,12 @@ function cycle_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
   end
 end
 
+#Function: grid_graph
+#Parameters: n, integer number of nodes
+#            edge_weight, (optional) integer/floating point weight of edges in graph
+#            directed, (optional) bloolean (true/false) denoting whether the graph should be directed
+#Purpose: To generate a grid-shaped graph that is as close to a perfect 2-d lattice as possible with n nodes
+#Return value: MatrixNetwork representation of a line graph
 function grid_graph(n::Int; edge_weight::Number=1.0, directed::Bool=false)
   #=A square (or close to square) 2d lattice with a number of nodes close to `n`. The
   directed version of the grid graph has a source and a sink node (e.g., everything
@@ -105,6 +123,13 @@ end
 
 # random graphs
 
+#Function: gnp_graph
+#Parameters: n, integer number of nodes
+#            p, floating point number (maximum 1.0) that represents the probability that any node is connected to any other node
+#            directed, (optional) bloolean (true/false) denoting whether the graph should be directed
+#            edge_weight, (optional) integer/floating point weight of edges in graph
+#Purpose: To generate a random graph using a user-specified probability that nodes will be connected to each other.
+#         This is basically the Erdos-Renyi model.
 function gnp_graph(n::Int; p::AbstractFloat=0.1, directed::Bool=true, edge_weight::Number=1.0)
   if directed
     return MatrixNetwork(sprand(n,n,p,bitrand).*edge_weight)
@@ -115,6 +140,17 @@ function gnp_graph(n::Int; p::AbstractFloat=0.1, directed::Bool=true, edge_weigh
   end
 end
 
+#Function: sbm_graph
+#Parameters: n, integer number of nodes
+#            communities, integer number of distinct communities within the stochastic block model
+#            p_within, floating point number (maximum 1.0) that represents the probability that any node is connected
+#            to any other node within the same community
+#            p_between, floating point number (maximum 1.0) that represents the probability that any node is connected
+#            to any other node outside of its community
+#            directed, (optional) bloolean (true/false) denoting whether the graph should be directed
+#            edge_weight, (optional) integer/floating point weight of edges in graph
+#Purpose: To generate a random stochastic block model graph with n nodes and communities communities
+#         using the user-specified probabilities of within and between community connections.
 function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, edge_weight=1.0, directed=true)
   if directed
     if communities == 1
@@ -177,25 +213,13 @@ function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, edge_weight=1
   return MatrixNetwork(sparse(G))
 end
 
-function cm_graph(n; max_degree=5)
-  nodesPerDegree = n ÷ max_degree
-  degreeArray = Array{Int64, 1}(undef, n)
-  degree = 1
-  iterator = 1
-  for i in 1:n
-    degreeArray[i] = degree
-    #push!(degreeArray, degree)
-    if iterator >= nodesPerDegree
-      if i == (n-1)
-        degree -= 1
-      end
-      iterator = 1
-      degree += 1
-      @goto skip
-    end
-    iterator += 1
-    @label skip
-  end
+#Function: cm_graph
+#Parameters: n, integer number of nodes
+#            degreeArray, an array of integers specifying the degree of each node in the graph.
+#            degreeArray must not contain any number greater than or equal to n, degreeArray
+#            must be of length n, and the sum of all elements in degreeArray must be an even number
+#Purpose: To generate a random configuration model graph with n nodes each having degree specified in degreeArray
+function cm_graph(n, degreeArray)
   G = random_configuration_model(n, degreeArray)
   return MatrixNetwork(sparse((G)))
 end
