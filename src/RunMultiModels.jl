@@ -93,7 +93,7 @@ for id in 1:length(listModelType)
         # initial_condition = np.random.rand(originalSize)
         # initial_condition = np.concatenate((np.ones(1),np.zeros(originalSize-1)))
         initial_condition = listOfICs[run]
-        # for each partition, create a task to solve for the loss, and pass the Future to the task to the losses array to grab later
+        # for each partition, create a task to solve for the loss, and pass the Future to the task to the losses RemoteChannel
         for partition in listOfPartitions
             results = @spawnat :any getLoss(A, partition, initial_condition, modelFunc, tmax, tinc; modelArgs...)
             push!(losses, results)
