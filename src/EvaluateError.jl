@@ -15,7 +15,7 @@ function aggregateTimeSeries(originalTimeSeries, partition::Dict{Integer,Integer
     return aggregatedTimeSeries
 end
 
-function computeDynamicalError(originalTimeSeries::ODESolution, reducedTimeSeries::ODESolution, partition::Dict{Integer,Integer})
+function computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition::Dict{Integer,Integer})
   numTimeSteps = size(reducedTimeSeries, 2)
   aggregatedTimeSeries = aggregateTimeSeries(originalTimeSeries, partition)
   return sum(sum((reducedTimeSeries - aggregatedTimeSeries).^2))/numTimeSteps
@@ -44,8 +44,8 @@ function getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_co
   originalTimeSeries = simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
   reducedTimeSeries = simulateODEonGraph(reducedA, compressed_initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
 
-  loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
-  #loss = computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)
+  #loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
+  loss = computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)
   flush(stdout)
   return loss
 end
