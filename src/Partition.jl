@@ -263,6 +263,41 @@ function partitionNodes(nodeIds::Vector{})
     end
     return partitions
 end
+
+function exhaustivePartitionFast(n::Integer)
+    allPartitions = Dict{Integer,Dict{Integer, Integer}}()
+    c = 1
+    # storing the partition in a way that lets us find the next partition in O(1) time
+    curPartition = Dict{Integer, Integer}(i=>1 for i=1:n)
+    allPartitions[c] = copy(curPartition)
+    while curPartition[n] < n
+        #@threads begin
+            #convert to a Dictionary partition
+        #end
+        iter = false
+        ind = n
+        # get the rightmost node that we can increment
+        while !iter
+            # if this node can be moved to the next supernode or a new supernode can be created
+            if curPartition[ind] <= curPartition[ind-1]
+                iter = true
+                # move the node into the next supernode
+                curPartition[ind] += 1
+                # move all nodes after this node back to the first supernode
+                for i=(ind+1):n
+                    curPartition[i] = 1
+                end
+                #curPartition[ind+1:end] .= 1
+            else
+                ind -= 1
+            end
+        end
+        c += 1
+        allPartitions[c] = copy(curPartition)
+    end
+    return allPartitions
+end
+
 #=
 # WARNING: not super efficient at the moment!
 function exhaustivePartition(n::Integer)

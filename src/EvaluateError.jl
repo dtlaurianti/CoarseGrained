@@ -7,9 +7,8 @@ function aggregateTimeSeries(originalTimeSeries, partition::Dict{Integer,Integer
         originalSize = size(originalTimeSeries,1)
         numTimeSteps = size(originalTimeSeries,2)
         aggregatedTimeSeries = zeros((reducedSize, numTimeSteps))
-
         for node in 1:originalSize
-        aggregatedTimeSeries[partition[node], :] .+= originalTimeSeries[node, :]./supernodeSizes[partition[node]]
+          aggregatedTimeSeries[partition[node], :] .+= originalTimeSeries[node, :]./supernodeSizes[partition[node]]
         end
     end
     return aggregatedTimeSeries
@@ -37,7 +36,6 @@ function lossFunction(timeseries1, timeseries2, type="L2")
 end
 
 function getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
-
   compressed_initial_condition = compressInitialCondition(initial_condition, partition)
   reducedA = compressAdjacencyMatrix(A, partition)
   originalTimeSeries = simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
