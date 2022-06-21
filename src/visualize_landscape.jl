@@ -138,7 +138,7 @@ end
 #Return value: none. Plots a graph and saves the (x, y, z) data in a CSV file if save_to_string
 #              is provided a value.
 function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; save_to_string="", modelType::Function=linear_model)
-    listModelArgs = Dict(:ϵ=>-3/NumOriginalNodes, :β=>0.5, :γ=>0.5, :ω=>0.5, :K=>0.5, :d=>0.5, :c=>0.5, :b=>0.5)
+    listModelArgs = Dict(:ϵ=>-3/NumOriginalNodes, :β=>0.5, :γ=>0.5, :ω=>rand(NumOriginalNodes), :K=>0.5, :d=>0.5, :c=>0.5, :b=>0.5)
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
 
@@ -164,7 +164,7 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
     z = zeros(num_par)
     for i in 1:num_par
         # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
-      loss = getLoss(A, partitions[i], ones(NumOriginalNodes), modelType, NumOriginalNodes, 0.01; listModelArgs...)
+      loss = getLoss(A, partitions[i], rand(NumOriginalNodes), modelType, NumOriginalNodes, 0.01; listModelArgs...)
       z[i] = loss
     end
 
