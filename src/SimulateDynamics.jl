@@ -16,6 +16,10 @@ Base.@kwdef struct Model_Parameters
   b::Number=0
 end
 
+# write function to modify du element-wise, assigning du to another vector will not modify it in-place
+# this causes unexpected behavior in the simulateODEonGraph function
+
+
 function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   du .= (p.ϵ.*p.A-I)*u
 end
