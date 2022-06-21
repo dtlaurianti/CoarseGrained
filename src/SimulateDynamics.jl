@@ -4,6 +4,9 @@ using DifferentialEquations
 using SparseArrays
 
 # create a common Type for passing parameters
+# A is the matrix that represents our network
+# all other parameters are optional,
+# and the model will only use the parameters it needs
 Base.@kwdef struct Model_Parameters
   A::SparseMatrixCSC
   ϵ::Number=1
@@ -16,10 +19,17 @@ Base.@kwdef struct Model_Parameters
   b::Number=0
 end
 
-# write function to modify du element-wise, assigning du to another vector will not modify it in-place
+# write functions to modify du element-wise,
+# assigning du to another vector will not modify it in-place but reassign its pointer (?)
 # this causes unexpected behavior in the simulateODEonGraph function
 
-
+#Function: linear_model
+#Parameters: du, passed by the ODESolver, modified in place
+#            u, passed by the ODESolver, our initial_conditions on first pass, then whatever they become
+#            p, the struct which we will use A and ϵ from
+#            t, the time variable ODESolver will use
+#Purpose: to simulate a linear model with the given inputs
+#Return value: Modifies in place, return value not used
 function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   du .= (p.ϵ.*p.A-I)*u
 end
