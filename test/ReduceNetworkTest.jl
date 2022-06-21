@@ -1,9 +1,6 @@
 using Plots
 using GraphRecipes
 
-@userplot NetworkPlot
-@recipe function f(np::NetworkPlot)
-end
 
 @testset "getSupernodeSizes_test" begin
     Part = generateRandomPartitions(10, 7, 10)

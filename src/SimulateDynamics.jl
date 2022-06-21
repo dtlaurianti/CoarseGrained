@@ -30,12 +30,20 @@ end
 
 function kuramoto_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
     n = size(p.A, 1)
-    dxdt = ones(n).*p.ω
+    dudt = ones(n).*p.ω
+    println("dudt before: ", dudt)
     for i in 1:n
         S = sin.(u[i].*ones(n).-(u))
-        dxdt .+= p.K.*(p.A[i,:].*(S))
+        println("i: ", i)
+        println("K: ",p.K)
+        println("A: ",p.A)
+        println("S: ", S)
+        println("p.K.*(p.A[i,:].*(S)): ", p.K*(p.A[i,:] * S))
+        dudt .+= p.K.*(p.A[i,:].*(S))
     end
-    return dxdt
+
+    println("dudt after: ", dudt)
+    return dudt
 end
 
 function LotkaVolterra_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
