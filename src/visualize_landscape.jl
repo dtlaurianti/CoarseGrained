@@ -123,17 +123,22 @@ function variation_of_information(X::Vector{Vector{Any}},Y::Vector{Vector{Any}})
   return abs(σ)
 end
 
+
+
 #Function: surfaceplots
 #Parameters: partitions, an array of dictionaries representing network partitions
-#            A, MatrixNetwork representation of a network
-#            NumOriginalNodes, the number of nodes in A, which should be the same as the number
+#            A -- MatrixNetwork representation of a network
+#            NumOriginalNodes -- the number of nodes in A, which should be the same as the number
 #            of original nodes in all of the partitions.
-#            save_to_string, (optional) name of the string that the plotted data should be saved to
+#            save_to_string -- (optional) name of the string that the plotted data should be saved to
 #            in CSV format. If left empty, the data will not be saved to a file.
+#            modelType -- (optional) denotes which model will be used to calculate loss. 
+#            Default model is linear_model.
 #Purpose: To plot a 3d surface representing the loss landscape of a range of partitions
 #Return value: none. Plots a graph and saves the (x, y, z) data in a CSV file if save_to_string
 #              is provided a value.
 function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; save_to_string="", modelType::Function=linear_model)
+    listModelArgs = Dict(:ϵ=>-3/NumOriginalNodes, :β=>0.5, :γ=>0.5, :ω=>0.5, :K=>0.5, :d=>0.5, :c=>0.5, :b=>0.5)
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
 
@@ -159,7 +164,7 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
     z = zeros(num_par)
     for i in 1:num_par
         # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
-      loss = getLoss(A, partitions[i], ones(NumOriginalNodes), modelType, NumOriginalNodes, 0.01, ϵ=-0.3)
+      loss = getLoss(A, partitions[i], ones(NumOriginalNodes), modelType, NumOriginalNodes, 0.01; listModelArgs...)
       z[i] = loss
     end
 
