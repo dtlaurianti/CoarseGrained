@@ -9,7 +9,7 @@ Base.@kwdef struct Model_Parameters
   ϵ::Number=1
   β::Number=0
   γ::Number=0
-  ω::Number=0
+  ω::Vector=[missing]
   K::Number=1
   d::Number=0.1
   c::Number=1
@@ -40,20 +40,11 @@ end
 
 function kuramoto_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
     n = size(p.A, 1)
-    dudt = ones(n).*p.ω
-    println("dudt before: ", dudt)
+    du .= ones(n).*p.ω
     for i in 1:n
         S = sin.(u[i].*ones(n).-(u))
-        println("i: ", i)
-        println("K: ",p.K)
-        println("A: ",p.A)
-        println("S: ", S)
-        println("p.K.*(p.A[i,:].*(S)): ", p.K*(p.A[i,:] * S))
-        dudt .+= p.K.*(p.A[i,:].*(S))
+        du .+= p.K.*(Vector(p.A[i,:]).*(S))
     end
-
-    println("dudt after: ", dudt)
-    return dudt
 end
 
 function LotkaVolterra_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)

@@ -13,9 +13,9 @@ x = rand(n)
 
 scale = 1/log(n)
 
-sol1 = simulateODEonGraph(GG, x)
-plt1 = Plots.plot(sol1,xlim=(0,10),ylim=(0,5),title="grid_graph linear_model")
-gplt1 = graphplot(sparse(GG), thickness_scaling=scale)
+sol1 = simulateODEonGraph(CG, x)
+plt1 = Plots.plot(sol1,title="cycle_graph linear_model", palette=distinguishable_colors(n))
+gplt1 = graphplot(sparse(CG), thickness_scaling=scale, markercolor = Vector(1:n), node_weights=x, palette=distinguishable_colors(n), names = 1:n)
 display(Plots.plot(plt1, gplt1))
 
 #=
@@ -27,12 +27,15 @@ display(gif(anim1))
 gplt1 = graphplot(sparse(LG))
 display(gplt1)
 =#
+gplt2 = graphplot(sparse(GNPG), thickness_scaling=scale, markercolor = Vector(1:n), node_weights=x, palette=distinguishable_colors(n))
 sol2 = simulateODEonGraph(GNPG, x, γ=0.1, β=0.1, dynamical_function=SIS_model)
-plt2 = Plots.plot(sol2,xlim=(0,10),ylim=(0,1),title="gnp_graph SIS_model")
-display(Plots.plot(plt2, gplt1))
+plt2 = Plots.plot(sol2,title="gnp_graph SIS_model", palette=distinguishable_colors(n))
+display(Plots.plot(plt2, gplt2))
+
 sol3 = simulateODEonGraph(GNPG, x, β=0.1, dynamical_function=SI_model)
-plt3 = Plots.plot(sol3,xlim=(0,10),ylim=(0,1),title="gnp_graph SI_model")
-display(Plots.plot(plt3, gplt1))
-sol4 = simulateODEonGraph(GNPG, x, K=0.1, dynamical_function=kuramoto_model)
-plt4 = Plots.plot(sol4,xlim=(0,10),ylim=(0,1),title="gnp_graph Kuramoto_model")
+plt3 = Plots.plot(sol3,title="gnp_graph SI_model", palette=distinguishable_colors(n))
+display(Plots.plot(plt3, gplt2))
+
+sol4 = simulateODEonGraph(CG, x, K=0.1, ω=rand(n), dynamical_function=kuramoto_model)
+plt4 = Plots.plot(sol4,title="gnp_graph Kuramoto_model", palette=distinguishable_colors(n))
 display(Plots.plot(plt4, gplt1))
