@@ -22,6 +22,20 @@ function compressInitialCondition(initialConditions::Vector, partition::Dict{Int
     return compressedInitialConditions
 end
 
+# compresses vector argument ω to the size of the partitioned network
+function compressArguments(partition::Dict{Integer,Integer}, function_args...)
+    function_args = Dict(function_args)
+    if haskey(function_args, :ω)
+        supernodeSizes = getSupernodeSizes(partition)
+        ω = [0.0 for _=1:length(supernodeSizes)]
+        for i in 1:length(function_args[:ω])
+            ω[partition[i]] +=  function_args[:ω][i]/supernodeSizes[partition[i]]
+        end
+    end
+    function_args[:ω] = ω
+    return function_args
+end
+
 # Reduce Networks with a partition
 function compressAdjacencyMatrix(A::MatrixNetwork, partition::Dict{Integer,Integer})
     A = sparse(A)

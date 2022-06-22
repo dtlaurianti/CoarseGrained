@@ -36,10 +36,12 @@ function lossFunction(timeseries1, timeseries2, type="L2")
 end
 
 function getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+  function_args = Dict(function_args)
   compressed_initial_condition = compressInitialCondition(initial_condition, partition)
+  compressed_args = compressArguments(partition, function_args...)
   reducedA = compressAdjacencyMatrix(A, partition)
   originalTimeSeries = simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
-  reducedTimeSeries = simulateODEonGraph(reducedA, compressed_initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
+  reducedTimeSeries = simulateODEonGraph(reducedA, compressed_initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, compressed_args...)
 
   #loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
   loss = computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)

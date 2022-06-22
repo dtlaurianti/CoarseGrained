@@ -63,7 +63,7 @@ end
 
 function LotkaVolterra_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   n = size(p.A, 1)
-  return p.ω.*u + (u.*sum((p.A.*u), dims=2))
+  return p.ω.*u + u.*(p.A.*u)
 end
 
 function linear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number; c=1)

@@ -1,5 +1,3 @@
-using Plots
-using GraphRecipes
 
 
 @testset "getSupernodeSizes_test" begin

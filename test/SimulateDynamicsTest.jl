@@ -1,5 +1,3 @@
-using Plots
-using GraphRecipes
 
 n = 16
 

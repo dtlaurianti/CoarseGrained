@@ -14,3 +14,7 @@ end
     include("../src/EvaluateError.jl")
     include("../src/visualize_landscape.jl")
 end
+
+using Plots
+using GraphRecipes
+using Dates
