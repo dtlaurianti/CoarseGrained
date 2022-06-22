@@ -50,6 +50,7 @@ function spectralClustering(A::MatrixNetwork, reducedSize::Integer)
     return Dict{Integer, Integer}(i => labels[i] for i in 1:size(A,1))
 end
 
+#not implemented
 function mEEP(A::MatrixNetwork, reducedSize::Integer)
     return print("under dev")
 end
