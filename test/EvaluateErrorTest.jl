@@ -2,10 +2,11 @@ G = gnp_graph(20)
 P = agglomerationReduction(G, 10)
 x = rand(20)
 
+#=
 @testset "getLoss_test" begin
     getLoss(G, P, x, linear_model, 10, .1; ω=rand(20), γ=0.1)
 end
-#=
+
 @testset "aggregateTimeSeries_test" begin
     Random.seed!(trunc(Int, time() * 1000000))
     n = 50

@@ -63,7 +63,7 @@ end
 
 function LotkaVolterra_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   n = size(p.A, 1)
-  return p.ω.*u + u.*(p.A.*u)
+  du .= p.ω.*u + u.*(p.A*u)
 end
 
 function linear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number; c=1)
@@ -73,7 +73,7 @@ function linear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number; 
   Dout = diag(sum(p.A, dims=1))            # compute outdegree matrix
   Din  = diag(sum(p.A, dims=2))            # compute indegree matrix
   L =  Dout .+ Din .- p.A .- transpose(p.A)  # compute graph laplacian
-  return -c.*sum((L*u), dims=2)
+  du .= -p.c.*sum((L*u), dims=2)
 end
 
 function nonlinear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number)
@@ -86,7 +86,7 @@ function nonlinear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Numbe
   For now, d, c, b are constants, but we can eventually vary by individual
   =#
   n = size(p.A, 1)
-  return - p.d.*u + p.c.*tanh.(p.A⋅u) + p.b.*ones(n)
+  du .= -p.d.*u + p.c.*tanh.(p.A*u) + p.b.*ones(n)
 end
 
 function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
