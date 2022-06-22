@@ -141,7 +141,7 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
 
     #calculate distance matrix
     num_par = length(partitions)
-    D = SharedArray{Float64}(dims=(num_par,num_par))
+    D = SharedArray{Float64}((num_par,num_par))
     @distributed for i in 1:num_par
         for j in 1:num_par
             # the dissimilarity matrix

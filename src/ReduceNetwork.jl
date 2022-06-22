@@ -31,8 +31,8 @@ function compressArguments(partition::Dict{Integer,Integer}, function_args...)
         for i in 1:length(function_args[:ω])
             ω[partition[i]] +=  function_args[:ω][i]/supernodeSizes[partition[i]]
         end
+        function_args[:ω] = ω
     end
-    function_args[:ω] = ω
     return function_args
 end
 
