@@ -23,11 +23,11 @@ end
     #CM = cm_graph(10, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
     dt = now()
     DT = Dates.format(dt, "mm-dd_HH-MM-SS")
-    string = "test" * DT
+    timeString = "test" * DT
     #Uncomment one of the following depending on if you want the results to be saved
     #to a CSV file or not
     #surfaceplots(Part, GNP, 25, save_to_string=string)
-    surfaceplots(Part, GNP, 25, modelType=SIS_model)
+    surfaceplots(Part, GNP, 25, modelType=kuramoto_model, save_to_string=timeString)
     println(string)
 
     #=In normal terminal, (with R installed)
