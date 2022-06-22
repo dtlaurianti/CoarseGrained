@@ -22,10 +22,7 @@ using ScikitLearn
 using StatsBase
 using Plots
 using PyPlot
-include("EvaluateError.jl")
-include("ReduceNetwork.jl")
-include("GenerateGraphs.jl")
-include("SimulateDynamics.jl")
+using SharedArrays
 
 
 # convert a partition from our dictionary supernode format to a nested array format
@@ -52,7 +49,7 @@ end
 =#
 
 #Function: dict_to_array
-#Parameters: partitions, an array of dictionaries each representing a partition from some number of nodes to some 
+#Parameters: partitions, an array of dictionaries each representing a partition from some number of nodes to some
 #            smaller number of nodes.
 #Purpose: to create an array of arrays each containing smaller arrays representing nodes in the reduced network.
 #         These smaller arrays contain all of the original nodes that were mapped to that node in the reduced network.
@@ -67,11 +64,11 @@ function dict_to_array(partitions::Array{Dict{Integer,Integer}})
 end
 
 #Function: partition_dict_to_array
-#Parameters: partition, a dictionary representing a partition from some number of nodes to some 
+#Parameters: partition, a dictionary representing a partition from some number of nodes to some
 #            smaller number of nodes.
 #Purpose: to create an array of smaller arrays representing nodes in the reduced network.
 #         These smaller arrays contain all of the original nodes that were mapped to that node in the reduced network.
-#         This function performs the same task as dict_to_array, but for just one partition dictionary as opposed to 
+#         This function performs the same task as dict_to_array, but for just one partition dictionary as opposed to
 #         an array of them.
 #Return value: An array representing the nodes of the reduced network defined in the partition dictionary
 function partition_dict_to_array(partition::Dict{Integer,Integer})
@@ -112,7 +109,7 @@ function variation_of_information(X::Vector{Vector{Any}},Y::Vector{Vector{Any}})
       # q = the ratio of nodes in the supernode y to nodes in the graph
       q = size(y,1) / n
       # r = the ratio of nodes in both x & y to nodes in the graph
-      r = (length(intersect(unique(x), unique(y))) / n)
+      r = (length(unique(vcat(x,y))) / n)
       # if x & y share at least one node they are seen as comparable supernodes
       if r > 0.0
         # add to the distance between partitions
@@ -132,7 +129,7 @@ end
 #            of original nodes in all of the partitions.
 #            save_to_string -- (optional) name of the string that the plotted data should be saved to
 #            in CSV format. If left empty, the data will not be saved to a file.
-#            modelType -- (optional) denotes which model will be used to calculate loss. 
+#            modelType -- (optional) denotes which model will be used to calculate loss.
 #            Default model is linear_model.
 #Purpose: To plot a 3d surface representing the loss landscape of a range of partitions
 #Return value: none. Plots a graph and saves the (x, y, z) data in a CSV file if save_to_string
@@ -144,8 +141,8 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
 
     #calculate distance matrix
     num_par = length(partitions)
-    D = zeros(num_par, num_par)
-    for i in 1:num_par
+    D = SharedArray{Float64}(dims=(num_par,num_par))
+    @distributed for i in 1:num_par
         for j in 1:num_par
             # the dissimilarity matrix
             D[i, j] = variation_of_information(Arr[i],Arr[j])
@@ -170,7 +167,7 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
 
     #Save vector data if we want to smooth it later
     if !isempty(save_to_string)
-      df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions])
+      df = DataFrame(["x" => x, "y" => y, "z" => z])
       loc = "../data/visualization_data/" * save_to_string * ".csv"
       CSV.write(loc, df)
     end

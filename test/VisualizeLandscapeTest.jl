@@ -1,4 +1,4 @@
-
+#=
 @testset "dict_to_array_test" begin
     Part = generateRandomPartitions(10, 7, 10)
     Partition1 = Part[1]
@@ -9,13 +9,13 @@
     display(b)
     @test a[1] == b
 end
-
+=#
 @testset "variation_of_information_test" begin
     Part = generateRandomPartitions(10, 7, 10)
     Arr = dict_to_array(Part)
     display(variation_of_information(Arr[1], Arr[2]))
 end
-
+#=
 @testset "surfaceplots" begin
     Part = generateRandomPartitions(25, 10, 100)
     #LG = line_graph(10)
@@ -42,3 +42,4 @@ end
     #display(@benchmark line_graph(15))
     #display(@benchmark surfaceplots(generateRandomPartitions(15, 10, 500), line_graph(15), 15))
 end
+=#
