@@ -109,6 +109,7 @@ for id in 1:length(listModelType)
             graphArgsString *= "_"*string(key)*"="*string(value)
         end
 
+        # generate a place to store the file of the data
         foldername = "data/model_data/"*modelType*modelArgsString*"/"*graphType*graphArgsString
         if !isdir(foldername)
              mkpath(foldername) # make folder if it doesn't exist
@@ -116,6 +117,8 @@ for id in 1:length(listModelType)
         # prep filename and data
         filename = foldername * "/" * string(originalSize) * "_" * string(reducedSize) * "_run" * string(run)
 
+        # save all the data in a .jld2 file which we can later import
+        # to recreate the data in their original Julia Object forms
         jldsave("$filename.jld2";
             A,
             partitions = listOfPartitions,

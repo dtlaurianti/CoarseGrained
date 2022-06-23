@@ -1,5 +1,5 @@
 
-n = 16
+n = 10
 
 LG = line_graph(n)
 CG = cycle_graph(n)
@@ -12,20 +12,22 @@ x = rand(n)
 
 scale = 1/log(n)
 
-sol1 = simulateODEonGraph(LG, x)
-plt1 = Plots.plot(sol1,title="line_graph linear_model", palette=distinguishable_colors(n))
-gplt1 = graphplot(sparse(LG), thickness_scaling=scale, markercolor = Vector(1:n), node_weights=x, palette=distinguishable_colors(n), names = 1:n)
+sol1 = simulateODEonGraph(CG, x)
+plt1 = Plots.plot(sol1,title="cycle_graph linear_model", palette=distinguishable_colors(n))
+gplt1 = graphplot(sparse(CG), thickness_scaling=scale, markercolor = Vector(1:n), node_weights=x, palette=distinguishable_colors(n), names = 1:n)
 display(Plots.plot(plt1, gplt1))
 
-#=
+display(plt1)
+
+plta = Plots.plot(n, xlim=(0,1000), ylim=(0,1), legend=false, title="cycle_graph linear_model", palette=distinguishable_colors(n))
 anim1 = @animate for i=1:1000
-    push!(plt1,sol1[i])
+    push!(plta,sol1[i])
 end every 10
 display(gif(anim1))
-
+#=
 gplt1 = graphplot(sparse(LG))
 display(gplt1)
-=#
+
 
 gplt2 = graphplot(sparse(CG), thickness_scaling=scale, markercolor = Vector(1:n), node_weights=x, palette=distinguishable_colors(n))
 sol2 = simulateODEonGraph(CG, x, γ=0.1, β=0.1, dynamical_function=SIS_model)
@@ -54,3 +56,4 @@ display(Plots.plot(plt6, gplt4))
 sol7 = simulateODEonGraph(GNPG, x, d=.1, c=.1, b=.1, dynamical_function=nonlinear_opinions)
 plt7 = Plots.plot(sol7,title="gnp_graph nonlinear_opinions_model", palette=distinguishable_colors(n))
 display(Plots.plot(plt7, gplt4))
+=#

@@ -6,7 +6,9 @@ using SparseArrays
 using Random
 using Graphs
 
-# returns true if A has paths between every node pair
+#Function: isConnected
+#Parameters: A, the MatrixNetwork to be tested for connectedness
+#Return value: Boolean, whether the network is connected
 function isConnected(A::MatrixNetwork)
   A = sparse(A)
   n = size(A,1)
@@ -50,7 +52,7 @@ end
 #Parameters: n, integer number of nodes
 #            edge_weight, (optional) integer/floating point weight of edges in graph
 #            directed, (optional) bloolean (true/false) denoting whether the graph should be directed
-#Purpose: To generate a cycle graph with n nodes connected in a cycle that includes all nodes. 
+#Purpose: To generate a cycle graph with n nodes connected in a cycle that includes all nodes.
 #         All nodes have degree 2.
 #Return value: MatrixNetwork representation of a cycle graph
 function cycle_graph(n::Int; edge_weight::Number=1.0, directed::Bool=true)
