@@ -142,7 +142,7 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
     #calculate distance matrix
     num_par = length(partitions)
     D = SharedArray{Float64}((num_par,num_par))
-    @distributed for i in 1:num_par
+    @sync @distributed for i in 1:num_par
         for j in 1:num_par
             # the dissimilarity matrix
             D[i, j] = variation_of_information(Arr[i],Arr[j])
@@ -153,7 +153,6 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
     #calculate MDS on disimilarity matrix
     embedding = StatsBase.fit(MDS, D, distances=true, maxoutdim=2)
     X_transformed = StatsBase.predict(embedding)
-
     #Format data
     x = X_transformed[1,:]
     y = X_transformed[2,:]
@@ -169,7 +168,7 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
     #Save vector data if we want to smooth it later
     if !isempty(save_to_string)
       df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions])
-      loc = "../data/visualization_data/" * save_to_string * ".csv"
+      loc = "./data/visualization_data/" * save_to_string * ".csv"
       CSV.write(loc, df)
     end
 

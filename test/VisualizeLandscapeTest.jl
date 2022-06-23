@@ -42,4 +42,3 @@ end
     #display(@benchmark line_graph(15))
     #display(@benchmark surfaceplots(generateRandomPartitions(15, 10, 500), line_graph(15), 15))
 end
-
