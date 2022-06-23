@@ -167,8 +167,11 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
 
     #Save vector data if we want to smooth it later
     if !isempty(save_to_string)
-      df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions])
+      df = DataFrame(["x" => x, "y" => y, "z" => z])
       loc = "./data/visualization_data/" * save_to_string * ".csv"
+      CSV.write(loc, df)
+      df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions])
+      loc = "./data/visualization_data/PART" * save_to_string * ".csv"
       CSV.write(loc, df)
     end
 
