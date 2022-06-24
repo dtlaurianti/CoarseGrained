@@ -41,6 +41,12 @@ function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, n
     return partitionList
 end
 
+
+#Function: spectralClustering
+#Parameters: A, MatrixNetwork containing the network to be compressed
+#            reducedSize, integer number of nodes to map the original nodes to. Should be smaller than originalSize
+#Purpose: To reduce a network to the specified number of nodes using the spectral clustering method
+#Return value: returns a partition Dictionary specifying the supernodes of the reduced network
 function spectralClustering(A::MatrixNetwork, reducedSize::Integer)
     # get the eigen decomposition of the diagonal of A
     X = eigen(Diagonal(diag(sparse(A))))
@@ -54,7 +60,11 @@ function mEEP(A::MatrixNetwork, reducedSize::Integer)
     return print("under dev")
 end
 
-# works only for undirected networks as of now.
+#Function: agglomerationReduction
+#Parameters: A, MatrixNetwork containing the network to be compressed
+#            reducedSize, integer number of nodes to map the original nodes to. Should be smaller than originalSize
+#Purpose: To reduce a network to the specified number of nodes using the agglomeration reduction method
+#Return value: returns a partition Dictionary specifying the supernodes of the reduced network
 function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
     A = sparse(A)
     partition = Dict{Integer, Integer}()
@@ -80,6 +90,7 @@ function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
         orderedPartitionpartition, Q = greedyMerge(A, orderedPartition, Q, k)
     end
 
+    # convert the array-format partition into a dictionary-format partition
     aggPartition = Dict{Integer, Integer}()
     for supernode in 1:length(orderedPartition)
         for node in orderedPartition[supernode]
@@ -89,6 +100,14 @@ function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
     return aggPartition
 end
 
+#Function: greedyMerge
+#Parameters: A, SparseMatrixCSC containing the network to be compressed
+#            orderedPartition, a partition in Array format storing the iterative reductions we've made so far to the network
+#            Q, a property of A calculated in the last iteration which we use to measure the change in A
+#            k, the degree of the nodes in the original network
+#Purpose: To reduce a network by combining two nodes/supernodes into one supernode in a way that minimizes the change in the network,
+# agglomerationReduction repeatedly calls this method until the network is reduced to the required size
+#Return value: returns a partition Dictionary specifying the supernodes of the reduced network
 function greedyMerge(A::SparseMatrixCSC, orderedPartition::Vector{Vector{Any}}, Q::Number, k::Matrix)
     m = sum(k)
     numGroups = length(orderedPartition)
@@ -137,7 +156,9 @@ function greedyMerge(A::SparseMatrixCSC, orderedPartition::Vector{Vector{Any}}, 
     return orderedPartition, maxQ[maxQInd]
 end
 
-# Takes the number of nodes n and returns a Dictionary of all possible partitions
+#Function: exhaustivePartition
+#Parameters: n, the number of nodes in the resultant partition
+#Return value: returns a Dictionary of partition Dictionaries containing all possible partitions of n nodes
 # The Dict should be of length Σ S(n)  (Stirling Number of the Second Kind)
 function exhaustivePartition(n::Integer)
     allPartitions = Dict{Integer,Dict{Integer, Integer}}()
@@ -177,8 +198,11 @@ function exhaustivePartition(n::Integer)
     return allPartitions
 end
 
-# Gives a Dict of all partitions of n nodes with k supernodes
-# the number of partitions should be equal to S(n, k) (Stirling Number of the Second Kind)
+#Function: kPartition
+#Parameters: n, the number of nodes in the original network
+    #        k, the number of supernodes in the compressed network
+#Purpose: To reduce an arbitrary network of n nodes to k nodes
+#Return value: returns a Dictionary of Partition Dictionaries containing all possible reductions from n to k nodes
 function kPartition(n::Integer, k::Integer)
     allPartitions = Dict{Integer,Dict{Integer, Integer}}()
     c = 0
