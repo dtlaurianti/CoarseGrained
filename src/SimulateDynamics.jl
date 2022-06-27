@@ -1,13 +1,8 @@
-using MatrixNetworks
-using LinearAlgebra
-using DifferentialEquations
-using SparseArrays
-
 # create a common Type for passing parameters
 # A is the matrix that represents our network
 # all other parameters are optional,
 # and the model will only use the parameters it needs
-Base.@kwdef struct Model_Parameters
+@everywhere Base.@kwdef struct Model_Parameters
   A::SparseMatrixCSC
   ϵ::Number=1
   β::Number=0
@@ -32,7 +27,7 @@ end
 #            t, the time variable ODESolver will use
 #Purpose: to simulate a linear model with the given inputs
 #Return value: Modifies in place, return value not used
-function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+@everywhere function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   du .= (p.ϵ.*p.A-I)*u
 end
 
@@ -50,7 +45,7 @@ function SIS_model(t, x, A, gamma, beta)
   #            t, the time variable ODESolver will use
   #Purpose: to simulate an SIS model with the given inputs
   #Return value: Modifies in place, return value not used
-function SIS_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+@everywhere function SIS_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   du .= -p.γ.*u + p.β.*((ones(length(u))-u).*(p.A*u))
 end
 #=
@@ -67,7 +62,7 @@ function SI_model(t, x, A, beta)
 #            t, the time variable ODESolver will use
 #Purpose: to simulate an SI model with the given inputs
 #Return value: Modifies in place, return value not used
-function SI_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+@everywhere function SI_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   du .= p.β.*((ones(length(u))-u).*(p.A*u))
 end
 
@@ -79,7 +74,7 @@ end
 #            t, the time variable ODESolver will use
 #Purpose: to simulate an Kuramoto model with the given inputs
 #Return value: Modifies in place, return value not used
-function kuramoto_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+@everywhere function kuramoto_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
     n = size(p.A, 1)
     du .= ones(n).*p.ω
     for i in 1:n
@@ -96,7 +91,7 @@ end
 #            t, the time variable ODESolver will use
 #Purpose: to simulate an Lotka-Volterra model with the given inputs
 #Return value: Modifies in place, return value not used
-function LotkaVolterra_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+@everywhere function LotkaVolterra_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   n = size(p.A, 1)
   du .= p.ω.*u + u.*(p.A*u)
 end
@@ -109,7 +104,7 @@ end
 #            t, the time variable ODESolver will use
 #Purpose: to simulate an linear opinions model with the given inputs
 #Return value: Modifies in place, return value not used
-function linear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number; c=1)
+@everywhere function linear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number; c=1)
   #=
   Simplest model of linear opinion dynamics; c = constant, for now
   =#
@@ -127,7 +122,7 @@ end
 #            t, the time variable ODESolver will use
 #Purpose: to simulate an nonlinear opinion model with the given inputs
 #Return value: Modifies in place, return value not used
-function nonlinear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number)
+@everywhere function nonlinear_opinions(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   #=
   An instance of the model in https://arxiv.org/abs/2009.04332
   Parameters:
@@ -150,7 +145,7 @@ end
 #            function_args, the extra inputs to the dynamical model (ϵ, γ, β, K, ω, d, c, b)
 #Purpose: to simulate the dynamics on a network using the chosen dynamical model and conditions
 #Return value: returns an ODESolution or ODECompositeSolution type, accessible through an array interface
-function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+@everywhere function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
   tspan = (0, tmax)
   # splat the MatrixNetwork and additional parameters into one parameters Tuple
   p = Model_Parameters(A=sparse(A); function_args...)

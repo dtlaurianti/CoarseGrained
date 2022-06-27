@@ -1,11 +1,18 @@
 using Distributed
 using Test
 using BenchmarkTools
+using SharedArrays
 const numCores = 104
 if (nworkers() != numCores)
     rmprocs(procs()[2:end])
     addprocs(numCores)
 end
+
+@everywhere using MatrixNetworks
+@everywhere using DifferentialEquations
+@everywhere using Linear LinearAlgebra
+@everywhere using SparseArrays
+
 include("../src/SimulateDynamics.jl")
 include("../src/GenerateGraphs.jl")
 include("../src/Partition.jl")

@@ -1,9 +1,7 @@
-using SparseArrays
 using Clustering
 using Random
 using StatsBase
 using Distributed
-using SharedArrays
 using Base.Threads
 
 # generate numPartitions random partitions mapping a network of size originalSize

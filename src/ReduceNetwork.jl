@@ -1,11 +1,8 @@
-using MatrixNetworks
-using LinearAlgebra
-
 #Function: getSupernodeSizes
 #Parameters: partition, the partition that specifies the supernodes
 #Purpose: Counts the number of nodes in each supernode of a partition
 #Return value: A Vector of the number of nodes in each supernode
-function getSupernodeSizes(partition::Dict{Integer,Integer})
+@everywhere function getSupernodeSizes(partition::Dict{Integer,Integer})
   supernodeSizes = Dict{Integer,Integer}()
   for supernode in values(partition)
       supernodeSizes[supernode] = get!(supernodeSizes, supernode, 0)+1
@@ -19,7 +16,7 @@ end
 #Purpose: creates a new initial value for each new supernode based on the initial values of the nodes it contains
 #Return value: A Vector of the new initial conditions with length equal to the number of supernodes
 # Reduce Initial Conditions - REQUIRES SEQUENTIAL (no missing) SUPERNODE LABELS
-function compressInitialCondition(initialConditions::Vector, partition::Dict{Integer,Integer})
+@everywhere function compressInitialCondition(initialConditions::Vector, partition::Dict{Integer,Integer})
     supernodeSizes = getSupernodeSizes(partition)
     compressedInitialConditions = zeros(length(supernodeSizes))
     for i in 1:length(initialConditions)
@@ -35,7 +32,7 @@ end
 #            function_args, the var-kwargs that was passed into getLoss
 #Purpose: creates a new initial set of arguments for the dynamical model with appropriately sized Vectors for the partitioned network
 #Return value: A Dict of the modified function_args
-function compressArguments(partition::Dict{Integer,Integer}, function_args...)
+@everywhere function compressArguments(partition::Dict{Integer,Integer}, function_args...)
     function_args = Dict(function_args)
     # If function_args is specifying ω which is a vector argument we need to compress it
     if haskey(function_args, :ω)
@@ -56,7 +53,7 @@ end
 #            partition, the partition that specifies the supernodes in the created network
 #Purpose: To compress a network according to a partition
 #Return value: A new, compressed MatrixNetwork
-function compressAdjacencyMatrix(A::MatrixNetwork, partition::Dict{Integer,Integer})
+@everywhere function compressAdjacencyMatrix(A::MatrixNetwork, partition::Dict{Integer,Integer})
     A = sparse(A)
     #Reduce matrix using spectral method from Gfeller et al. (2008).
     numGroups = length(unique(values(partition)))

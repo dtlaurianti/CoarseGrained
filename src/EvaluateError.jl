@@ -5,7 +5,7 @@
 #            type, a keyword choosing the method to compute the aggregate time series
 #Purpose: To take a time series from an uncompressed network and compress that series to the size of the supernodes for comparison with a compressed network
 #Return value: Time series with the compressed version of originalTimeSeries
-function aggregateTimeSeries(originalTimeSeries, partition::Dict{Integer,Integer}, type="average")
+@everywhere function aggregateTimeSeries(originalTimeSeries, partition::Dict{Integer,Integer}, type="average")
     if type == "average"
         supernodeSizes = getSupernodeSizes(partition)
         reducedSize = length(supernodeSizes)
@@ -25,7 +25,7 @@ end
 #            partition, a Dict specifying the supernodes of the compressed network
 #Purpose: To compute the difference in the time series for a network and it's compressed version
 #Return value: Float of loss value
-function computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition::Dict{Integer,Integer})
+@everywhere function computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition::Dict{Integer,Integer})
   numTimeSteps = size(reducedTimeSeries, 2)
   aggregatedTimeSeries = aggregateTimeSeries(originalTimeSeries, partition)
   return sum(sum((reducedTimeSeries - aggregatedTimeSeries).^2))/numTimeSteps
@@ -37,7 +37,7 @@ end
 #            partition, a Dict specifying the supernodes of the compressed network
 #Purpose: To compute the difference in the time series for a network and it's compressed version
 #Return value: Float of loss value
-function computeIndividualError(originalTimeSeries, reducedTimeSeries, partition::Dict{Integer,Integer})
+@everywhere function computeIndividualError(originalTimeSeries, reducedTimeSeries, partition::Dict{Integer,Integer})
   originalSize = size(reducedTimeSeries, 1)
   loss = 0
   for node in 1:originalSize
@@ -52,7 +52,7 @@ end
 #            type, a keyword for the way that we will calculate the loss
 #Purpose: To compute the difference in two time series using the specified method
 #Return value: Float of loss value
-function lossFunction(timeseries1, timeseries2, type="L2")
+@everywhere function lossFunction(timeseries1, timeseries2, type="L2")
   if type == "L2"
     return sum((timeseries1 .- timeseries2).^2)/size(timeseries1, 1)
   end
@@ -69,7 +69,7 @@ end
 #            function_args, a var-kwargs of the inputs to the model
 #Purpose: To compute the loss caused by coarse-graining a network according to a partition
 #Return value: Float of loss value
-function getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+@everywhere function getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
   function_args = Dict(function_args)
   # create the initial conditions for the compressed version of A
   compressed_initial_condition = compressInitialCondition(initial_condition, partition)
