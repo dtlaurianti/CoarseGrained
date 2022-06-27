@@ -57,7 +57,7 @@ end
 #Purpose: To provide a measure of the difference between two partitions
 #Return value: a positive, floating point value that is higher the more different
 #              X and Y are.
-function variation_of_information(X::Vector{Vector{Any}},Y::Vector{Vector{Any}})
+@everywhere function variation_of_information(X::Vector{Vector{Any}},Y::Vector{Vector{Any}})
   n = float(sum([size(x,1) for x in X]))
   σ = 0.0
   for x in X
