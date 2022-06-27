@@ -7,9 +7,10 @@ if (nworkers() != numCores)
     rmprocs(procs()[2:end])
     addprocs(numCores)
 end
+
 @everywhere using MatrixNetworks
 @everywhere using DifferentialEquations
-@everywhere using Linear LinearAlgebra
+@everywhere using LinearAlgebra
 @everywhere using SparseArrays
 
 include("../src/SimulateDynamics.jl")
