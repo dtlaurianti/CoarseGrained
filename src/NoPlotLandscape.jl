@@ -108,6 +108,7 @@ function GetXYZ(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes;
         # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
       loss = getLoss(A, partitions[i], rand(NumOriginalNodes), modelType, NumOriginalNodes, 0.01; listModelArgs...)
       z[i] = loss
+      display(i)
     end
 
     #Save vector data if we want to smooth it later
