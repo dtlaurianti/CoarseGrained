@@ -8,7 +8,7 @@
     DT = Dates.format(dt, "mm-dd_HH-MM-SS")
     timeString = "test" * DT
     #Uncomment one of the following depending on if you want the results to be saved
-    #to a CSV file or not
+    #to a CSV file or nott
     #surfaceplots(Part, GNP, 25, save_to_string=string)
     GetXYZ(Part, GNP, 500, modelType=kuramoto_model, save_to_string=timeString)
     println(string)
