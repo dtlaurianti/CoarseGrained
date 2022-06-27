@@ -227,11 +227,12 @@ function kPartition(n::Integer, k::Integer)
                 for i=(ind+1):n
                     curPartition[i] = 1
                 end
-                #curPartition[ind+1:end] .= 1
             else
+                # otherwise move on to the node to the left
                 ind -= 1
             end
         end
+        # if we have created exactly k supernodes accept the partition
         if maximum(values(curPartition)) == k
             c += 1
             allPartitions[c] = copy(curPartition)

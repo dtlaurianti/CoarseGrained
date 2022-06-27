@@ -13,6 +13,7 @@ end
     include("../src/ReduceNetwork.jl")
     include("../src/EvaluateError.jl")
     include("../src/visualize_landscape.jl")
+    include("../src/LocalSearch.jl")
 end
 
 using Plots
