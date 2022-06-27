@@ -4,36 +4,81 @@
 #            p, the partition to start from
 #Purpose: To find the partition with local minimum loss using a basic iterative approach
 #Return value: returns a partition that is a local minimum of the partition space
-function iterativeImprovement(A::MatrixNetwork, dynamical_function::Function, p::Dict{Integer, Integer})
+function iterativeImprovement(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
     n = length(p)
     k = length(unique(values(p)))
-
-
+    function_args = Dict(function_args)
+    minloss = getLoss(A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
+    p2 = p
+    # iteratively and greedily choose the least adjacent partition until we find a local minimum
+    while true
+        neighborhood = getNeighborhood(p, n, k, depth)
+        # find the adjacent partition with the least loss
+        for neighbor in neighborhood
+            loss = getLoss(A, neighbor, initial_condition, dynamical_function, tmax, dt, function_args...)
+            if loss < minloss
+                p2 = adjacent
+                minloss = loss
+            end
+        end
+        # if we haven't found a better partition in the surrounding partitions we return out current partition
+        if p2 = p
+            break
+        end
+        # update the point we are at
+        p = p2
+    end
+    return p
 end
 
-#Function: getNeighbors
+#Function: getAdjacentPartitions
 #Parameters: p, the partition to start from
-#Purpose: To return a list of the neighboring partitions
+#            n, the number of nodes
+#            k, the number of supernodes
+#Purpose: To return a list of the adjacent partitions
 #Return value: returns a list of partitions adjacent to the input partition
-function getNeighbors(p::Dict{Integer, Integer}, n::Integer, k::Integer)
-    neighbors = []
+function getAdjacentPartitions(p::Dict{Integer, Integer}, n::Integer, k::Integer)
+    adjacents = []
+    # apply every possible single node change and record the resulting partitions
     for i=1:n
         for j=1:k
             if p[i] != j
-                append!(neighbors, [copy(p)])
-                neighbors[end][i] = j
+                append!(adjacents, [copy(p)])
+                adjacents[end][i] = j
             end
         end
     end
+    return adjacents
+end
+
+#Function: getNeighborhood
+#Parameters: p, the partition to start from
+#            n, the number of nodes
+#            k, the number of supernodes
+#            depth, the number of partitions away to look
+#Purpose: To return a list of the neighboring partitions
+#Return value: returns a list of partitions up to depth away from the input partition
+function getNeighborhood(p::p::Dict{Integer, Integer}, n::Integer, k::Integer, depth::Integer)
+    neighbors = Set(p)
+    for _=1:depth
+        for partition in neighbors
+            push!(neighbors, getAdjacentPartitions(partition))
+        end
+    end
+    pop!(neighbors, p)
     return neighbors
 end
 
-#Function: getNeighbors
+#Function: getAdjacentSample
 #Parameters: p, the partition to start from
-#Purpose: To return a list of the neighboring partitions
+#            n, the number of nodes
+#            k, the number of supernodes
+#            s, the number of sample partitions
+#Purpose: To return a sample list of the adjacent partitions
 #Return value: returns a sample list of partitions adjacent to the input partition
-function getNeighborSample(p::Dict{Integer, Integer}, n::Integer, k::Integer, s::Integer)
+function getAdjacentSample(p::Dict{Integer, Integer}, n::Integer, k::Integer, s::Integer)
     sample = []
+    # change the supernode we partition one node into to create s new partitions adjacent to this partition
     for _=1:s
         append!(sample, [copy(p)])
         while true
