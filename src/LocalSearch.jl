@@ -22,7 +22,7 @@ function iterativeImprovement(A::MatrixNetwork, p::Dict{Integer, Integer}, depth
             end
         end
         # if we haven't found a better partition in the surrounding partitions we return out current partition
-        if p2 = p
+        if p2 == p
             break
         end
         # update the point we are at
@@ -58,7 +58,7 @@ end
 #            depth, the number of partitions away to look
 #Purpose: To return a list of the neighboring partitions
 #Return value: returns a list of partitions up to depth away from the input partition
-function getNeighborhood(p::p::Dict{Integer, Integer}, n::Integer, k::Integer, depth::Integer)
+function getNeighborhood(p::Dict{Integer, Integer}, n::Integer, k::Integer, depth::Integer)
     neighbors = Set(p)
     for _=1:depth
         for partition in neighbors
