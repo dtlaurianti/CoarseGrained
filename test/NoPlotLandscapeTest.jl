@@ -1,6 +1,6 @@
 @testset "GetXYZ" begin
-    numOriginalNodes = 300
-    Part = generateRandomPartitions(numOriginalNodes, 100, 1000)
+    numOriginalNodes = 1000
+    Part = generateRandomPartitions(numOriginalNodes, 500, 100)
     #LG = line_graph(numOriginalNodes)
     GNP = gnp_graph(numOriginalNodes;p=0.5)
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
