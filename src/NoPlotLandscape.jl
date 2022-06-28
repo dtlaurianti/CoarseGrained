@@ -100,7 +100,7 @@ function GetXYZ(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes;
     #Format data
     x = X_transformed[1,:]
     y = X_transformed[2,:]
-
+    println("Checkpoint3")
     #Calculate z dimension
     z = SharedArray{Float64}((num_par))
     @sync @distributed for i in 1:num_par
