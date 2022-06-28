@@ -17,10 +17,13 @@ end
 end
 
 @testset "surfaceplots" begin
-    numOriginalNodes = 1000
-    Part = generateRandomPartitions(numOriginalNodes, 500, 300)
+    numOriginalNodes = 100
+    println("Checkpoint01")
+    Part = generateRandomPartitions(numOriginalNodes, 50, 300)
+    println("Checkpoint02")
     #LG = line_graph(numOriginalNodes)
     GNP = gnp_graph(numOriginalNodes;p=0.5)
+    println("Checkpoint03")
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
     dt = now()
 
@@ -30,6 +33,7 @@ end
     #to a CSV file or not
     #surfaceplots(Part, GNP, 25, save_to_string=string)
     #surfaceplots(Part, GNP, 50, modelType=linear_model, save_to_string=timeString)
+    println("Checkpoint04")
     @time GetXYZ(Part, GNP, numOriginalNodes, modelType=linear_model, save_to_string=timeString)
     println(string)
 
