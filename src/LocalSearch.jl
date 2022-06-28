@@ -4,6 +4,7 @@
 #            dynamical_function, the dynamic model to run on the network
 #            partitions, the partitions we will evolve from
 #            generations, the number of reproduction cycles to run
+#            crossover_prob, the chance of a partition to randomly changing into a adjacent partition
 #            mutation_prob, the chance of a partition to randomly changing into a adjacent partition
 #            initial_condition, the initial variable values
 #            dynamical_function, the dynamical model we will run getLoss using
@@ -11,14 +12,89 @@
 #            dt, the length of the timesteps in our simulation
 #Purpose: To find the partition with local minimum loss using a basic iterative approach
 #Return value: returns a partition that is an approximate local minimum of the partition space
-function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, Integer}}, generations::Integer, mutation_prob::Float64, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, Integer}}, generations::Integer, crossover_prob::Float64, mutation_prob::Float64, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
     c = length(partitions)
     n = length(partitions[1])
     k = length(unique(values(partitions[1])))
+
+    crossover_prob = pweights(1-crossover_prob, crossover_prob)
+    mutation_prob = pweights(1-mutation_prob, mutation_prob)
+
     function_args = Dict(function_args)
+    individuals = []
+    # convert every partition to binary form so it can be crossed and mutated
+    for partition in partitions
+        push!(individuals, dict_to_matrix(partition, n, k))
+    end
+    for _=1:generations
+        # reproduction phase
+        loss_log = []
+        # store the magnitude of loss for each partition
+        for individual in individuals
+            append!(loss, log(getLoss(A, matrix_to_dict(individual), initial_condition, dynamical_function, tmax, dt, function_args...)))
+        end
+        loss_sum = sum(loss)
+        prob = []
+        # each partition reproduces with probability scaled to the magnitude of its loss
+        for i = 1:c
+            append!(prob, loss_log[i]/loss_sum)
+        end
+        weights = pweights(prob)
+        children = []
+        for i = 1:c
+            append!(children, individuals[StatsBase.sample(1:c, weights)])
+        end
+
+        # crossing phase
+        for i = 1:c
+            swap = StatsBase.sample([0,1], crossover_prob, )
+        end
+
+        # mutation phase
+        for i = 1:c
+            if StatsBase.sample([0,1], mutation_prob) == 1
+                children[c] =
+        end
+    end
+    finalPartitions = []
+    for individual in individuals
+        push!(finalPartitions, matrix_to_dict(individual, n, k))
+    end
+    return individuals
 
 end
 
+#Function: dict_to_matrix
+#Parameters: p, the partition to convert to matrix form
+#            n, the number of nodes in the partition
+#            k, the number of supernodes in the partition
+#Purpose: To find the partition with local minimum loss using a basic iterative approach
+#Return value: returns a partition that is an approximate local minimum of the partition space
+function dict_to_matrix(p::Dict{Integer, Integer}, n::Integer, k::Integer)
+    P = zeros(n, k)
+    for i = 1:n
+        P[i, p[i]] = 1
+    end
+    return P
+end
+
+#Function: matrix_to_dict
+#Parameters: P, the partition to convert to ditionary form
+#            n, the number of nodes in the partition
+#            k, the number of supernodes in the partition
+#Purpose: To find the partition with local minimum loss using a basic iterative approach
+#Return value: returns a partition that is an approximate local minimum of the partition space
+function matrix_to_dict(P::Matrix, n::Integer, k::Integer)
+    p = Dict{Integer, Integer}()
+    for i = 1:n
+        for j = 1:k
+            if P[i, j] == 1
+                p[i] = j
+            end
+        end
+    end
+    return p
+end
 
 #Function: iterativeImprovement
 #Parameters: A, MatrixNetwork to partition and run dynamics on
@@ -108,7 +184,7 @@ end
 #            s, the number of sample partitions
 #Purpose: To return a sample list of the adjacent partitions
 #Return value: returns a sample list of partitions adjacent to the input partition
-function getAdjacentSample(p::Dict{Integer, Integer}, n::Integer, k::Integer, s::Integer)
+function getAdjacentSample(p::Dict{Integer, Integer}, n::Integer, k::Integer, s::Integer=1)
     sample = []
     # change the supernode we partition one node into to create s new partitions adjacent to this partition
     for _=1:s

@@ -1,3 +1,4 @@
+#=
 @testset "neighbors_tests" begin
     p = generateRandomPartitions(10,5,1)[1]
     display(p)
@@ -12,4 +13,17 @@
     x = rand(5)
     p3 = iterativeImprovement(G, p2, 1, x, linear_model, 10, 0.1)
     display(p3)
+end
+
+@testset "conversion_tests" begin
+    p = generateRandomPartitions(10,5,1)[1]
+    display(p)
+    P = dict_to_matrix(p, 10, 5)
+    display(P)
+    p2 = matrix_to_dict(P, 10, 5)
+    display(p2)
+end
+=#
+@testset "genetic_tests" begin
+
 end
