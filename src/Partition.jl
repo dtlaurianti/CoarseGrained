@@ -26,9 +26,7 @@ function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, n
             partition = Dict{Integer, Integer}()
             # assigns each node in the original nodes to a new node in the reduced nodes
             labels = StatsBase.sample(1:reducedSize, originalSize)
-            for node in 1:originalSize
-                partition[node] = labels[node]
-            end
+            partition = Dict(zip(keys(partition), labels))
             # check that each partition is nonempty
             if length(unique(labels)) == reducedSize
                 partitionAccepted = true

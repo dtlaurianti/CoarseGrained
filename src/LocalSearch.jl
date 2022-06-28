@@ -12,6 +12,10 @@
 #Purpose: To find the partition with local minimum loss using a basic iterative approach
 #Return value: returns a partition that is an approximate local minimum of the partition space
 function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, Integer}}, generations::Integer, mutation_prob::Float64, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+    c = length(partitions)
+    n = length(partitions[1])
+    k = length(unique(values(partitions[1])))
+    function_args = Dict(function_args)
 
 end
 
