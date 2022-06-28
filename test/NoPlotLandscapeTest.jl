@@ -1,8 +1,9 @@
 @testset "GetXYZ" begin
-    Part = generateRandomPartitions(1000, 500, 500)
-    #LG = line_graph(10)
-    GNP = gnp_graph(1000;p=0.5)
-    #CM = cm_graph(10, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
+    numOriginalNodes = 1000
+    Part = generateRandomPartitions(numOriginalNodes, 500, 300)
+    #LG = line_graph(numOriginalNodes)
+    GNP = gnp_graph(numOriginalNodes;p=0.5)
+    #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
     dt = now()
 
     DT = Dates.format(dt, "mm-dd_HH-MM-SS")
@@ -10,7 +11,7 @@
     #Uncomment one of the following depending on if you want the results to be saved
     #to a CSV file or nott
     #surfaceplots(Part, GNP, 25, save_to_string=string)
-    @time GetXYZ(Part, GNP, 1000, modelType=linear_model, save_to_string=timeString)
+    @time GetXYZ(Part, GNP, numOriginalNodes, modelType=linear_model, save_to_string=timeString)
     println(string)
 
     #=In normal terminal, (with R installed)
