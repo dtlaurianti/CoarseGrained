@@ -21,22 +21,18 @@ function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, n
     partitionList = Array{Dict{Integer,Integer}, 1}(undef, numPartitions)
     Random.seed!(trunc(Int, time() * 1000000))
     @threads for index in 1:numPartitions
-        partitionAccepted = false
-        while !partitionAccepted
-            partition = Dict{Integer, Integer}()
-            # assigns each node in the original nodes to a new node in the reduced nodes
-            labels = StatsBase.sample(1:reducedSize, originalSize)
-            partition = Dict(zip(1:originalSize, labels))
-            # check that each partition is nonempty
-            if length(unique(labels)) == reducedSize
-                partitionAccepted = true
-                partitionList[index]=partition
-            end
+        partition = Dict{Integer, Integer}()
+        # assigns each node in the original nodes to a new node in the reduced nodes
+        labels = StatsBase.sample(1:reducedSize, originalSize)
+        # specifically assigns each supernode one random node so they are nonempty
+        assignindices = StatsBase.sample(1:originalSize, reducedSize, replace=false)
+        for i=1:reducedSize
+            labels[assignindices[i]] = i
         end
+        partitionList[index] = Dict(zip(1:originalSize, labels))
     end
     return partitionList
 end
-
 
 #Function: spectralClustering
 #Parameters: A, MatrixNetwork containing the network to be compressed
