@@ -1,7 +1,30 @@
+
+#Function: geneticImprovement
+#Parameters: A, MatrixNetwork to partition and run dynamics on
+#            dynamical_function, the dynamic model to run on the network
+#            partitions, the partitions we will evolve from
+#            generations, the number of reproduction cycles to run
+#            mutation_prob, the chance of a partition to randomly changing into a adjacent partition
+#            initial_condition, the initial variable values
+#            dynamical_function, the dynamical model we will run getLoss using
+#            tmax, when to end the model
+#            dt, the length of the timesteps in our simulation
+#Purpose: To find the partition with local minimum loss using a basic iterative approach
+#Return value: returns a partition that is an approximate local minimum of the partition space
+function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, Integer}}, generations::Integer, mutation_prob::Float64, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+
+end
+
+
 #Function: iterativeImprovement
 #Parameters: A, MatrixNetwork to partition and run dynamics on
 #            dynamical_function, the dynamic model to run on the network
 #            p, the partition to start from
+#            depth, how many adjacent partitions away our neighborhoods should look
+#            initial_condition, the initial variable values
+#            dynamical_function, the dynamical model we will run getLoss using
+#            tmax, when to end the model
+#            dt, the length of the timesteps in our simulation
 #Purpose: To find the partition with local minimum loss using a basic iterative approach
 #Return value: returns a partition that is a local minimum of the partition space
 function iterativeImprovement(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
@@ -9,6 +32,7 @@ function iterativeImprovement(A::MatrixNetwork, p::Dict{Integer, Integer}, depth
     k = length(unique(values(p)))
     function_args = Dict(function_args)
     minloss = getLoss(A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
+    display(minloss)
     p2 = p
     # iteratively and greedily choose the least adjacent partition until we find a local minimum
     while true
@@ -17,16 +41,17 @@ function iterativeImprovement(A::MatrixNetwork, p::Dict{Integer, Integer}, depth
         for neighbor in neighborhood
             loss = getLoss(A, neighbor, initial_condition, dynamical_function, tmax, dt, function_args...)
             if loss < minloss
-                p2 = adjacent
+                p2 = neighbor
                 minloss = loss
             end
         end
         # if we haven't found a better partition in the surrounding partitions we return out current partition
-        if p2 = p
+        if p2 == p
             break
         end
         # update the point we are at
         p = p2
+        display(minloss)
     end
     return p
 end
@@ -45,6 +70,9 @@ function getAdjacentPartitions(p::Dict{Integer, Integer}, n::Integer, k::Integer
             if p[i] != j
                 append!(adjacents, [copy(p)])
                 adjacents[end][i] = j
+                if length(unique(values(adjacents[end]))) != k
+                    pop!(adjacents)
+                end
             end
         end
     end
@@ -58,11 +86,11 @@ end
 #            depth, the number of partitions away to look
 #Purpose: To return a list of the neighboring partitions
 #Return value: returns a list of partitions up to depth away from the input partition
-function getNeighborhood(p::p::Dict{Integer, Integer}, n::Integer, k::Integer, depth::Integer)
-    neighbors = Set(p)
+function getNeighborhood(p::Dict{Integer, Integer}, n::Integer, k::Integer, depth::Integer)
+    neighbors = Set([p])
     for _=1:depth
         for partition in neighbors
-            push!(neighbors, getAdjacentPartitions(partition))
+            union!(neighbors, getAdjacentPartitions(partition, n, k))
         end
     end
     pop!(neighbors, p)
@@ -86,7 +114,12 @@ function getAdjacentSample(p::Dict{Integer, Integer}, n::Integer, k::Integer, s:
             ks = rand(1:k)
             if p[ns] != ks
                 sample[end][ns] = ks
-                break
+                if length(unique(values(sample[end]))) != k
+                    pop!(sample)
+                    append!(sample, [copy(p)])
+                else
+                    break
+                end
             end
         end
     end

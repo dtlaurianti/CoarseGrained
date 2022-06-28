@@ -2,7 +2,7 @@ using Distributed
 using Test
 using BenchmarkTools
 using SharedArrays
-const numCores = 6
+const numCores = 12
 if (nworkers() != numCores)
     rmprocs(procs()[2:end])
     addprocs(numCores)
