@@ -21,7 +21,7 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
     mutation_prob = pweights(1-mutation_prob, mutation_prob)
 
     function_args = Dict(function_args)
-    individuals = []
+    individuals = partitions
     # convert every partition to binary form so it can be crossed and mutated
     for partition in partitions
         push!(individuals, dict_to_matrix(partition, n, k))
@@ -31,7 +31,7 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
         loss_log = []
         # store the magnitude of loss for each partition
         for individual in individuals
-            append!(loss, log(getLoss(A, matrix_to_dict(individual), initial_condition, dynamical_function, tmax, dt, function_args...)))
+            append!(loss, log(getLoss(A, individual, initial_condition, dynamical_function, tmax, dt, function_args...)))
         end
         loss_sum = sum(loss)
         prob = []
@@ -64,6 +64,7 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
 
 end
 
+#=
 #Function: dict_to_matrix
 #Parameters: p, the partition to convert to matrix form
 #            n, the number of nodes in the partition
@@ -95,6 +96,9 @@ function matrix_to_dict(P::Matrix, n::Integer, k::Integer)
     end
     return p
 end
+=#
+
+
 
 #Function: iterativeImprovement
 #Parameters: A, MatrixNetwork to partition and run dynamics on
