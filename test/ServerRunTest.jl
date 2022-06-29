@@ -8,6 +8,7 @@ println("Beginning Testing...")
 #include("PartitionTest.jl")
 #include("RunMultiModelsTest.jl")
 #include("LocalSearchTest.jl")
-include("NoPlotLandscapeTest.jl")
+#include("NoPlotLandscapeTest.jl")
+include("plotTests.jl")
 
 println("Testing Complete.")

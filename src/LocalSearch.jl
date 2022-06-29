@@ -96,6 +96,35 @@ function matrix_to_dict(P::Matrix, n::Integer, k::Integer)
     return p
 end
 
+function findLocalMinimum(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+    n = length(p)
+    k = length(unique(values(p)))
+    function_args = Dict(function_args)
+    minloss = getLoss(A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
+    display(minloss)
+    p2 = p
+    # iteratively and greedily choose the least adjacent partition until we find a local minimum
+    while true
+        neighborhood = getNeighborhood(p, n, k, depth) #replace with radius-based search
+        # find the adjacent partition with the least loss
+        for neighbor in neighborhood
+            loss = getLoss(A, neighbor, initial_condition, dynamical_function, tmax, dt, function_args...)#just use z values
+            if loss < minloss
+                p2 = neighbor
+                minloss = loss
+            end
+        end
+        # if we haven't found a better partition in the surrounding partitions we return out current partition
+        if p2 == p
+            break
+        end
+        # update the point we are at
+        p = p2
+        display(minloss)
+    end
+    return p
+end
+
 #Function: iterativeImprovement
 #Parameters: A, MatrixNetwork to partition and run dynamics on
 #            dynamical_function, the dynamic model to run on the network
