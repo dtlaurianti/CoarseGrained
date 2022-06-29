@@ -17,9 +17,9 @@ end
 end
 
 @testset "surfaceplots" begin
-    numOriginalNodes = 300
+    numOriginalNodes = 500
     println("Checkpoint01")
-    Part = generateRandomPartitions(numOriginalNodes, 100, 300)
+    Part = generateRandomPartitions(numOriginalNodes, 10, 10)
     println("Checkpoint02")
     #LG = line_graph(numOriginalNodes)
     GNP = gnp_graph(numOriginalNodes;p=0.5)
