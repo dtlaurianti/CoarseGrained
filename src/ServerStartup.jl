@@ -18,7 +18,7 @@ include("../src/GenerateGraphs.jl")
 include("../src/Partition.jl")
 include("../src/ReduceNetwork.jl")
 include("../src/EvaluateError.jl")
-include("../src/LocalSearch.jl")
+#include("../src/LocalSearch.jl")
 include("../src/NoPlotLandscape.jl")
 
 using Plots

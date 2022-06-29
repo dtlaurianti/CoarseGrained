@@ -53,7 +53,7 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
         # mutation phase
         for i = 1:c
             if StatsBase.sample([0,1], mutation_prob) == 1
-                children[c] =
+                children[c] = 
         end
     end
     finalPartitions = []
