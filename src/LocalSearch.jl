@@ -22,10 +22,6 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
 
     function_args = Dict(function_args)
     individuals = partitions
-    # convert every partition to binary form so it can be crossed and mutated
-    for partition in partitions
-        push!(individuals, dict_to_matrix(partition, n, k))
-    end
     for _=1:generations
         # reproduction phase
         loss_log = []
@@ -53,12 +49,12 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
         # mutation phase
         for i = 1:c
             if StatsBase.sample([0,1], mutation_prob) == 1
-                children[c] = 
+                children[c] =
         end
     end
     finalPartitions = []
     for individual in individuals
-        push!(finalPartitions, matrix_to_dict(individual, n, k))
+        push!(finalPartitions, individual)
     end
     return individuals
 
