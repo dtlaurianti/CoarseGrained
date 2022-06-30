@@ -82,7 +82,7 @@ function GetXYZ(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes;
     listModelArgs = Dict(:ϵ=>-3/NumOriginalNodes, :β=>0.5, :γ=>0.5, :ω=>rand(NumOriginalNodes), :K=>0.5, :d=>0.5, :c=>0.5, :b=>0.5)
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
-    println("Checkpoint1")
+    println("Checkpoint")
     #calculate distance matrix
     num_par = length(partitions)
     D = SharedArray{Float64}((num_par,num_par))
@@ -92,7 +92,6 @@ function GetXYZ(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes;
             D[i, j] = variation_of_information(Arr[i],Arr[j])
         end
     end
-    println("Checkpoint2")
     D = Array(D)
     #calculate MDS on disimilarity matrix
     embedding = StatsBase.fit(MDS, D, distances=true, maxoutdim=2)
@@ -100,7 +99,6 @@ function GetXYZ(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes;
     #Format data
     x = X_transformed[1,:]
     y = X_transformed[2,:]
-    println("Checkpoint3")
     #Calculate z dimension
     z = SharedArray{Float64}((num_par))
     @sync @distributed for i in 1:num_par
