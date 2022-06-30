@@ -25,5 +25,7 @@ end
 end
 =#
 @testset "genetic_tests" begin
-
+    p1 = generateRandomPartition(10,5,1)[1]
+    p2 = generateRandomPartition(10,5,1)[1]
+    pc = supernodeBucketCross(p1, p2, 10, 5)
 end

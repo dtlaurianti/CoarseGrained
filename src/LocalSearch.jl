@@ -1,10 +1,11 @@
+using DataStructures
+
 
 #Function: geneticImprovement
 #Parameters: A, MatrixNetwork to partition and run dynamics on
 #            dynamical_function, the dynamic model to run on the network
-#            partitions, the partitions we will evolve from
+#            partitions, the partitions we will evolve from, should be an even number
 #            generations, the number of reproduction cycles to run
-#            crossover_prob, the chance of a partition to randomly changing into a adjacent partition
 #            mutation_prob, the chance of a partition to randomly changing into a adjacent partition
 #            initial_condition, the initial variable values
 #            dynamical_function, the dynamical model we will run getLoss using
@@ -12,7 +13,7 @@
 #            dt, the length of the timesteps in our simulation
 #Purpose: To find the partition with local minimum loss using a basic iterative approach
 #Return value: returns a partition that is an approximate local minimum of the partition space
-function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, Integer}}, generations::Integer, crossover_prob::Float64, mutation_prob::Float64, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, Integer}}, generations::Integer, mutation_prob::Float64, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
     c = length(partitions)
     n = length(partitions[1])
     k = length(unique(values(partitions[1])))
@@ -42,8 +43,11 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
         end
 
         # crossing phase
-        for i = 1:c
-            swap = StatsBase.sample([0,1], crossover_prob, )
+        for i = 1:2:c
+            child1 = supernodeBucketCross(individuals[i], individuals[i+1], n, k, crossover_prob)
+            child2 = supernodeBucketCross(individuals[i+1], individuals[i], n, k, crossover_prob)
+            individuals[i] = child1
+            individuals[i+1] = child2
         end
 
         # mutation phase
@@ -58,6 +62,68 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
     end
     return individuals
 
+end
+
+
+#Function: supernodeBucketCross
+#Parameters: parent1, the partition to cross
+#            parent2, the partition to cross
+#            n, the number of nodes in the partitions
+#            k, the number of supernodes in the partitions
+#Purpose: To cross-breed two partitions to produce a partition with some qualities of both
+#Return value: returns a partition that is a combination of parent1 and parent2
+function supernodeBucketCross(parent1::Dict{Integer, Integer}, parent2::Dict{Integer, Integer}, n::Integer, k::Integer)
+    #=
+    buckets = Dict(Set() for _=1:k)
+    for (node,supernode) in parent1
+        push!(buckets[supernode], node)
+    end
+    for (node,supernode) in parent2
+        push!(buckets[supernode], node)
+    end
+    =#
+    supernodeSizes1 = getSupernodeSizes(parent1)
+    supernodeSizes2 = getSupernodeSizes(parent2)
+
+    buckets1 = Vector()
+    for (node,supernode) in parent1
+        push!(buckets1, supernode=>node)
+    end
+    buckets2 = Vector()
+    for (node,supernode) in parent2
+        push!(buckets2, supernode=>node)
+    end
+
+    # identically partitioned nodes are automatically placed in the child partition
+    child = intersect(buckets1, buckets2)
+    # differently partitioned nodes will have the nodes picked randomly from either to be placed in the child partition
+    buckets = symdiff(buckets1, buckets2)
+
+    # for each differing supernode, randomly select nodes until it is of the proper size
+    for i = 1:k
+        # if there was a difference in the supernode between parent partitions construct the crossed supernode
+        # aka if there is at least one node is
+        if !isempty(filter(pair->pair.first==i, buckets))
+            numSame = filter(pair->pair.first==i, child)
+            # get the number of nodes in each supernode
+            size1 = supernodeSizes1[i] - numSame
+            size2 = supernodeSizes2[i] - numSame
+            # the size of the child supernode is chosen randomly between the size of the two nodes
+            sizec = rand(min(size1,size2), max(size1,size2))
+            # until we have sizec nodes, pop a random element from a random parent and add it to the child
+            for j = 1:sizec
+                # take a random node from the nodes found in that supernode in either partition
+                nodes = filter(pair->pair.first==i, buckets)
+                node = rand(nodes)
+                # set the child
+                push!(child, node)
+                # remove all pairs containing that node from the buckets
+                filter!(pair -> pair.second != node, buckets)
+                end
+            end
+        end
+    end
+    return child
 end
 
 #=
