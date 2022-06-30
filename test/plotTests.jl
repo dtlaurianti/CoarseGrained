@@ -7,7 +7,7 @@ for i in 1:5
     trash0 = @elapsed(GetXYZ(Part1, GNP1, 15, modelType=linear_model))
 end
 
-for numOriginalNodes in 100:50:1500
+for numOriginalNodes in 20:10:100
     push!(x, numOriginalNodes)
     Part = generateRandomPartitions(numOriginalNodes, 10, 10);
     #LG = line_graph(numOriginalNodes)
@@ -20,7 +20,7 @@ for numOriginalNodes in 100:50:1500
 end
 
 figure = Plots.plot(x, y, title="Time Complexity With Respect To numOriginalNodes", xlabel="numOriginalNodes",
-ylabel = "time (seconds)", margin=9Plots.mm)
+ylabel = "time (seconds)", margin=9Plots.mm, ylims = (0, Inf))
 png(figure, "OriginalNodesPlot.png")
 
 df = DataFrame(["x" => x, "y" => y])
@@ -35,20 +35,20 @@ for i in 1:5
     trash2 = @elapsed(GetXYZ(Part1, GNP1, 15, modelType=linear_model))
 end
 
-for numReducedNodes in 100:50:1500
+for numReducedNodes in 10:10:100
     push!(x, numReducedNodes)
-    Part = generateRandomPartitions(1550, numReducedNodes, 10);
+    Part = generateRandomPartitions(110, numReducedNodes, 10);
     #LG = line_graph(numOriginalNodes)
-    GNP = gnp_graph(1550;p=0.5)
+    GNP = gnp_graph(110;p=0.5)
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
     for i in 1:4
-        push!(times, @elapsed(GetXYZ(Part, GNP, 1550, modelType=linear_model)))
+        push!(times, @elapsed(GetXYZ(Part, GNP, 110, modelType=linear_model)))
     end
     push!(y, median(times))
 end
 
 figure = Plots.plot(x, y, title="Time Complexity With Respect To numReducedNodes", 
-xlabel="numReducedNodes", ylabel = "time (seconds)", margin=9Plots.mm)
+xlabel="numReducedNodes", ylabel = "time (seconds)", margin=9Plots.mm, ylims = (0, Inf))
 png(figure, "ReducedNodesPlot.png")
 
 df2 = DataFrame(["x" => x, "y" => y])
@@ -63,7 +63,7 @@ for i in 1:5
     trash3 = @elapsed(GetXYZ(Part1, GNP1, 15, modelType=linear_model))
 end
 
-for numPartitions in 100:50:1500
+for numPartitions in 10:10:100
     push!(x, numPartitions)
     Part = generateRandomPartitions(20, 10, numPartitions);
     #LG = line_graph(numOriginalNodes)
@@ -76,7 +76,7 @@ for numPartitions in 100:50:1500
 end
 
 figure = Plots.plot(x, y, title="Time Complexity With Respect To numPartitions", 
-xlabel="numPartitions", ylabel = "time (seconds)", margin=9Plots.mm)
+xlabel="numPartitions", ylabel = "time (seconds)", margin=9Plots.mm, ylims = (0, Inf))
 png(figure, "numPartitionsPlot.png")
 
 df3 = DataFrame(["x" => x, "y" => y])
