@@ -4,7 +4,7 @@ times = []
 Part1 = generateRandomPartitions(15, 10, 10);
 GNP1 = gnp_graph(15;p=0.5)
 for i in 1:5
-    trash = @elapsed(GetXYZ(Part1, GNP1, 15, modelType=linear_model))
+    trash0 = @elapsed(GetXYZ(Part1, GNP1, 15, modelType=linear_model))
 end
 
 for numOriginalNodes in 100:50:1500
