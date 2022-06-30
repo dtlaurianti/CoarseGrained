@@ -21,17 +21,13 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
     mutation_prob = pweights(1-mutation_prob, mutation_prob)
 
     function_args = Dict(function_args)
-    individuals = []
-    # convert every partition to binary form so it can be crossed and mutated
-    for partition in partitions
-        push!(individuals, dict_to_matrix(partition, n, k))
-    end
+    individuals = partitions
     for _=1:generations
         # reproduction phase
         loss_log = []
         # store the magnitude of loss for each partition
         for individual in individuals
-            append!(loss, log(getLoss(A, matrix_to_dict(individual), initial_condition, dynamical_function, tmax, dt, function_args...)))
+            append!(loss, log(getLoss(A, individual, initial_condition, dynamical_function, tmax, dt, function_args...)))
         end
         loss_sum = sum(loss)
         prob = []
@@ -53,17 +49,18 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
         # mutation phase
         for i = 1:c
             if StatsBase.sample([0,1], mutation_prob) == 1
-                children[c] = 
+                children[c] =
         end
     end
     finalPartitions = []
     for individual in individuals
-        push!(finalPartitions, matrix_to_dict(individual, n, k))
+        push!(finalPartitions, individual)
     end
     return individuals
 
 end
 
+#=
 #Function: dict_to_matrix
 #Parameters: p, the partition to convert to matrix form
 #            n, the number of nodes in the partition
@@ -95,6 +92,9 @@ function matrix_to_dict(P::Matrix, n::Integer, k::Integer)
     end
     return p
 end
+=#
+
+
 
 function findLocalMinimum(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
     n = length(p)
