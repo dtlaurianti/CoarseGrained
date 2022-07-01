@@ -25,7 +25,26 @@ end
 end
 =#
 @testset "genetic_tests" begin
-    p1 = generateRandomPartition(10,5,1)[1]
-    p2 = generateRandomPartition(10,5,1)[1]
+    p1 = generateRandomPartitions(10,5,1)[1]
+    p2 = generateRandomPartitions(10,5,1)[1]
     pc = supernodeBucketCross(p1, p2, 10, 5)
+    println("Parent 1: ", p1)
+    println("Parent 2: ", p2)
+    println("Child: ", pc)
+
+    pcm = randomWalkMutate(pc, 10, 5, 0.75)
+    println("Mutant Child: ", pcm)
+
+    p3 = generateRandomPartitions(10,5,1)[1]
+    p4 = generateRandomPartitions(10,5,1)[1]
+
+    GNP = gnp_graph(10)
+
+    gen3 = geneticImprovement(GNP, [p1,p2,p3,p4], 2, 0.75, rand(10), linear_model, 10, 0.1)
+    for part in [p1,p2,p3,p4]
+        println("Gen 1: ", part)
+    end
+    for part in gen3
+        println("Gen 3: ", part)
+    end
 end
