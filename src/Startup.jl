@@ -12,6 +12,7 @@ end
 @everywhere using DifferentialEquations
 @everywhere using LinearAlgebra
 @everywhere using SparseArrays
+@everywhere using StatsBase
 
 include("../src/SimulateDynamics.jl")
 include("../src/GenerateGraphs.jl")

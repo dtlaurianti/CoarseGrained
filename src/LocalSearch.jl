@@ -1,4 +1,4 @@
-using DataStructures
+@everywhere using DataStructures
 
 
 #Function: supernodeBucketCross
@@ -8,7 +8,7 @@ using DataStructures
 #            k, the number of supernodes in the partitions
 #Purpose: To cross-breed two partitions to produce a partition with some qualities of both
 #Return value: returns a partition that is a combination of parent1 and parent2
-function supernodeBucketCross(parent1::Dict{Integer, Integer}, parent2::Dict{Integer, Integer}, n::Integer, k::Integer)
+@everywhere function supernodeBucketCross(parent1::Dict{Integer, Integer}, parent2::Dict{Integer, Integer}, n::Integer, k::Integer)
     # store the parent nodes in reversed vector notation
     buckets1 = Vector{Pair}()
     for (node,supernode) in parent1
@@ -80,7 +80,7 @@ end
 #            mutation_prob, the probability of taking another step on the random walk
 #Purpose: To mutate a partition
 #Return value: returns a partition that is slightly different than the input partition
-function randomWalkMutate(individual::Dict{Integer,Integer}, n::Integer, k::Integer, mutation_prob::Float64)
+@everywhere function randomWalkMutate(individual::Dict{Integer,Integer}, n::Integer, k::Integer, mutation_prob::Float64)
     weights = pweights([1-mutation_prob, mutation_prob])
     # each time we flip heads with chance mutation_prob walk to an adjacent partition
     while true
@@ -114,10 +114,12 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
     individuals = partitions
     for _=1:generations
         # reproduction phase
-        loss_log = []
+
+        loss_log = zeros(c)
         # store the magnitude of loss for each partition
-        for individual in individuals
-            append!(loss_log, log(getLoss(A, individual, initial_condition, dynamical_function, tmax, dt, function_args...)))
+        @sync @distributed for i = 1:c
+            loss_log[i] = log(getLoss(A, individuals[i], initial_condition, dynamical_function, tmax, dt, function_args...))
+            #append!(loss_log, log(getLoss(A, individual, initial_condition, dynamical_function, tmax, dt, function_args...)))
         end
         loss_sum = sum(loss_log)
         prob = Vector{Float64}()
@@ -133,7 +135,7 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
         individuals = children
 
         # crossing phase
-        for i = 1:2:c
+        @sync @distributed for i = 1:2:c
             child1 = supernodeBucketCross(individuals[i], individuals[i+1], n, k)
             child2 = supernodeBucketCross(individuals[i+1], individuals[i], n, k)
             individuals[i] = child1
@@ -141,12 +143,14 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
         end
 
         # mutation phase
-        for i = 1:c
+        @sync @distributed for i = 1:c
             individuals[i] = randomWalkMutate(individuals[i], n, k, mutation_prob)
         end
     end
     return individuals
 end
+
+
 
 #=
 #Function: dict_to_matrix
@@ -329,7 +333,7 @@ end
 #            k, the number of supernodes
 #Purpose: To return a random adjacent partition
 #Return value: returns a partition adjacent to the input partition
-function randomAdjacentPartition(p::Dict{Integer, Integer}, n::Integer, k::Integer)
+@everywhere function randomAdjacentPartition(p::Dict{Integer, Integer}, n::Integer, k::Integer)
     sample = copy(p)
     # change the supernode we partition one node into to create a new partition adjacent to the input partition
     while true

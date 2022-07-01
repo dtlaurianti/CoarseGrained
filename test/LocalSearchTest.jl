@@ -35,16 +35,18 @@ end
     pcm = randomWalkMutate(pc, 10, 5, 0.75)
     println("Mutant Child: ", pcm)
 
-    p3 = generateRandomPartitions(10,5,1)[1]
-    p4 = generateRandomPartitions(10,5,1)[1]
+    gen1 = generateRandomPartitions(100, 50, 512)
+    x = rand(100)
+    GNP = gnp_graph(100)
 
-    GNP = gnp_graph(10)
-
-    gen3 = geneticImprovement(GNP, [p1,p2,p3,p4], 2, 0.75, rand(10), linear_model, 10, 0.1)
-    for part in [p1,p2,p3,p4]
+    @time gen3 = geneticImprovement(GNP, gen1, 16, 0.75, x, linear_model, 10, 0.1)
+    @time gen3fast = geneticImprovementFast(GNP, gen1, 16, 0.75, x, linear_model, 10, 0.1)
+    #=
+    for part in gen1
         println("Gen 1: ", part)
     end
     for part in gen3
         println("Gen 3: ", part)
     end
+    =#
 end

@@ -19,7 +19,6 @@ using MultivariateStats
 using DataFrames
 using CSV
 using ScikitLearn
-using StatsBase
 using Plots
 using PyPlot
 using SharedArrays

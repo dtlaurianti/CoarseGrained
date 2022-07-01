@@ -1,6 +1,5 @@
 using Clustering
 using Random
-using StatsBase
 using Distributed
 using Base.Threads
 
