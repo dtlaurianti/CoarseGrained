@@ -39,14 +39,15 @@ end
     x = rand(100)
     GNP = gnp_graph(100)
 
-    @time gen3 = geneticImprovement(GNP, gen1, 16, 0.75, x, linear_model, 10, 0.1)
-    @time gen3fast = geneticImprovementFast(GNP, gen1, 16, 0.75, x, linear_model, 10, 0.1)
-    #=
-    for part in gen1
-        println("Gen 1: ", part)
+    @time gen3 = geneticImprovement(GNP, gen1, 16, 0.9, x, linear_model, 10, 0.1)
+    gen1_loss = 0
+    for i = 1:512
+        gen1_loss += getLoss(GNP, gen1[i], x, linear_model, 10, 0.1)
     end
-    for part in gen3
-        println("Gen 3: ", part)
+    gen3_loss = 0
+    for i = 1:512
+        gen3_loss += getLoss(GNP, gen3[i], x, linear_model, 10, 0.1)
     end
-    =#
+    println("Avg Loss Gen1: ", gen1_loss/512)
+    println("Avg Loss Gen3: ", gen3_loss/512)
 end

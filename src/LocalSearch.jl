@@ -117,10 +117,11 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
 
         loss_log = zeros(c)
         # store the magnitude of loss for each partition
-        @sync @distributed for i = 1:c
+        Threads.@threads for i = 1:c
             loss_log[i] = log(getLoss(A, individuals[i], initial_condition, dynamical_function, tmax, dt, function_args...))
             #append!(loss_log, log(getLoss(A, individual, initial_condition, dynamical_function, tmax, dt, function_args...)))
         end
+        display(loss_log)
         loss_sum = sum(loss_log)
         prob = Vector{Float64}()
         # each partition reproduces with probability scaled to the magnitude of its loss
@@ -135,7 +136,7 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
         individuals = children
 
         # crossing phase
-        @sync @distributed for i = 1:2:c
+        Threads.@threads for i = 1:2:c
             child1 = supernodeBucketCross(individuals[i], individuals[i+1], n, k)
             child2 = supernodeBucketCross(individuals[i+1], individuals[i], n, k)
             individuals[i] = child1
@@ -143,7 +144,7 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
         end
 
         # mutation phase
-        @sync @distributed for i = 1:c
+        Threads.@threads for i = 1:c
             individuals[i] = randomWalkMutate(individuals[i], n, k, mutation_prob)
         end
     end
