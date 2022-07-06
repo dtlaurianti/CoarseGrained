@@ -88,7 +88,8 @@ end
 end
 
 #Function: getLossPartition
-#Parameters: A, MatrixNetwork that represents the original network
+#Parameters: originalTimeSeries, the time series of the uncompressed network that we precompute
+#            A, MatrixNetwork that represents the original network
 #            partition, a Dict that specifies the supernodes in the compressed network
 #            initial_condition, a Vector of the node variables in the original network
 #            dynamical_function, the method that we will use to calculate the dynamics on the network and it's compressed version
@@ -112,4 +113,19 @@ end
   #loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
   loss = loss_function(originalTimeSeries, reducedTimeSeries, partition)
   return loss
+end
+
+#Function: getLossBatch
+#Parameters: A, MatrixNetwork that represents the original network
+#            partitions, a Vector of Dicts that specify the supernodes in the compressed networks
+#            initial_condition, a Vector of the node variables in the original network
+#            dynamical_function, the method that we will use to calculate the dynamics on the network and it's compressed version
+#            tmax, the final t value to compute up to
+#            dt, the length of the time steps
+#            function_args, a var-kwargs of the inputs to the model
+#Purpose: To compute the loss caused by coarse-graining a network according to a partition
+#Return value: Vector of Float of loss value
+@everywhere function getLossBatch(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; loss_function::Function=computeDynamicalError, function_args...)
+  originalTimeSeries = simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
+  return pmap(part->getLossPartition(originalTimeSeries, A, part, initial_condition, dynamical_function, tmax, dt; loss_function=loss_function, function_args...), partitions)
 end
