@@ -84,6 +84,32 @@ end
   # calculate the difference between the time series
   #loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
   loss = computeDynamicalError(originalTimeSeries, reducedTimeSeries, partition)
-  flush(stdout)
+  return loss
+end
+
+#Function: getLossPartition
+#Parameters: A, MatrixNetwork that represents the original network
+#            partition, a Dict that specifies the supernodes in the compressed network
+#            initial_condition, a Vector of the node variables in the original network
+#            dynamical_function, the method that we will use to calculate the dynamics on the network and it's compressed version
+#            tmax, the final t value to compute up to
+#            dt, the length of the time steps
+#            function_args, a var-kwargs of the inputs to the model
+#Purpose: To compute the loss caused by coarse-graining a network according to a partition
+#Return value: Float of loss value
+@everywhere function getLossPartition(originalTimeSeries, A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; loss_function::Function=computeDynamicalError, function_args...)
+  function_args = Dict(function_args)
+  # create the initial conditions for the compressed version of A
+  compressed_initial_condition = compressInitialCondition(initial_condition, partition)
+  # create the model arguments for the compressed version of A
+  compressed_args = compressArguments(partition, function_args...)
+  # create the compressed version of A
+  reducedA = compressAdjacencyMatrix(A, partition)
+  # compute the time series
+  reducedTimeSeries = simulateODEonGraph(reducedA, compressed_initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, compressed_args...)
+
+  # calculate the difference between the time series
+  #loss = computeIndividualError(originalTimeSeries, reducedTimeSeries, partition)
+  loss = loss_function(originalTimeSeries, reducedTimeSeries, partition)
   return loss
 end
