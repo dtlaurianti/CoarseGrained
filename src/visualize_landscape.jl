@@ -16,9 +16,10 @@
 
 using Clustering
 using MultivariateStats
+
 using DataFrames
-using CSV
-using ScikitLearn
+#using CSV
+#using ScikitLearn
 using Plots
 using PyPlot
 using SharedArrays
@@ -160,7 +161,8 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
     z = SharedArray{Float64}((num_par))
     @sync @distributed for i in 1:num_par
         # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
-      loss = getLoss(A, partitions[i], rand(NumOriginalNodes), modelType, NumOriginalNodes, 0.01; listModelArgs...)
+        #getLoss(A::MatrixNetwork, partition::Dict{Integer, Integer}, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+      loss = getLoss(A, partitions[i], rand(NumOriginalNodes), modelType, 10, 0.01; listModelArgs...)
       z[i] = loss
     end
     z = Array(z)

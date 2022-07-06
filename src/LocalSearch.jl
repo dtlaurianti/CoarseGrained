@@ -219,36 +219,65 @@ function matrix_to_dict(P::Matrix, n::Integer, k::Integer)
     return p
 end
 =#
+function countcsvlines(file)
+    n = 0
+    for row in CSV.Rows(file)
+        n += 1
+    end
+    return n
+end
 
-
-
-function findLocalMinimum(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
-    n = length(p)
-    k = length(unique(values(p)))
-    function_args = Dict(function_args)
-    minloss = getLoss(A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
-    display(minloss)
-    p2 = p
-    # iteratively and greedily choose the least adjacent partition until we find a local minimum
-    while true
-        neighborhood = getNeighborhood(p, n, k, depth) #replace with radius-based search
-        # find the adjacent partition with the least loss
-        for neighbor in neighborhood
-            loss = getLoss(A, neighbor, initial_condition, dynamical_function, tmax, dt, function_args...)#just use z values
-            if loss < minloss
-                p2 = neighbor
-                minloss = loss
+function findLocalMinimum(xyzpData::String, radius::Number; startingPartition::String="")
+    minSoFar = ""
+    csv_reader = CSV.File(xyzpData)
+    if !isempty(startingPartition)
+        currentPart = 0
+        for row in csv_reader
+            currentPart += 1
+            if cmp(row.partition, startingPartition) == 0
+                break
             end
         end
-        # if we haven't found a better partition in the surrounding partitions we return out current partition
-        if p2 == p
+    else
+        numRows = countcsvlines(xyzpData)
+        currentPart = rand(2:numRows)
+    end
+    i, x, y, z = 0, 0, 0, 0
+    part = ""
+    for row in csv_reader
+        i += 1
+        if i == currentPart
+            x = row.x; y = row.y; z = row.z; part = row.partition
             break
         end
-        # update the point we are at
-        p = p2
-        display(minloss)
     end
-    return p
+    @label start
+    xmin = x - radius; xmax = x + radius; ymin = y - radius; ymax = y + radius; zcurrent = z
+    j = 0
+    minIndex = 0
+    for row in csv_reader
+        j += 1
+        if row.x >= xmin && row.x <= xmax && row.y >= ymin && row.y <= ymax
+            if row.z < zcurrent
+                zcurrent = row.z
+                minIndex = j
+            end
+        end
+    end
+    k = 0
+    for row in csv_reader
+        k += 1
+        if k == minIndex
+            if row.partition != minSoFar
+                x = row.x; y = row.y; z = row.z; part = row.partition
+                @goto start
+            else
+                return row.partition
+                break
+            end
+        end
+    end
+    return part
 end
 
 #Function: iterativeImprovement

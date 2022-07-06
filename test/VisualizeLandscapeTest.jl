@@ -18,12 +18,9 @@ end
 
 @testset "surfaceplots" begin
     numOriginalNodes = 500
-    println("Checkpoint01")
     Part = generateRandomPartitions(numOriginalNodes, 10, 10)
-    println("Checkpoint02")
     #LG = line_graph(numOriginalNodes)
     GNP = gnp_graph(numOriginalNodes;p=0.5)
-    println("Checkpoint03")
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
     dt = now()
 
@@ -31,11 +28,7 @@ end
     timeString = "test" * DT
     #Uncomment one of the following depending on if you want the results to be saved
     #to a CSV file or not
-    #surfaceplots(Part, GNP, 25, save_to_string=string)
-    #surfaceplots(Part, GNP, 50, modelType=linear_model, save_to_string=timeString)
-    println("Checkpoint04")
-    @time GetXYZ(Part, GNP, numOriginalNodes, modelType=linear_model, save_to_string=timeString)
-    println(string)
+    surfaceplots(Part, GNP, numOriginalNodes, modelType=linear_model, save_to_string=timeString)
 
     #=In normal terminal, (with R installed)
     call Rscript --vanilla ~/Documents/GitHub/CoarseGrained/src/make_smoothdata.R string"
