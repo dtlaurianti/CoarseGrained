@@ -209,27 +209,17 @@ function findLocalMinimum(xyzpData::String, radius::Number; startingPartition::S
         numRows = countcsvlines(xyzpData)
         currentPart = rand(2:numRows)
     end
-    i = 0
-    x = 0
-    y = 0
-    z = 0
+    i, x, y, z = 0, 0, 0, 0
     part = ""
     for row in csv_reader
         i += 1
         if i == currentPart
-            x = row.x 
-            y = row.y
-            z = row.z
-            part = row.partition
+            x = row.x; y = row.y; z = row.z; part = row.partition
             break
         end
     end
     @label start
-    xmin = x - radius
-    xmax = x + radius
-    ymin = y - radius
-    ymax = y + radius
-    zcurrent = z
+    xmin = x - radius; xmax = x + radius; ymin = y - radius; ymax = y + radius; zcurrent = z
     j = 0
     minIndex = 0
     for row in csv_reader
@@ -246,10 +236,7 @@ function findLocalMinimum(xyzpData::String, radius::Number; startingPartition::S
         k += 1
         if k == minIndex
             if row.partition != minSoFar
-                x = row.x 
-                y = row.y
-                z = row.z
-                part = row.partition
+                x = row.x; y = row.y; z = row.z; part = row.partition
                 @goto start
             else
                 return row.partition
