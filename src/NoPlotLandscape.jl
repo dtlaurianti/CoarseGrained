@@ -102,7 +102,7 @@ function GetXYZ(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes;
     z = SharedArray{Float64}((num_par))
     @sync @distributed for i in 1:num_par
         # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
-      loss = getLoss(A, partitions[i], rand(NumOriginalNodes), modelType, NumOriginalNodes, 0.01; listModelArgs...)
+      loss = getLoss(A, partitions[i], rand(NumOriginalNodes), modelType, 10, 0.01; listModelArgs...)
       z[i] = loss
       println(i)
     end
