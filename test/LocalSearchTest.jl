@@ -1,5 +1,6 @@
-#=
+
 @testset "neighbors_tests" begin
+    #=
     p = generateRandomPartitions(10,5,1)[1]
     display(p)
     sample = getAdjacentSample(p, 10, 5, 10)
@@ -15,9 +16,15 @@
     display(p3)
     loss = getLoss(G, p3, x, linear_model, 10, 0.1)
     println("Iterative Loss: ", loss)
-
+    =#
+    p = generateRandomPartitions(5,3,1)[1]
+    display([p])
+    neighborhood = getNeighborhood(p, 5, 3, 3)
+    display(neighborhood)
+    space = kPartition(5,3)
+    display(space)
 end
-=#
+
 #=
 @testset "conversion_tests" begin
     p = generateRandomPartitions(10,5,1)[1]
@@ -28,7 +35,7 @@ end
     display(p2)
 end
 =#
-
+#=
 @testset "genetic_tests" begin
     #=
     p1 = generateRandomPartitions(10,5,1)[1]
@@ -100,7 +107,7 @@ end
     =#
     display(plt)
 end
-
+=#
 #=
 @testset "iterative_tests" begin
     part = generateRandomPartitions(6,4,1)[1]

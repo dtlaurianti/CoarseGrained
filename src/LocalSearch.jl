@@ -349,8 +349,6 @@ end
             end
         end
     end
-    display(p)
-    display(adjacents)
     return adjacents
 end
 
@@ -362,12 +360,19 @@ end
 #Purpose: To return a list of the neighboring partitions
 #Return value: returns a list of partitions up to depth away from the input partition
 @everywhere function getNeighborhood(p::Dict{Integer, Integer}, n::Integer, k::Integer, depth::Integer)
-    neighbors = Set([p])
-    for _=1:depth
-        for partition in neighbors
-            union!(neighbors, getAdjacentPartitions(partition, n, k))
+    # create a vector of set for partitions a certain number of changes away
+    neighbors = [Set() for _=1:depth+1]
+    # the set of 0 changes away is just p
+    union!(neighbors[1], [p])
+    # make one change to all partitions in the set of i-1 changes to get the set of partitions with i changes
+    for i=1:depth
+        for partition in neighbors[i]
+            union!(neighbors[i+1], getAdjacentPartitions(partition, n, k))
         end
     end
+    # consolidate all layers into one set
+    neighbors = union(neighbors...)
+    # remove p
     pop!(neighbors, p)
     return neighbors
 end
