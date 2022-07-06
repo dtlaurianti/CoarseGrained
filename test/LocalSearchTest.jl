@@ -95,8 +95,9 @@ end
     iter_partitions = pmap(part->iterativeImprovement(G, part, 1, x, linear_model, 10, 0.1), gen1)
     iter_losses = pmap(part->getLoss(G, part, x, linear_model, 10, 0.1), iter_partitions)
     iter_avg = sum(iter_losses)
-    =#
+
     violin!(plt, 1:100, iter_losses, label = "Greedy, Avg = $iter_avg")
+    =#
     display(plt)
 end
 
