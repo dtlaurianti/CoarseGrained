@@ -195,6 +195,7 @@ function countcsvlines(file)
 end
 
 function findLocalMinimum(xyzpData::String, radius::Number; startingPartition::String="")
+    minSoFar = ""
     csv_reader = CSV.File(xyzpData)
     if !isempty(startingPartition)
         currentPart = 0
@@ -223,6 +224,7 @@ function findLocalMinimum(xyzpData::String, radius::Number; startingPartition::S
             break
         end
     end
+    @label start
     xmin = x - radius
     xmax = x + radius
     ymin = y - radius
@@ -243,8 +245,16 @@ function findLocalMinimum(xyzpData::String, radius::Number; startingPartition::S
     for row in csv_reader
         k += 1
         if k == minIndex
-            return row.partition
-            break
+            if row.partition != minSoFar
+                x = row.x 
+                y = row.y
+                z = row.z
+                part = row.partition
+                @goto start
+            else
+                return row.partition
+                break
+            end
         end
     end
     return part
