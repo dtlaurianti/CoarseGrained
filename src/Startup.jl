@@ -26,5 +26,6 @@ include("../src/visualize_landscape.jl")
 include("../src/NoPlotLandscape.jl")
 
 using Plots
+using StatsPlots
 using GraphRecipes
 using Dates

@@ -27,11 +27,20 @@
     pq = PriorityQueue{Integer, Integer}()
     # initialize the priority queue with the supernodes and the number of nodes in their buckets
     nodecounts = [0 for _=1:k]
+    samecounts = [0 for _=1:k]
     for pair in buckets
         nodecounts[pair.first] += 10
     end
+    for pair in child
+        nodecounts[pair.first] += 10
+        samecounts[pair.first] += 10
+        # give tiebreaker to supernodes that haven't recieved a node yet
+        if nodecounts[pair.first] % 10 == 0
+            nodecounts[pair.first] += 1
+        end
+    end
     for i = 1:k
-        if nodecounts[i] > 1
+        if nodecounts[i] > 1 + samecounts[i]
             enqueue!(pq, i=>nodecounts[i])
         end
     end
@@ -57,7 +66,7 @@
         for (sn, _) in supernodes_containing
             nodecounts[sn] -= 10
             delete!(pq, sn)
-            if nodecounts[sn] > 1
+            if nodecounts[sn] > 1 + samecounts[sn]
                 enqueue!(pq, sn=>nodecounts[sn])
             end
         end
@@ -105,30 +114,27 @@ end
 #            dt, the length of the timesteps in our simulation
 #Purpose: To find the partition with local minimum loss using a genetic evolution algorithm
 #Return value: returns a set of partitions that evolved from the original set of partitions
-function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, Integer}}, generations::Integer, mutation_prob::Float64, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+@everywhere function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, Integer}}, generations::Integer, mutation_prob::Float64, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
     c = length(partitions)
     n = length(partitions[1])
     k = length(unique(values(partitions[1])))
+    originalTimeSeries = simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
 
     function_args = Dict(function_args)
     individuals = partitions
     for _=1:generations
         # reproduction phase
 
-        loss_log = zeros(c)
         # store the magnitude of loss for each partition
-        Threads.@threads for i = 1:c
-            loss_log[i] = log(getLoss(A, individuals[i], initial_condition, dynamical_function, tmax, dt, function_args...))
-            #append!(loss_log, log(getLoss(A, individual, initial_condition, dynamical_function, tmax, dt, function_args...)))
-        end
-        display(loss_log)
-        loss_sum = sum(loss_log)
+        losses = pmap(individual->getLossPartition(originalTimeSeries, A, individual, initial_condition, dynamical_function, tmax, dt, function_args...), individuals)
+        loss_sum = sum(losses)
         prob = Vector{Float64}()
         # each partition reproduces with probability scaled to the magnitude of its loss
         for i = 1:c
-            append!(prob, loss_log[i]/loss_sum)
+            append!(prob, loss_sum/(losses[i]*c))
         end
-        weights = pweights(prob)
+        weights = aweights(prob)
+        # display(weights)
         children = []
         for i = 1:c
             push!(children, individuals[StatsBase.sample(1:c, weights)])
@@ -136,19 +142,46 @@ function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, In
         individuals = children
 
         # crossing phase
-        Threads.@threads for i = 1:2:c
+        for i = 1:2:c
             child1 = supernodeBucketCross(individuals[i], individuals[i+1], n, k)
             child2 = supernodeBucketCross(individuals[i+1], individuals[i], n, k)
+
+            #=
+            if length(unique(values(child1))) < k
+                println("cross bug")
+                println("Child1")
+                show(child1)
+                println("Parent 1")
+                show(individuals[i])
+                println("Parent 2")
+                show(individuals[i+1])
+                return nothing
+            end
+            if length(unique(values(child2))) < k
+                println("cross bug")
+                println("Child2")
+                show(child2)
+                println("Parent 1")
+                show(individuals[i])
+                println("Parent 2")
+                show(individuals[i+1])
+                return nothing
+            end
+            =#
+
             individuals[i] = child1
             individuals[i+1] = child2
         end
 
         # mutation phase
-        Threads.@threads for i = 1:c
+        individuals = pmap(individual->randomWalkMutate(individual, n, k, mutation_prob), individuals)
+        #=
+        for i = 1:c
             individuals[i] = randomWalkMutate(individuals[i], n, k, mutation_prob)
         end
+        =#
     end
-    return individuals
+    return collect(individuals)
 end
 
 
@@ -258,12 +291,12 @@ end
 #            dt, the length of the timesteps in our simulation
 #Purpose: To find the partition with local minimum loss using a basic iterative approach
 #Return value: returns a partition that is a local minimum of the partition space
-function iterativeImprovement(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+@everywhere function iterativeImprovement(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
     n = length(p)
     k = length(unique(values(p)))
     function_args = Dict(function_args)
     minloss = getLoss(A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
-    display(minloss)
+
     p2 = p
     # iteratively and greedily choose the least adjacent partition until we find a local minimum
     while true
@@ -282,7 +315,45 @@ function iterativeImprovement(A::MatrixNetwork, p::Dict{Integer, Integer}, depth
         end
         # update the point we are at
         p = p2
-        display(minloss)
+    end
+    return p
+end
+
+@everywhere function iterativeImprovementDynamic(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+    n = length(p)
+    k = length(unique(values(p)))
+    function_args = Dict(function_args)
+    minloss = getLoss(A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
+    calc_count = 0
+    cache_count = 0
+    cache = Dict{Dict{Integer, Integer}, Nothing}()
+    p2 = p
+    # iteratively and greedily choose the least adjacent partition until we find a local minimum
+    while true
+        neighborhood = getNeighborhood(p, n, k, depth)
+        #=
+        println("Neighborhood: ")
+        show(neighborhood)
+        println()
+        =#
+        # find the adjacent partition with the least loss
+        for neighbor in neighborhood
+            if !haskey(cache, neighbor)
+                loss = getLoss(A, neighbor, initial_condition, dynamical_function, tmax, dt, function_args...)
+                if loss < minloss
+                    p2 = neighbor
+                    minloss = loss
+                end
+            end
+        end
+        # if we haven't found a better partition in the surrounding partitions we return out current partition
+        if p2 == p
+            break
+        end
+        # update the point we are at
+        p = p2
+        cache = Dict(zip(neighborhood, [nothing for _=1:length(neighborhood)]))
+        #display(cache)
     end
     return p
 end
@@ -293,7 +364,7 @@ end
 #            k, the number of supernodes
 #Purpose: To return a list of the adjacent partitions
 #Return value: returns a list of partitions adjacent to the input partition
-function getAdjacentPartitions(p::Dict{Integer, Integer}, n::Integer, k::Integer)
+@everywhere function getAdjacentPartitions(p::Dict{Integer, Integer}, n::Integer, k::Integer)
     adjacents = []
     # apply every possible single node change and record the resulting partitions
     for i=1:n
@@ -317,13 +388,20 @@ end
 #            depth, the number of partitions away to look
 #Purpose: To return a list of the neighboring partitions
 #Return value: returns a list of partitions up to depth away from the input partition
-function getNeighborhood(p::Dict{Integer, Integer}, n::Integer, k::Integer, depth::Integer)
-    neighbors = Set([p])
-    for _=1:depth
-        for partition in neighbors
-            union!(neighbors, getAdjacentPartitions(partition, n, k))
+@everywhere function getNeighborhood(p::Dict{Integer, Integer}, n::Integer, k::Integer, depth::Integer)
+    # create a vector of set for partitions a certain number of changes away
+    neighbors = [Set() for _=1:depth+1]
+    # the set of 0 changes away is just p
+    union!(neighbors[1], [p])
+    # make one change to all partitions in the set of i-1 changes to get the set of partitions with i changes
+    for i=1:depth
+        for partition in neighbors[i]
+            union!(neighbors[i+1], getAdjacentPartitions(partition, n, k))
         end
     end
+    # consolidate all layers into one set
+    neighbors = union(neighbors...)
+    # remove p
     pop!(neighbors, p)
     return neighbors
 end
@@ -335,7 +413,7 @@ end
 #            s, the number of sample partitions
 #Purpose: To return a sample list of the adjacent partitions
 #Return value: returns a sample list of partitions adjacent to the input partition
-function getAdjacentSample(p::Dict{Integer, Integer}, n::Integer, k::Integer, s::Integer=1)
+@everywhere function getAdjacentSample(p::Dict{Integer, Integer}, n::Integer, k::Integer, s::Integer=1)
     sample = []
     # change the supernode we partition one node into to create s new partitions adjacent to this partition
     for _=1:s
