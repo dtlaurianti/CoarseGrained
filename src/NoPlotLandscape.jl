@@ -3,7 +3,6 @@ using MultivariateStats
 using DataFrames
 using CSV
 using ScikitLearn
-using StatsBase
 
 #Function: dict_to_array
 #Parameters: partitions, an array of dictionaries each representing a partition from some number of nodes to some
@@ -82,7 +81,7 @@ function GetXYZ(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes;
     listModelArgs = Dict(:ϵ=>-3/NumOriginalNodes, :β=>0.5, :γ=>0.5, :ω=>rand(NumOriginalNodes), :K=>0.5, :d=>0.5, :c=>0.5, :b=>0.5)
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
-    println("Checkpoint")
+    #println("Checkpoint")
     #calculate distance matrix
     num_par = length(partitions)
     D = SharedArray{Float64}((num_par,num_par))
@@ -106,7 +105,7 @@ function GetXYZ(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes;
         # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
       loss = getLoss(A, partitions[i], rand(NumOriginalNodes), modelType, 10, 0.01; listModelArgs...)
       z[i] = loss
-      println(i)
+      #println(i)
     end
     z = Array(z)
 

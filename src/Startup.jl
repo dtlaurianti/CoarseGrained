@@ -12,16 +12,20 @@ end
 @everywhere using DifferentialEquations
 @everywhere using LinearAlgebra
 @everywhere using SparseArrays
+@everywhere using StatsBase
+@everywhere using CSV
+@everywhere using DataFrames
 
 include("../src/SimulateDynamics.jl")
 include("../src/GenerateGraphs.jl")
 include("../src/Partition.jl")
 include("../src/ReduceNetwork.jl")
 include("../src/EvaluateError.jl")
-#include("../src/LocalSearch.jl")
+include("../src/LocalSearch.jl")
 include("../src/visualize_landscape.jl")
 include("../src/NoPlotLandscape.jl")
 
 using Plots
+using StatsPlots
 using GraphRecipes
 using Dates

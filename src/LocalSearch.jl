@@ -1,5 +1,106 @@
-using DataStructures
+@everywhere using DataStructures
 
+
+#Function: supernodeBucketCross
+#Parameters: parent1, the partition to cross
+#            parent2, the partition to cross
+#            n, the number of nodes in the partitions
+#            k, the number of supernodes in the partitions
+#Purpose: To cross-breed two partitions to produce a partition with some qualities of both
+#Return value: returns a partition that is a combination of parent1 and parent2
+@everywhere function supernodeBucketCross(parent1::Dict{Integer, Integer}, parent2::Dict{Integer, Integer}, n::Integer, k::Integer)
+    # store the parent nodes in reversed vector notation
+    buckets1 = Vector{Pair}()
+    for (node,supernode) in parent1
+        push!(buckets1, supernode=>node)
+    end
+    buckets2 = Vector{Pair}()
+    for (node,supernode) in parent2
+        push!(buckets2, supernode=>node)
+    end
+
+    # identically partitioned nodes are automatically placed in the child partition
+    child = intersect(buckets1, buckets2)
+    # differently partitioned nodes will have the nodes picked randomly from either to be placed in the child partition
+    buckets = symdiff(buckets1, buckets2)
+    # priority queue to control the order that supernode buckets are pulled from
+    pq = PriorityQueue{Integer, Integer}()
+    # initialize the priority queue with the supernodes and the number of nodes in their buckets
+    nodecounts = [0 for _=1:k]
+    samecounts = [0 for _=1:k]
+    for pair in buckets
+        nodecounts[pair.first] += 10
+    end
+    for pair in child
+        nodecounts[pair.first] += 10
+        samecounts[pair.first] += 10
+        # give tiebreaker to supernodes that haven't recieved a node yet
+        if nodecounts[pair.first] % 10 == 0
+            nodecounts[pair.first] += 1
+        end
+    end
+    for i = 1:k
+        if nodecounts[i] > 1 + samecounts[i]
+            enqueue!(pq, i=>nodecounts[i])
+        end
+    end
+
+    # until we have assigned all nodes to a supernode in the child,
+    # use the priority queue to select a bucket to pull from and add that node to the child partition
+    while !isempty(pq)
+        # choose which supernode bucket to select from using the priority queue
+        supernode = peek(pq)
+        # get the bucket of nodes corresponding to that supernode
+        nodes = filter(pair->pair.first==supernode.first, buckets)
+        # choose a node at random from the bucket
+        node = rand(nodes)
+        # add that node/supernode pair to the child partition
+        push!(child, node)
+        # get the supernode buckets containing that node
+        supernodes_containing = filter(pair->pair.second==node.second, buckets)
+        # give tiebreaker to supernodes that haven't recieved a node yet
+        if nodecounts[node.first] % 10 == 0
+            nodecounts[node.first] += 1
+        end
+        # delete the priority queue entry for each supernode containing that node and enqueue a new entry with one less node counted for
+        for (sn, _) in supernodes_containing
+            nodecounts[sn] -= 10
+            delete!(pq, sn)
+            if nodecounts[sn] > 1 + samecounts[sn]
+                enqueue!(pq, sn=>nodecounts[sn])
+            end
+        end
+        # delete all instances containing the chosen node from the buckets
+        filter!(pair->pair.second!=node.second, buckets)
+    end
+    # restore the child partition to standard Dictionary notation
+    childDict = Dict{Integer, Integer}()
+    for pair in child
+        childDict[pair.second] = pair.first
+    end
+
+    return childDict
+end
+
+#Function: randomWalkMutate
+#Parameters: individual, the partition to mutate
+#            n, the number of nodes in the partitions
+#            k, the number of supernodes in the partitions
+#            mutation_prob, the probability of taking another step on the random walk
+#Purpose: To mutate a partition
+#Return value: returns a partition that is slightly different than the input partition
+@everywhere function randomWalkMutate(individual::Dict{Integer,Integer}, n::Integer, k::Integer, mutation_prob::Float64)
+    weights = pweights([1-mutation_prob, mutation_prob])
+    # each time we flip heads with chance mutation_prob walk to an adjacent partition
+    while true
+        if StatsBase.sample([0,1], weights) == 1
+            individual = randomAdjacentPartition(individual, n, k)
+        else
+            break
+        end
+    end
+    return individual
+end
 
 #Function: geneticImprovement
 #Parameters: A, MatrixNetwork to partition and run dynamics on
@@ -11,120 +112,79 @@ using DataStructures
 #            dynamical_function, the dynamical model we will run getLoss using
 #            tmax, when to end the model
 #            dt, the length of the timesteps in our simulation
-#Purpose: To find the partition with local minimum loss using a basic iterative approach
-#Return value: returns a partition that is an approximate local minimum of the partition space
-function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, Integer}}, generations::Integer, mutation_prob::Float64, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+#Purpose: To find the partition with local minimum loss using a genetic evolution algorithm
+#Return value: returns a set of partitions that evolved from the original set of partitions
+@everywhere function geneticImprovement(A::MatrixNetwork, partitions::Array{Dict{Integer, Integer}}, generations::Integer, mutation_prob::Float64, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
     c = length(partitions)
     n = length(partitions[1])
     k = length(unique(values(partitions[1])))
-
-    crossover_prob = pweights(1-crossover_prob, crossover_prob)
-    mutation_prob = pweights(1-mutation_prob, mutation_prob)
+    originalTimeSeries = simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
 
     function_args = Dict(function_args)
     individuals = partitions
     for _=1:generations
         # reproduction phase
-        loss_log = []
+
         # store the magnitude of loss for each partition
-        for individual in individuals
-            append!(loss, log(getLoss(A, individual, initial_condition, dynamical_function, tmax, dt, function_args...)))
-        end
-        loss_sum = sum(loss)
-        prob = []
+        losses = pmap(individual->getLossPartition(originalTimeSeries, A, individual, initial_condition, dynamical_function, tmax, dt, function_args...), individuals)
+        loss_sum = sum(losses)
+        prob = Vector{Float64}()
         # each partition reproduces with probability scaled to the magnitude of its loss
         for i = 1:c
-            append!(prob, loss_log[i]/loss_sum)
+            append!(prob, loss_sum/(losses[i]*c))
         end
-        weights = pweights(prob)
+        weights = aweights(prob)
+        # display(weights)
         children = []
         for i = 1:c
-            append!(children, individuals[StatsBase.sample(1:c, weights)])
+            push!(children, individuals[StatsBase.sample(1:c, weights)])
         end
+        individuals = children
 
         # crossing phase
         for i = 1:2:c
-            child1 = supernodeBucketCross(individuals[i], individuals[i+1], n, k, crossover_prob)
-            child2 = supernodeBucketCross(individuals[i+1], individuals[i], n, k, crossover_prob)
+            child1 = supernodeBucketCross(individuals[i], individuals[i+1], n, k)
+            child2 = supernodeBucketCross(individuals[i+1], individuals[i], n, k)
+
+            #=
+            if length(unique(values(child1))) < k
+                println("cross bug")
+                println("Child1")
+                show(child1)
+                println("Parent 1")
+                show(individuals[i])
+                println("Parent 2")
+                show(individuals[i+1])
+                return nothing
+            end
+            if length(unique(values(child2))) < k
+                println("cross bug")
+                println("Child2")
+                show(child2)
+                println("Parent 1")
+                show(individuals[i])
+                println("Parent 2")
+                show(individuals[i+1])
+                return nothing
+            end
+            =#
+
             individuals[i] = child1
             individuals[i+1] = child2
         end
 
         # mutation phase
+        individuals = pmap(individual->randomWalkMutate(individual, n, k, mutation_prob), individuals)
+        #=
         for i = 1:c
-            if StatsBase.sample([0,1], mutation_prob) == 1
-                children[c] =
+            individuals[i] = randomWalkMutate(individuals[i], n, k, mutation_prob)
         end
+        =#
     end
-    finalPartitions = []
-    for individual in individuals
-        push!(finalPartitions, individual)
-    end
-    return individuals
-
+    return collect(individuals)
 end
 
 
-#Function: supernodeBucketCross
-#Parameters: parent1, the partition to cross
-#            parent2, the partition to cross
-#            n, the number of nodes in the partitions
-#            k, the number of supernodes in the partitions
-#Purpose: To cross-breed two partitions to produce a partition with some qualities of both
-#Return value: returns a partition that is a combination of parent1 and parent2
-function supernodeBucketCross(parent1::Dict{Integer, Integer}, parent2::Dict{Integer, Integer}, n::Integer, k::Integer)
-    #=
-    buckets = Dict(Set() for _=1:k)
-    for (node,supernode) in parent1
-        push!(buckets[supernode], node)
-    end
-    for (node,supernode) in parent2
-        push!(buckets[supernode], node)
-    end
-    =#
-    supernodeSizes1 = getSupernodeSizes(parent1)
-    supernodeSizes2 = getSupernodeSizes(parent2)
-
-    buckets1 = Vector()
-    for (node,supernode) in parent1
-        push!(buckets1, supernode=>node)
-    end
-    buckets2 = Vector()
-    for (node,supernode) in parent2
-        push!(buckets2, supernode=>node)
-    end
-
-    # identically partitioned nodes are automatically placed in the child partition
-    child = intersect(buckets1, buckets2)
-    # differently partitioned nodes will have the nodes picked randomly from either to be placed in the child partition
-    buckets = symdiff(buckets1, buckets2)
-
-    # for each differing supernode, randomly select nodes until it is of the proper size
-    for i = 1:k
-        # if there was a difference in the supernode between parent partitions construct the crossed supernode
-        # aka if there is at least one node is
-        if !isempty(filter(pair->pair.first==i, buckets))
-            numSame = filter(pair->pair.first==i, child)
-            # get the number of nodes in each supernode
-            size1 = supernodeSizes1[i] - numSame
-            size2 = supernodeSizes2[i] - numSame
-            # the size of the child supernode is chosen randomly between the size of the two nodes
-            sizec = rand(min(size1,size2), max(size1,size2))
-            # until we have sizec nodes, pop a random element from a random parent and add it to the child
-            for j = 1:sizec
-                # take a random node from the nodes found in that supernode in either partition
-                nodes = filter(pair->pair.first==i, buckets)
-                node = rand(nodes)
-                # set the child
-                push!(child, node)
-                # remove all pairs containing that node from the buckets
-                filter!(pair -> pair.second != node, buckets)
-                end
-            end
-        end
-    end
-    return child
-end
 
 #=
 #Function: dict_to_matrix
@@ -159,36 +219,65 @@ function matrix_to_dict(P::Matrix, n::Integer, k::Integer)
     return p
 end
 =#
+function countcsvlines(file)
+    n = 0
+    for row in CSV.Rows(file)
+        n += 1
+    end
+    return n
+end
 
-
-
-function findLocalMinimum(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
-    n = length(p)
-    k = length(unique(values(p)))
-    function_args = Dict(function_args)
-    minloss = getLoss(A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
-    display(minloss)
-    p2 = p
-    # iteratively and greedily choose the least adjacent partition until we find a local minimum
-    while true
-        neighborhood = getNeighborhood(p, n, k, depth) #replace with radius-based search
-        # find the adjacent partition with the least loss
-        for neighbor in neighborhood
-            loss = getLoss(A, neighbor, initial_condition, dynamical_function, tmax, dt, function_args...)#just use z values
-            if loss < minloss
-                p2 = neighbor
-                minloss = loss
+function findLocalMinimum(xyzpData::String, radius::Number; startingPartition::String="")
+    minSoFar = ""
+    csv_reader = CSV.File(xyzpData)
+    if !isempty(startingPartition)
+        currentPart = 0
+        for row in csv_reader
+            currentPart += 1
+            if cmp(row.partition, startingPartition) == 0
+                break
             end
         end
-        # if we haven't found a better partition in the surrounding partitions we return out current partition
-        if p2 == p
+    else
+        numRows = countcsvlines(xyzpData)
+        currentPart = rand(2:numRows)
+    end
+    i, x, y, z = 0, 0, 0, 0
+    part = ""
+    for row in csv_reader
+        i += 1
+        if i == currentPart
+            x = row.x; y = row.y; z = row.z; part = row.partition
             break
         end
-        # update the point we are at
-        p = p2
-        display(minloss)
     end
-    return p
+    @label start
+    xmin = x - radius; xmax = x + radius; ymin = y - radius; ymax = y + radius; zcurrent = z
+    j = 0
+    minIndex = 0
+    for row in csv_reader
+        j += 1
+        if row.x >= xmin && row.x <= xmax && row.y >= ymin && row.y <= ymax
+            if row.z < zcurrent
+                zcurrent = row.z
+                minIndex = j
+            end
+        end
+    end
+    k = 0
+    for row in csv_reader
+        k += 1
+        if k == minIndex
+            if row.partition != minSoFar
+                x = row.x; y = row.y; z = row.z; part = row.partition
+                @goto start
+            else
+                return row.partition
+                break
+            end
+        end
+    end
+    return part
 end
 
 #Function: iterativeImprovement
@@ -202,12 +291,12 @@ end
 #            dt, the length of the timesteps in our simulation
 #Purpose: To find the partition with local minimum loss using a basic iterative approach
 #Return value: returns a partition that is a local minimum of the partition space
-function iterativeImprovement(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+@everywhere function iterativeImprovement(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
     n = length(p)
     k = length(unique(values(p)))
     function_args = Dict(function_args)
     minloss = getLoss(A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
-    display(minloss)
+
     p2 = p
     # iteratively and greedily choose the least adjacent partition until we find a local minimum
     while true
@@ -226,7 +315,45 @@ function iterativeImprovement(A::MatrixNetwork, p::Dict{Integer, Integer}, depth
         end
         # update the point we are at
         p = p2
-        display(minloss)
+    end
+    return p
+end
+
+@everywhere function iterativeImprovementDynamic(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
+    n = length(p)
+    k = length(unique(values(p)))
+    function_args = Dict(function_args)
+    minloss = getLoss(A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
+    calc_count = 0
+    cache_count = 0
+    cache = Dict{Dict{Integer, Integer}, Nothing}()
+    p2 = p
+    # iteratively and greedily choose the least adjacent partition until we find a local minimum
+    while true
+        neighborhood = getNeighborhood(p, n, k, depth)
+        #=
+        println("Neighborhood: ")
+        show(neighborhood)
+        println()
+        =#
+        # find the adjacent partition with the least loss
+        for neighbor in neighborhood
+            if !haskey(cache, neighbor)
+                loss = getLoss(A, neighbor, initial_condition, dynamical_function, tmax, dt, function_args...)
+                if loss < minloss
+                    p2 = neighbor
+                    minloss = loss
+                end
+            end
+        end
+        # if we haven't found a better partition in the surrounding partitions we return out current partition
+        if p2 == p
+            break
+        end
+        # update the point we are at
+        p = p2
+        cache = Dict(zip(neighborhood, [nothing for _=1:length(neighborhood)]))
+        #display(cache)
     end
     return p
 end
@@ -237,7 +364,7 @@ end
 #            k, the number of supernodes
 #Purpose: To return a list of the adjacent partitions
 #Return value: returns a list of partitions adjacent to the input partition
-function getAdjacentPartitions(p::Dict{Integer, Integer}, n::Integer, k::Integer)
+@everywhere function getAdjacentPartitions(p::Dict{Integer, Integer}, n::Integer, k::Integer)
     adjacents = []
     # apply every possible single node change and record the resulting partitions
     for i=1:n
@@ -261,13 +388,20 @@ end
 #            depth, the number of partitions away to look
 #Purpose: To return a list of the neighboring partitions
 #Return value: returns a list of partitions up to depth away from the input partition
-function getNeighborhood(p::Dict{Integer, Integer}, n::Integer, k::Integer, depth::Integer)
-    neighbors = Set([p])
-    for _=1:depth
-        for partition in neighbors
-            union!(neighbors, getAdjacentPartitions(partition, n, k))
+@everywhere function getNeighborhood(p::Dict{Integer, Integer}, n::Integer, k::Integer, depth::Integer)
+    # create a vector of set for partitions a certain number of changes away
+    neighbors = [Set() for _=1:depth+1]
+    # the set of 0 changes away is just p
+    union!(neighbors[1], [p])
+    # make one change to all partitions in the set of i-1 changes to get the set of partitions with i changes
+    for i=1:depth
+        for partition in neighbors[i]
+            union!(neighbors[i+1], getAdjacentPartitions(partition, n, k))
         end
     end
+    # consolidate all layers into one set
+    neighbors = union(neighbors...)
+    # remove p
     pop!(neighbors, p)
     return neighbors
 end
@@ -279,7 +413,7 @@ end
 #            s, the number of sample partitions
 #Purpose: To return a sample list of the adjacent partitions
 #Return value: returns a sample list of partitions adjacent to the input partition
-function getAdjacentSample(p::Dict{Integer, Integer}, n::Integer, k::Integer, s::Integer=1)
+@everywhere function getAdjacentSample(p::Dict{Integer, Integer}, n::Integer, k::Integer, s::Integer=1)
     sample = []
     # change the supernode we partition one node into to create s new partitions adjacent to this partition
     for _=1:s
@@ -295,6 +429,30 @@ function getAdjacentSample(p::Dict{Integer, Integer}, n::Integer, k::Integer, s:
                 else
                     break
                 end
+            end
+        end
+    end
+    return sample
+end
+
+#Function: randomAdjacentPartition
+#Parameters: p, the partition to start from
+#            n, the number of nodes
+#            k, the number of supernodes
+#Purpose: To return a random adjacent partition
+#Return value: returns a partition adjacent to the input partition
+@everywhere function randomAdjacentPartition(p::Dict{Integer, Integer}, n::Integer, k::Integer)
+    sample = copy(p)
+    # change the supernode we partition one node into to create a new partition adjacent to the input partition
+    while true
+        ns = rand(1:n)
+        ks = rand(1:k)
+        if p[ns] != ks
+            sample[ns] = ks
+            if length(unique(values(sample))) != k
+                sample[ns] = p[ns]
+            else
+                break
             end
         end
     end
