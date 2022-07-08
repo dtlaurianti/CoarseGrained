@@ -28,7 +28,7 @@ function generateRandomPartitions(originalSize::Integer, reducedSize::Integer, n
         for i=1:reducedSize
             labels[assignindices[i]] = i
         end
-        partitionList[index] = Dict(zip(1:originalSize, labels))
+        partitionList[index] = cleanPartition(Dict{Integer,Integer}(zip(1:originalSize, labels)))
     end
     return partitionList
 end
@@ -44,7 +44,7 @@ function spectralClustering(A::MatrixNetwork, reducedSize::Integer)
     # compute clusters with k centroids
     labels = kmeans(X.vectors[:,1:reducedSize]', reducedSize, init=:kmpp).assignments
     # return the partition
-    return Dict{Integer, Integer}(i => labels[i] for i in 1:size(A,1))
+    return cleanPartition(Dict{Integer, Integer}(i => labels[i] for i in 1:size(A,1)))
 end
 
 function mEEP(A::MatrixNetwork, reducedSize::Integer)
@@ -88,6 +88,7 @@ function agglomerationReduction(A::MatrixNetwork, reducedSize::Integer)
             aggPartition[node] = supernode
         end
     end
+    aggPartition = cleanPartition(aggPartition)
     return aggPartition
 end
 
@@ -189,9 +190,24 @@ function exhaustivePartition(n::Integer)
     return allPartitions
 end
 
+#= Stirling Numbers of the Second Kind
+n\k	0 	1 	2 	3 	4 	5 	6 	7 	8 	9 	10
+0 	1
+1 	0 	1
+2 	0 	1 	1
+3 	0 	1 	3 	1
+4 	0 	1 	7 	6 	1
+5 	0 	1 	15 	25 	10 	1
+6 	0 	1 	31 	90 	65 	15 	1
+7 	0 	1 	63 	301 	350 	140 	21 	1
+8 	0 	1 	127 	966 	1701 	1050 	266 	28 	1
+9 	0 	1 	255 	3025 	7770 	6951 	2646 	462 	36 	1
+10 	0 	1 	511 	9330 	34105 	42525 	22827 	5880 	750 	45 	1
+=#
+
 #Function: kPartition
 #Parameters: n, the number of nodes in the original network
-    #        k, the number of supernodes in the compressed network
+#            k, the number of supernodes in the compressed network
 #Purpose: To reduce an arbitrary network of n nodes to k nodes
 #Return value: returns a Dictionary of Partition Dictionaries containing all possible reductions from n to k nodes
 function kPartition(n::Integer, k::Integer)
@@ -230,4 +246,25 @@ function kPartition(n::Integer, k::Integer)
         end
     end
     return allPartitions
+end
+
+#Function: cleanPartition
+#Parameters: partition, the partition to be cleaned
+#Purpose: To convert a partition into standard form
+#Return value: Returns a partition in standard format
+@everywhere function cleanPartition(partition::Dict{Integer,Integer})
+    cleanedPartition = Dict()
+        for (node, supernode) in partition
+            try # if the supernode has already been reassigned use that
+                partition[node] = cleanedPartition[supernode]
+            catch # if it has not been reassign it
+                try # to the next value availible
+                    cleanedPartition[supernode] = maximum(values(cleanedPartition)) + 1
+                catch # or 1 if it is the first supernode we've cleaned
+                    cleanedPartition[supernode] = 1
+                end # then assign that node to the new label
+                partition[node] = cleanedPartition[supernode]
+            end
+        end
+        return partition
 end

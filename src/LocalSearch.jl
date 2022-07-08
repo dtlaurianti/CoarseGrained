@@ -79,7 +79,7 @@
         childDict[pair.second] = pair.first
     end
 
-    return childDict
+    return cleanPartition(childDict)
 end
 
 #Function: randomWalkMutate
@@ -319,45 +319,6 @@ end
     return p
 end
 
-@everywhere function iterativeImprovementDynamic(A::MatrixNetwork, p::Dict{Integer, Integer}, depth::Integer, initial_condition::Vector, dynamical_function::Function, tmax::Number, dt::Number; function_args...)
-    n = length(p)
-    k = length(unique(values(p)))
-    function_args = Dict(function_args)
-    minloss = getLoss(A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
-    calc_count = 0
-    cache_count = 0
-    cache = Dict{Dict{Integer, Integer}, Nothing}()
-    p2 = p
-    # iteratively and greedily choose the least adjacent partition until we find a local minimum
-    while true
-        neighborhood = getNeighborhood(p, n, k, depth)
-        #=
-        println("Neighborhood: ")
-        show(neighborhood)
-        println()
-        =#
-        # find the adjacent partition with the least loss
-        for neighbor in neighborhood
-            if !haskey(cache, neighbor)
-                loss = getLoss(A, neighbor, initial_condition, dynamical_function, tmax, dt, function_args...)
-                if loss < minloss
-                    p2 = neighbor
-                    minloss = loss
-                end
-            end
-        end
-        # if we haven't found a better partition in the surrounding partitions we return out current partition
-        if p2 == p
-            break
-        end
-        # update the point we are at
-        p = p2
-        cache = Dict(zip(neighborhood, [nothing for _=1:length(neighborhood)]))
-        #display(cache)
-    end
-    return p
-end
-
 #Function: getAdjacentPartitions
 #Parameters: p, the partition to start from
 #            n, the number of nodes
@@ -374,11 +335,13 @@ end
                 adjacents[end][i] = j
                 if length(unique(values(adjacents[end]))) != k
                     pop!(adjacents)
+                else
+                    adjacents[end] = cleanPartition(adjacents[end])
                 end
             end
         end
     end
-    return adjacents
+    return unique(adjacents)
 end
 
 #Function: getNeighborhood
@@ -427,6 +390,7 @@ end
                     pop!(sample)
                     append!(sample, [copy(p)])
                 else
+                    sample[end] = cleanPartition(sample[end])
                     break
                 end
             end
@@ -456,5 +420,5 @@ end
             end
         end
     end
-    return sample
+    return cleanPartition(sample)
 end
