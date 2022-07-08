@@ -51,7 +51,7 @@ for numReducedNodes in ProgressBar(25:25:200)
     push!(y, median(times))
 end
 
-figure = Plots.plot(x, y, title="Time Complexity With Respect To numReducedNodes", 
+figure = Plots.plot(x, y, title="Time Complexity With Respect To numReducedNodes",
 xlabel="numReducedNodes", ylabel = "time (seconds)", margin=9Plots.mm, ylims = (0, Inf))
 png(figure, "ReducedNodesPlot.png")
 
@@ -81,7 +81,7 @@ for numPartitions in ProgressBar(25:25:200)
     push!(y, median(times))
 end
 
-figure = Plots.plot(x, y, title="Time Complexity With Respect To numPartitions", 
+figure = Plots.plot(x, y, title="Time Complexity With Respect To numPartitions",
 xlabel="numPartitions", ylabel = "time (seconds)", margin=9Plots.mm, ylims = (0, Inf))
 png(figure, "numPartitionsPlot.png")
 
