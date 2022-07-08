@@ -1,6 +1,7 @@
 using Clustering
 using MultivariateStats
 using ScikitLearn
+using SharedArrays
 
 #Function: dict_to_array
 #Parameters: partitions, an array of dictionaries each representing a partition from some number of nodes to some
