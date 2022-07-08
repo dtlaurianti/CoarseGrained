@@ -1,7 +1,5 @@
 using Distributed
-using Test
-using BenchmarkTools
-using SharedArrays
+
 const numCores = 10
 if (nworkers() != numCores)
     rmprocs(procs()[2:end])
@@ -25,6 +23,8 @@ include("../src/LocalSearch.jl")
 include("../src/visualize_landscape.jl")
 include("../src/NoPlotLandscape.jl")
 
+using Test
+using BenchmarkTools
 using Plots
 using StatsPlots
 using GraphRecipes

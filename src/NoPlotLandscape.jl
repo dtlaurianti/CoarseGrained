@@ -1,8 +1,7 @@
 using Clustering
 using MultivariateStats
-using DataFrames
-using CSV
 using ScikitLearn
+using SharedArrays
 
 #Function: dict_to_array
 #Parameters: partitions, an array of dictionaries each representing a partition from some number of nodes to some
@@ -99,15 +98,9 @@ function GetXYZ(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes;
     x = X_transformed[1,:]
     y = X_transformed[2,:]
     #Calculate z dimension
-    z = SharedArray{Float64}((num_par))
     #println("Starting loss")
-    @sync @distributed for i in 1:num_par
-        # using hard-coded model and parameters, possibly want to make the outer function accept those parameters?
-      loss = getLoss(A, partitions[i], rand(NumOriginalNodes), modelType, 10, 0.01; listModelArgs...)
-      z[i] = loss
-      #println(i)
-    end
-    z = Array(z)
+
+    z = getLossBatch(A, partitions, rand(NumOriginalNodes), modelType, 10, 0.01; listModelArgs...)
 
     #Save vector data if we want to smooth it later
     if !isempty(save_to_string)

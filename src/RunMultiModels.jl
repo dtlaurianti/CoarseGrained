@@ -1,5 +1,4 @@
 using JLD2
-using Distributed
 
 # network parameters
 originalSize = 10
@@ -89,15 +88,11 @@ for id in 1:length(listModelType)
     end
     # Run simulations numRuns times with different initial conditions
     for run in 1:numRuns
-        losses=[]
         # initial_condition = np.random.rand(originalSize)
         # initial_condition = np.concatenate((np.ones(1),np.zeros(originalSize-1)))
         initial_condition = listOfICs[run]
         # for each partition, create a task to solve for the loss, and pass the Future to the task to the losses RemoteChannel
-        for i in 1:length(listOfPartitions)
-            results = @spawnat :any getLoss(A, listOfPartitions[i], initial_condition, modelFunc, tmax, tinc; modelArgs...)
-            push!(losses, results)
-        end
+        losses = getLossBatch(A, listOfPartitions, initial_condition, modelFunc, tmax, tinc; modelArgs...)
 
         # specify folder and check if it already exists
         modelArgsString = ""
@@ -122,7 +117,7 @@ for id in 1:length(listModelType)
         jldsave("$filename.jld2";
             A,
             partitions = listOfPartitions,
-            losses = [fetch(losses[i]) for i=1:length(listOfPartitions)],
+            losses = losses,
             parameters,
             initial_condition
         )

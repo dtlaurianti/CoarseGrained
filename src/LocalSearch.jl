@@ -31,6 +31,7 @@
     for pair in buckets
         nodecounts[pair.first] += 10
     end
+    # and count the number of nodes in each child supernode
     for pair in child
         nodecounts[pair.first] += 10
         samecounts[pair.first] += 10
@@ -39,6 +40,7 @@
             nodecounts[pair.first] += 1
         end
     end
+    # if there are nodes in the the buckets, put those buckets in the priority queue
     for i = 1:k
         if nodecounts[i] > 1 + samecounts[i]
             enqueue!(pq, i=>nodecounts[i])
@@ -145,80 +147,17 @@ end
         for i = 1:2:c
             child1 = supernodeBucketCross(individuals[i], individuals[i+1], n, k)
             child2 = supernodeBucketCross(individuals[i+1], individuals[i], n, k)
-
-            #=
-            if length(unique(values(child1))) < k
-                println("cross bug")
-                println("Child1")
-                show(child1)
-                println("Parent 1")
-                show(individuals[i])
-                println("Parent 2")
-                show(individuals[i+1])
-                return nothing
-            end
-            if length(unique(values(child2))) < k
-                println("cross bug")
-                println("Child2")
-                show(child2)
-                println("Parent 1")
-                show(individuals[i])
-                println("Parent 2")
-                show(individuals[i+1])
-                return nothing
-            end
-            =#
-
             individuals[i] = child1
             individuals[i+1] = child2
         end
 
         # mutation phase
         individuals = pmap(individual->randomWalkMutate(individual, n, k, mutation_prob), individuals)
-        #=
-        for i = 1:c
-            individuals[i] = randomWalkMutate(individuals[i], n, k, mutation_prob)
-        end
-        =#
     end
     return collect(individuals)
 end
 
 
-
-#=
-#Function: dict_to_matrix
-#Parameters: p, the partition to convert to matrix form
-#            n, the number of nodes in the partition
-#            k, the number of supernodes in the partition
-#Purpose: To find the partition with local minimum loss using a basic iterative approach
-#Return value: returns a partition that is an approximate local minimum of the partition space
-function dict_to_matrix(p::Dict{Integer, Integer}, n::Integer, k::Integer)
-    P = zeros(n, k)
-    for i = 1:n
-        P[i, p[i]] = 1
-    end
-    return P
-end
-
-#Function: matrix_to_dict
-#Parameters: P, the partition to convert to ditionary form
-#            n, the number of nodes in the partition
-#            k, the number of supernodes in the partition
-#Purpose: To find the partition with local minimum loss using a basic iterative approach
-#Return value: returns a partition that is an approximate local minimum of the partition space
-function matrix_to_dict(P::Matrix, n::Integer, k::Integer)
-    p = Dict{Integer, Integer}()
-    for i = 1:n
-        for j = 1:k
-            if P[i, j] == 1
-                p[i] = j
-            end
-        end
-    end
-    return p
-end
-=#
 function countcsvlines(file)
     n = 0
     for row in CSV.Rows(file)
@@ -295,7 +234,9 @@ end
     n = length(p)
     k = length(unique(values(p)))
     function_args = Dict(function_args)
-    minloss = getLoss(A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
+    originalTimeSeries = simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
+
+    minloss = getLossPartition(originalTimeSeries, A, p, initial_condition, dynamical_function, tmax, dt, function_args...)
 
     p2 = p
     # iteratively and greedily choose the least adjacent partition until we find a local minimum
@@ -303,7 +244,7 @@ end
         neighborhood = getNeighborhood(p, n, k, depth)
         # find the adjacent partition with the least loss
         for neighbor in neighborhood
-            loss = getLoss(A, neighbor, initial_condition, dynamical_function, tmax, dt, function_args...)
+            loss = getLossPartition(originalTimeSeries, A, neighbor, initial_condition, dynamical_function, tmax, dt, function_args...)
             if loss < minloss
                 p2 = neighbor
                 minloss = loss

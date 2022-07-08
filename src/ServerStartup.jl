@@ -13,6 +13,8 @@ end
 @everywhere using LinearAlgebra
 @everywhere using SparseArrays
 @everywhere using StatsBase
+@everywhere using CSV
+@everywhere using DataFrames
 
 include("../src/SimulateDynamics.jl")
 include("../src/GenerateGraphs.jl")
@@ -23,5 +25,6 @@ include("../src/EvaluateError.jl")
 include("../src/NoPlotLandscape.jl")
 
 using Plots
+using StatsPlots
 using GraphRecipes
 using Dates
