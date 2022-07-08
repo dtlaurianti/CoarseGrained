@@ -1,7 +1,5 @@
 using Clustering
 using MultivariateStats
-using DataFrames
-using CSV
 using ScikitLearn
 
 #Function: dict_to_array

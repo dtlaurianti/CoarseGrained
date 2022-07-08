@@ -1,5 +1,4 @@
 using JLD2
-using Distributed
 
 # network parameters
 originalSize = 10
