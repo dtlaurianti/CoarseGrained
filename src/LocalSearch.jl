@@ -209,6 +209,8 @@ function findLocalMinimum(xyzpData::String, radius::Number; startingPartition::S
         if k == minIndex
             if row.partition != minSoFar
                 x = row.x; y = row.y; z = row.z; part = row.partition
+                minSoFar = part
+                show(stdout, "text/plain", part)
                 @goto start
             else
                 return row.partition
