@@ -78,7 +78,7 @@ end
     gen1 = generateRandomPartitions(n, k, c)
     x = rand(n)
     G = gnp_graph(n, p=.5)
-    @time begin
+    @profiler begin
         genf0 = geneticImprovement(G, gen1, f0, 0.1, x, linear_model, 10, 0.1)
         genf1 = geneticImprovement(G, genf0, f1-f0, 0.1, x, linear_model, 10, 0.1)
         genf2 = geneticImprovement(G, genf1, f2-f1, 0.1, x, linear_model, 10, 0.1)
@@ -101,7 +101,7 @@ end
     violin!(plt, 1:100, genf2_losses, label = "Gen $f2, Avg = $genf2_avg")
     violin!(plt, 1:100, genf3_losses, label = "Gen $f3, Avg = $genf3_avg")
 
-    @time iter_partitions = pmap(part->iterativeImprovement(G, part, 1, x, linear_model, 10, 0.1), gen1)
+    @profiler iter_partitions = pmap(part->iterativeImprovement(G, part, 1, x, linear_model, 10, 0.1), gen1)
     iter_losses = getLossBatch(G, iter_partitions, x, linear_model, 10, 0.1)
     iter_avg = sum(iter_losses/c)
 

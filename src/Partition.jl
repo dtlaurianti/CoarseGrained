@@ -252,19 +252,35 @@ end
 #Parameters: partition, the partition to be cleaned
 #Purpose: To convert a partition into standard form
 #Return value: Returns a partition in standard format
+#=
 @everywhere function cleanPartition(partition::Dict{Integer,Integer})
     cleanedPartition = Dict()
-        for (node, supernode) in partition
-            try # if the supernode has already been reassigned use that
-                partition[node] = cleanedPartition[supernode]
-            catch # if it has not been reassign it
-                try # to the next value availible
-                    cleanedPartition[supernode] = maximum(values(cleanedPartition)) + 1
-                catch # or 1 if it is the first supernode we've cleaned
-                    cleanedPartition[supernode] = 1
-                end # then assign that node to the new label
-                partition[node] = cleanedPartition[supernode]
-            end
+    for (node, supernode) in partition
+        try # if the supernode has already been reassigned use that
+            partition[node] = cleanedPartition[supernode]
+        catch # if it has not been reassign it
+            try # to the next value availible
+                cleanedPartition[supernode] = maximum(values(cleanedPartition)) + 1
+            catch # or 1 if it is the first supernode we've cleaned
+                cleanedPartition[supernode] = 1
+            end # then assign that node to the new label
+            partition[node] = cleanedPartition[supernode]
         end
-        return partition
+    end
+    return partition
+end
+=#
+@everywhere function cleanPartition(partition::Dict{Integer,Integer})
+    cleanedPartition = Dict()
+    maxv = 1
+    for (node, supernode) in partition
+        if haskey(cleanedPartition, supernode)
+            partition[node] = cleanedPartition[supernode]
+        else
+            cleanedPartition[supernode] = maxv
+            maxv += 1
+            partition[node] = cleanedPartition[supernode]
+        end
+    end
+    return partition
 end
