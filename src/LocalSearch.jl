@@ -167,6 +167,7 @@ function countcsvlines(file)
 end
 
 function findLocalMinimum(xyzpData::String, radius::Number; startingPartition::String="")
+    save = []
     minSoFar = ""
     csv_reader = CSV.File(xyzpData)
     if !isempty(startingPartition)
@@ -187,6 +188,7 @@ function findLocalMinimum(xyzpData::String, radius::Number; startingPartition::S
         i += 1
         if i == currentPart
             x = row.x; y = row.y; z = row.z; part = row.partition
+            push!(save, part)
             break
         end
     end
@@ -210,14 +212,24 @@ function findLocalMinimum(xyzpData::String, radius::Number; startingPartition::S
             if row.partition != minSoFar
                 x = row.x; y = row.y; z = row.z; part = row.partition
                 minSoFar = part
-                show(stdout, "text/plain", part)
+                push!(save, part)
                 @goto start
             else
+                dt = now()
+                DT = Dates.format(dt, "mm-dd_HH-MM-SS")
+                df = DataFrame(["partition" => save])
+                loc = "./data/localMin_data/" * DT * ".csv"
+                CSV.write(loc, df)
                 return row.partition
                 break
             end
         end
     end
+    dt = now()
+    DT = Dates.format(dt, "mm-dd_HH-MM-SS")
+    df = DataFrame(["partition" => save])
+    loc = "./data/localMin_data/" * DT * ".csv"
+    CSV.write(loc, df)
     return part
 end
 

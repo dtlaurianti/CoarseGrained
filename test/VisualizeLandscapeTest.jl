@@ -23,7 +23,6 @@ end
     GNP = gnp_graph(numOriginalNodes;p=0.5)
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
     dt = now()
-
     DT = Dates.format(dt, "mm-dd_HH-MM-SS")
     timeString = "test" * DT
     #Uncomment one of the following depending on if you want the results to be saved
