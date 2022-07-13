@@ -20,6 +20,7 @@ end
     #display(@benchmark kPartition(10,5))
     #@profiler exhaustivePartition(10)
     #@profiler exhaustivePartitionT(10)
-    display(@benchmark generateRandomPartitions(100, 50, 25))
-    display(@benchmark generateRandomPartitionsFast(100, 50, 25))
+    #display(@benchmark generateRandomPartitions(100, 50, 25))
+    #display(@benchmark generateRandomPartitionsFast(100, 50, 25))
+    #@benchmark generateRandomPartitions(100,50,1000000)
 end

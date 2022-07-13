@@ -17,18 +17,18 @@ end
 end
 
 @testset "surfaceplots" begin
-    numOriginalNodes = 500
-    Part = generateRandomPartitions(numOriginalNodes, 10, 10)
+    numOriginalNodes = 1000
+    Part = generateRandomPartitions(numOriginalNodes, 100, 1000)
     #LG = line_graph(numOriginalNodes)
-    GNP = gnp_graph(numOriginalNodes;p=0.5)
+    #GNP = gnp_graph(numOriginalNodes;p=0.5)
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
+    SBM = MatrixNetwork(sparse(stochastic_block_model(150, 50, [500, 500])))
     dt = now()
-
     DT = Dates.format(dt, "mm-dd_HH-MM-SS")
     timeString = "test" * DT
     #Uncomment one of the following depending on if you want the results to be saved
     #to a CSV file or not
-    surfaceplots(Part, GNP, numOriginalNodes, modelType=linear_model, save_to_string=timeString)
+    surfaceplots(Part, SBM, numOriginalNodes, modelType=linear_model, save_to_string=timeString)
 
     #=In normal terminal, (with R installed)
     call Rscript --vanilla ~/Documents/GitHub/CoarseGrained/src/make_smoothdata.R string"

@@ -37,12 +37,17 @@ end
     display(Matrix(sparse(sbm_graph(27, communities = 1))))
 end
 =#
+
+@testset "other_sbm_tests" begin
+    display(Matrix(sparse(stochastic_block_model(150, 50, [500, 500]))))
+end
+#=
 @testset "cm_graph_tests" begin
     display((cm_graph(10, [1, 1, 2, 2, 3, 3, 4, 4, 5, 5])))
     display((cm_graph(10, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])))
     display((cm_graph(6, [1, 1, 1, 2, 2, 3])))
 end
-
+=#
 #=
 @testset "Efficiency Testing" begin
     #display(@benchmark line_graph(15))
