@@ -17,12 +17,12 @@ end
 end
 
 @testset "surfaceplots" begin
-    numOriginalNodes = 1000
-    Part = generateRandomPartitions(numOriginalNodes, 100, 1000)
+    numOriginalNodes = 200
+    Part = generateRandomPartitions(numOriginalNodes, 100, 1500)
     #LG = line_graph(numOriginalNodes)
     #GNP = gnp_graph(numOriginalNodes;p=0.5)
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
-    SBM = MatrixNetwork(sparse(stochastic_block_model(150, 50, [500, 500])))
+    SBM = MatrixNetwork(sparse(stochastic_block_model(50, 25, [100, 100])))
     dt = now()
     DT = Dates.format(dt, "mm-dd_HH-MM-SS")
     timeString = "test" * DT
