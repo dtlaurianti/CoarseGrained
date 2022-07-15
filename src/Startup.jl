@@ -20,8 +20,9 @@ include("../src/Partition.jl")
 include("../src/ReduceNetwork.jl")
 include("../src/EvaluateError.jl")
 include("../src/LocalSearch.jl")
-include("../src/visualize_landscape.jl")
-include("../src/NoPlotLandscape.jl")
+include("../src/VisualizeLandscape.jl")
+include("../src/PyPlot.jl")
+
 
 using Test
 using BenchmarkTools
@@ -29,3 +30,6 @@ using Plots
 using StatsPlots
 using GraphRecipes
 using Dates
+using ProgressBars
+using CSV
+using DataFrames
