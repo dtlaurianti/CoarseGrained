@@ -16,12 +16,6 @@
 
 using Clustering
 using MultivariateStats
-
-using DataFrames
-#using CSV
-#using ScikitLearn
-using Plots
-using PyPlot
 using SharedArrays
 
 
@@ -120,22 +114,17 @@ end
   return abs(σ)
 end
 
-
-
-#Function: surfaceplots
+#Function: getXYZ
 #Parameters: partitions, an array of dictionaries representing network partitions
 #            A -- MatrixNetwork representation of a network
 #            NumOriginalNodes -- the number of nodes in A, which should be the same as the number
 #            of original nodes in all of the partitions.
-#            save_to_string -- (optional) name of the string that the plotted data should be saved to
-#            in CSV format. If left empty, the data will not be saved to a file.
 #            modelType -- (optional) denotes which model will be used to calculate loss.
 #            Default model is linear_model.
-#Purpose: To plot a 3d surface representing the loss landscape of a range of partitions
-#Return value: none. Plots a graph and saves the (x, y, z) data in a CSV file if save_to_string
-#              is provided a value.
-function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; save_to_string="", modelType::Function=linear_model)
-    listModelArgs = Dict(:ϵ=>-3/NumOriginalNodes, :β=>0.5, :γ=>0.5, :ω=>rand(NumOriginalNodes), :K=>0.5, :d=>0.5, :c=>0.5, :b=>0.5)
+#Purpose: To get the xyz coordinates representing the loss landscape of a range of partitions
+#Return value: x,y,z vectors
+function getXYZ(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; modelType::Function=linear_model)
+  listModelArgs = Dict(:ϵ=>-3/NumOriginalNodes, :β=>0.5, :γ=>0.5, :ω=>rand(NumOriginalNodes), :K=>0.5, :d=>0.5, :c=>0.5, :b=>0.5)
     #convert dictionary to an array
     Arr = dict_to_array(partitions)
 
@@ -157,73 +146,68 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
     x = X_transformed[1,:]
     y = X_transformed[2,:]
 
-    #Calculate z dimension
+    # calculate z dimension
     z = getLossBatch(A, partitions, rand(NumOriginalNodes), modelType, 10, 0.01; listModelArgs...)
+    return x,y,z
+end
 
-    #Save vector data if we want to smooth it later
+#Function: surfaceplots
+#Parameters: partitions, an array of dictionaries representing network partitions
+#            A -- MatrixNetwork representation of a network
+#            NumOriginalNodes -- the number of nodes in A, which should be the same as the number
+#            of original nodes in all of the partitions.
+#            save_to_string -- (optional) name of the string that the plotted data should be saved to
+#            in CSV format. If left empty, the data will not be saved to a file.
+#            modelType -- (optional) denotes which model will be used to calculate loss.
+#            Default model is linear_model.
+#Purpose: To plot a 3d surface representing the loss landscape of a range of partitions
+#Return value: none. Plots a graph and saves the (x, y, z) data in a CSV file if save_to_string
+#              is provided a value.
+function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; save_to_string="", modelType::Function=linear_model, plotting=false)
+    x,y,z = getXYZ(partitions, A, NumOriginalNodes, modelType=modelType)
+
     if !isempty(save_to_string)
-      df = DataFrame(["x" => x, "y" => y, "z" => z])
-      loc = "./data/visualization_data/" * save_to_string * ".csv"
-      CSV.write(loc, df)
-      df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions])
-      loc = "./data/visualization_data/PART" * save_to_string * ".csv"
-      CSV.write(loc, df)
+      save_data(x,y,z,partitions, save_to_string)
     end
 
-    # plot surface
-    pyplot()
-    pygui(true)
-    plt = Plots.plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.85, 0.05, 0.05, 0.9])))
-    display(plt)
-
+    if plotting
+      try
+        display(plot_surface(x,y,z))
+      catch
+        println("No plotting on the server.")
+      end
+    end
+    return x,y,z
 end
 
-#function plot_smoothed_surface
+#function save_data
 #
-#Input: A csv file which has been smoothed by the R function
-#Output: No output, just a plot
-function plot_smoothed_surface(data)
-  #Grab data from file
-  df = DataFrame(CSV.File(data))
-  x = df.x
-  y = df.y
-  z = df.z
-
-  # plot surface
-  pyplot()
-  pygui(true)
-  plt = Plots.plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.85, 0.05, 0.05, 0.9])))
-  display(plt)
-end
-
-
-# function subplot_smoothed_surface
-# a subplot version of plot_smoothed_surface
-# Input: A csv file which has been smoothed by the R function, (optional) ax
-# Output: A subplot
-function subplot_smoothed_surface(data, fig, ax=None)
-  #Grab data from file
-  data = pd.read_csv(data)
-  x = data['x']
-  y = data['y']
-  z = data['z']
-
-  #Plot surface
-  triang = mtri.Triangulation(x,y)
-  if ax != None
-      ax = fig.add_subplot(1,2,ax,projection="3d")
-  else
-      ax = fig.add_subplot(1,2,1,projection="3d")
+#Input: x,y,z, partition
+#Output: two CSV files with the data, one with partitions one without
+function save_data(x,y,z,partitions,save_to_string="")
+  #Save vector data if we want to smooth it later
+  if !isempty(save_to_string)
+    save_xyz(x,y,z, save_to_string)
+    save_xyzp(x,y,z,partitions, save_to_string)
   end
-  surf = ax.plot_trisurf(triang,z,cmap=plt.cm.CMRmap,antialiased=True)
-  return surf
 end
 
-#Test Examples
-#G = nx.fast_gnp_random_graph(10, 0.3)
-#A = nx.to_numpy_array(G)
-#P = RN.generateRandomPartitions(10,7,1000)
+#function save_xyz
+#
+#Input: x,y,z
+#Output: a CSV file with the x,y,z data
+function save_xyz(x,y,z, save_to_string)
+  df = DataFrame(["x" => x, "y" => y, "z" => z])
+  loc = "./data/visualization_data/" * save_to_string * ".csv"
+  CSV.write(loc, df)
+end
 
-#surfaceplots(P,A,"n10_p7_s1000")
-
-# plot_smoothed_surface("data/visualization_data/test.csv")
+#function save_xyzp
+#
+#Input: x,y,z
+#Output: a CSV file with the x,y,z data
+function save_xyzp(x,y,z, partition, save_to_strings)
+  df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions])
+  loc = "./data/visualization_data/PART" * save_to_string * ".csv"
+  CSV.write(loc, df)
+end
