@@ -8,6 +8,37 @@ for i in 1:5
     trash0 = @elapsed(GetXYZ(Part1, GNP1, 100, modelType=linear_model))
 end
 
+#LG = line_graph(numOriginalNodes)
+GNPReduced = gnp_graph(20200;p=0.5)
+#CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
+
+println("Reduced Nodes Progress:")
+for numReducedNodes in ProgressBar(200:200:20000)
+    PartReduced = generateRandomPartitions(20200, numReducedNodes, 10);
+    push!(x, numReducedNodes)
+    for i in 1:4
+        push!(times, @elapsed(GetXYZ(PartReduced, GNPReduced, 20200, modelType=linear_model)))
+    end
+    push!(y, median(times))
+end
+
+figure = Plots.plot(x, y, title="Time Complexity With Respect To numReducedNodes",
+xlabel="numReducedNodes", ylabel = "time (seconds)", margin=9Plots.mm, ylims = (0, Inf))
+png(figure, "ReducedNodesPlot.png")
+
+df2 = DataFrame(["x" => x, "y" => y])
+loc = "./data/time_complexity_data/reduced_nodes.csv"
+CSV.write(loc, df2)
+println("Complete!")
+
+x = []
+y = []
+times = []
+
+for i in 1:5
+    trash2 = @elapsed(GetXYZ(Part1, GNP1, 100, modelType=linear_model))
+end
+
 println("Original Nodes Progress:")
 for numOriginalNodes in ProgressBar(200:200:20000)
     push!(x, numOriginalNodes)
@@ -28,37 +59,6 @@ png(figure, "OriginalNodesPlot.png")
 df = DataFrame(["x" => x, "y" => y])
 loc = "./data/time_complexity_data/original_nodes.csv"
 CSV.write(loc, df)
-println("Complete!")
-
-x = []
-y = []
-times = []
-
-for i in 1:5
-    trash2 = @elapsed(GetXYZ(Part1, GNP1, 100, modelType=linear_model))
-end
-
-PartReduced = generateRandomPartitions(20200, numReducedNodes, 10);
-#LG = line_graph(numOriginalNodes)
-GNPReduced = gnp_graph(20200;p=0.5)
-#CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
-
-println("Reduced Nodes Progress:")
-for numReducedNodes in ProgressBar(200:200:20000)
-    push!(x, numReducedNodes)
-    for i in 1:4
-        push!(times, @elapsed(GetXYZ(PartReduced, GNPReduced, 20200, modelType=linear_model)))
-    end
-    push!(y, median(times))
-end
-
-figure = Plots.plot(x, y, title="Time Complexity With Respect To numReducedNodes",
-xlabel="numReducedNodes", ylabel = "time (seconds)", margin=9Plots.mm, ylims = (0, Inf))
-png(figure, "ReducedNodesPlot.png")
-
-df2 = DataFrame(["x" => x, "y" => y])
-loc = "./data/time_complexity_data/reduced_nodes.csv"
-CSV.write(loc, df2)
 println("Complete!")
 
 x = []
