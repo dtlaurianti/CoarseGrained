@@ -164,7 +164,7 @@ end
 #Return value: none. Plots a graph and saves the (x, y, z) data in a CSV file if save_to_string
 #              is provided a value.
 function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; save_to_string="", modelType::Function=linear_model, plotting=false)
-    x,y,z = getXYZ(partitions, A, NumOriginalNodes, modelType)
+    x,y,z = getXYZ(partitions, A, NumOriginalNodes, modelType=modelType)
 
     if !isempty(save_to_string)
       save_data(x,y,z,partitions, save_to_string)

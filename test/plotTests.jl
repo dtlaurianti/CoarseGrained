@@ -5,18 +5,18 @@ times = []
 Part1 = generateRandomPartitions(100, 50, 500);
 GNP1 = gnp_graph(100;p=0.5)
 for i in 1:5
-    trash0 = @elapsed(GetXYZ(Part1, GNP1, 100, modelType=linear_model))
+    trash0 = @elapsed(getXYZ(Part1, GNP1, 100, modelType=linear_model))
 end
 
 println("Original Nodes Progress:")
-for numOriginalNodes in ProgressBar(200:200:20000)
+for numOriginalNodes in ProgressBar(100:50:300)
     push!(x, numOriginalNodes)
     Part = generateRandomPartitions(numOriginalNodes, 10, 10);
     #LG = line_graph(numOriginalNodes)
     GNP = gnp_graph(numOriginalNodes;p=0.5)
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
     for i in 1:4
-        push!(times, @elapsed(GetXYZ(Part, GNP, numOriginalNodes, modelType=linear_model)))
+        push!(times, @elapsed(getXYZ(Part, GNP, numOriginalNodes, modelType=linear_model)))
     end
     push!(y, median(times))
 end
@@ -35,19 +35,19 @@ y = []
 times = []
 
 for i in 1:5
-    trash2 = @elapsed(GetXYZ(Part1, GNP1, 100, modelType=linear_model))
+    trash2 = @elapsed(getXYZ(Part1, GNP1, 100, modelType=linear_model))
 end
 
-PartReduced = generateRandomPartitions(20200, numReducedNodes, 10);
 #LG = line_graph(numOriginalNodes)
-GNPReduced = gnp_graph(20200;p=0.5)
+GNPReduced = gnp_graph(350;p=0.5)
 #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
 
 println("Reduced Nodes Progress:")
-for numReducedNodes in ProgressBar(200:200:20000)
+for numReducedNodes in ProgressBar(100:50:300)
+    PartReduced = generateRandomPartitions(350, numReducedNodes, 10);
     push!(x, numReducedNodes)
     for i in 1:4
-        push!(times, @elapsed(GetXYZ(PartReduced, GNPReduced, 20200, modelType=linear_model)))
+        push!(times, @elapsed(getXYZ(PartReduced, GNPReduced, 350, modelType=linear_model)))
     end
     push!(y, median(times))
 end
@@ -66,18 +66,18 @@ y = []
 times = []
 
 for i in 1:5
-    trash3 = @elapsed(GetXYZ(Part1, GNP1, 100, modelType=linear_model))
+    trash3 = @elapsed(getXYZ(Part1, GNP1, 100, modelType=linear_model))
 end
 
 println("Partitions Progress:")
-for numPartitions in ProgressBar(200:200:20000)
+for numPartitions in ProgressBar(100:50:300)
     push!(x, numPartitions)
     Part = generateRandomPartitions(20, 10, numPartitions);
     #LG = line_graph(numOriginalNodes)
     GNP = gnp_graph(20;p=0.5)
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
     for i in 1:4
-        push!(times, @elapsed(GetXYZ(Part, GNP, 20, modelType=linear_model)))
+        push!(times, @elapsed(getXYZ(Part, GNP, 20, modelType=linear_model)))
     end
     push!(y, median(times))
 end
