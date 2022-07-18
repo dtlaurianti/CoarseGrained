@@ -47,13 +47,11 @@ end
 end
 =#
 @testset "optimization plots" begin
-    numOriginalNodes = 10
-    numReducedNodes = 5
-    numPartitions = 100
-    partitions = generateRandomPartitions(numOriginalNodes, numReducedNodes, numPartitions)
+    numOriginalNodes = 8
+    numReducedNodes = 4
+    partitions = kPartition(numOriginalNodes, numReducedNodes)
     SBM = sbm_graph(numOriginalNodes)
-    x,y,z = getXYZ(partitions, SBM, 10)
-    plt = plot_surface(x,y,z)
+    x,y,z = surfaceplots(partitions, SBM, numOriginalNodes, save_to_string="8_4_full_space", plotting=true)
 end
 #=
 @testset "Efficiency Testing" begin
