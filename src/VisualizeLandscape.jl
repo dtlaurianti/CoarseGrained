@@ -216,3 +216,43 @@ function save_xyzp(x,y,z, partitions, save_to_string)
   loc = "./data/visualization_data/PART" * save_to_string * ".csv"
   CSV.write(loc, df)
 end
+
+
+#Input: A csv file which has been smoothed by the R function
+#Output: No output, just a plot
+function plot_smoothed_surface(data)
+  #Grab data from file
+  df = DataFrame(CSV.File(data))
+  x = df.x
+  y = df.y
+  z = df.z
+
+  # plot surface
+  pyplot()
+  pygui(true)
+  plt = Plots.plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.85, 0.05, 0.05, 0.9])))
+  display(plt)
+end
+
+
+# function subplot_smoothed_surface
+# a subplot version of plot_smoothed_surface
+# Input: A csv file which has been smoothed by the R function, (optional) ax
+# Output: A subplot
+function subplot_smoothed_surface(data, fig, ax=None)
+  #Grab data from file
+  data = pd.read_csv(data)
+  x = data['x']
+  y = data['y']
+  z = data['z']
+
+  #Plot surface
+  triang = mtri.Triangulation(x,y)
+  if ax != None
+      ax = fig.add_subplot(1,2,ax,projection="3d")
+  else
+      ax = fig.add_subplot(1,2,1,projection="3d")
+  end
+  surf = ax.plot_trisurf(triang,z,cmap=plt.cm.CMRmap,antialiased=True)
+  return surf
+end
