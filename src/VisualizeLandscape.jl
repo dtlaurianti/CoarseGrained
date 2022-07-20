@@ -20,7 +20,7 @@ using SharedArrays
 
 
 # convert a partition from our dictionary supernode format to a nested array format
-# functionality changed from the dict_to_array function because our dissimilarity formula
+# functionality changed from the  function because our dissimilarity formula
 # is impartial to the ordering of the nodes.
 #= Old:
 #Function dict_to_array
@@ -114,7 +114,7 @@ end
   return abs(σ)
 end
 
-#Function: getXYZ
+#Function: GetXYZ
 #Parameters: partitions, an array of dictionaries representing network partitions
 #            A -- MatrixNetwork representation of a network
 #            NumOriginalNodes -- the number of nodes in A, which should be the same as the number
@@ -123,7 +123,7 @@ end
 #            Default model is linear_model.
 #Purpose: To get the xyz coordinates representing the loss landscape of a range of partitions
 #Return value: x,y,z vectors
-function getXYZ(partitions::Vector{Dict{Integer, Integer}}, A::MatrixNetwork, NumOriginalNodes::Integer; modelType::Function=linear_model)
+function GetXYZ(partitions::Vector{Dict{Integer, Integer}}, A::MatrixNetwork, NumOriginalNodes::Integer; modelType::Function=linear_model)
   listModelArgs = Dict(:ϵ=>-3/NumOriginalNodes, :β=>0.5, :γ=>0.5, :ω=>rand(NumOriginalNodes), :K=>0.5, :d=>0.5, :c=>0.5, :b=>0.5)
   #convert dictionary to an array
   Arr = dict_to_array(partitions)
@@ -150,8 +150,8 @@ function getXYZ(partitions::Vector{Dict{Integer, Integer}}, A::MatrixNetwork, Nu
   return x,y,z
 end
 
-function getXYZ(partitions::Dict{Integer,Dict{Integer, Integer}}, A::MatrixNetwork, NumOriginalNodes::Integer; modelType::Function=linear_model)
-  return getXYZ(collect(values(partitions)), A, NumOriginalNodes, modelType=modelType)
+function GetXYZ(partitions::Dict{Integer,Dict{Integer, Integer}}, A::MatrixNetwork, NumOriginalNodes::Integer; modelType::Function=linear_model)
+  return GetXYZ(collect(values(partitions)), A, NumOriginalNodes, modelType=modelType)
 end
 #Function: surfaceplots
 #Parameters: partitions, an array of dictionaries representing network partitions
@@ -165,8 +165,8 @@ end
 #Purpose: To plot a 3d surface representing the loss landscape of a range of partitions
 #Return value: none. Plots a graph and saves the (x, y, z) data in a CSV file if save_to_string
 #              is provided a value.
-function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; save_to_string="", modelType::Function=linear_model, plotting=false)
-    x,y,z = getXYZ(partitions, A, NumOriginalNodes, modelType=modelType)
+function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A::MatrixNetwork, NumOriginalNodes::Integer; save_to_string="", modelType::Function=linear_model, plotting=false)
+    x,y,z = GetXYZ(partitions, A, NumOriginalNodes, modelType=modelType)
 
     if !isempty(save_to_string)
       save_data(x,y,z,partitions, save_to_string)
