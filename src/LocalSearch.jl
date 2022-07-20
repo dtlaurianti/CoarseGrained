@@ -168,6 +168,7 @@ end
 
 function findLocalMinimum(xyzpData::String, xradius::Number, yradius::Number; startingPartition::String="")
     save = []
+    save2 = []
     minSoFar = ""
     csv_reader = CSV.File(xyzpData)
     if !isempty(startingPartition)
@@ -187,8 +188,9 @@ function findLocalMinimum(xyzpData::String, xradius::Number, yradius::Number; st
     for row in csv_reader
         i += 1
         if i == currentPart
-            x = row.x; y = row.y; z = row.z; part = row.partition
+            x = row.x; y = row.y; z = row.z; part = row.partition; partArray = row.partitionArray
             push!(save, part)
+            push!(save2, partArray)
             break
         end
     end
@@ -210,14 +212,15 @@ function findLocalMinimum(xyzpData::String, xradius::Number, yradius::Number; st
         k += 1
         if k == minIndex
             if row.partition != minSoFar
-                x = row.x; y = row.y; z = row.z; part = row.partition
+                x = row.x; y = row.y; z = row.z; part = row.partition; partArray = row.partitionArray
                 minSoFar = part
                 push!(save, part)
+                push!(save2, partArray)
                 @goto start
             else
                 dt = now()
                 DT = Dates.format(dt, "mm-dd_HH-MM-SS")
-                df = DataFrame(["partition" => save])
+                df = DataFrame(["partition" => save, "partArray" => save2])
                 loc = "./data/localMin_data/" * DT * ".csv"
                 CSV.write(loc, df)
                 return row.partition
@@ -227,7 +230,7 @@ function findLocalMinimum(xyzpData::String, xradius::Number, yradius::Number; st
     end
     dt = now()
     DT = Dates.format(dt, "mm-dd_HH-MM-SS")
-    df = DataFrame(["partition" => save])
+    df = DataFrame(["partition" => save, "partArray" => save2])
     loc = "./data/localMin_data/" * DT * ".csv"
     CSV.write(loc, df)
     return part

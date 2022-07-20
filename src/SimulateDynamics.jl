@@ -136,7 +136,7 @@ end
 end
 
 
-#Function: SIS_model
+#Function: simulateODEonGraph
 #Parameters: A, the network to simulate dynamics on
 #            initial_condition, the vector of initial variables for each node
 #            dynamical_function, the model which we will use to calculate the dynamics
@@ -146,6 +146,16 @@ end
 #Purpose: to simulate the dynamics on a network using the chosen dynamical model and conditions
 #Return value: returns an ODESolution or ODECompositeSolution type, accessible through an array interface
 @everywhere function simulateODEonGraph(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+  tspan = (0, tmax)
+  # splat the MatrixNetwork and additional parameters into one parameters Tuple
+  p = Model_Parameters(A=sparse(A); function_args...)
+  prob = ODEProblem(dynamical_function, initial_condition, tspan, p)
+  sol = solve(prob, saveat=dt)
+  # time_series = solve_ivp(t, x -> dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
+  return sol
+end
+
+@everywhere function simulateODEonGraphFast(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
   tspan = (0, tmax)
   # splat the MatrixNetwork and additional parameters into one parameters Tuple
   p = Model_Parameters(A=sparse(A); function_args...)

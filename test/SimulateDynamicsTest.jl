@@ -1,4 +1,4 @@
-
+#=
 n = 10
 
 LG = line_graph(n)
@@ -24,6 +24,7 @@ anim1 = @animate for i=1:1000
     push!(plta,sol1[i])
 end every 10
 display(gif(anim1))
+=#
 #=
 gplt1 = graphplot(sparse(LG))
 display(gplt1)
@@ -57,3 +58,10 @@ sol7 = simulateODEonGraph(GNPG, x, d=.1, c=.1, b=.1, dynamical_function=nonlinea
 plt7 = Plots.plot(sol7,title="gnp_graph nonlinear_opinions_model", palette=distinguishable_colors(n))
 display(Plots.plot(plt7, gplt4))
 =#
+
+@testset "efficiency_testing" begin
+    G = gnp_graph(1000)
+    x = rand(1000)
+    @time simulateODEonGraph(G, x)
+    @time simulateODEonGraphFast(G, x)
+end

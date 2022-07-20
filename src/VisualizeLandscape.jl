@@ -20,7 +20,7 @@ using SharedArrays
 
 
 # convert a partition from our dictionary supernode format to a nested array format
-# functionality changed from the dict_to_array function because our dissimilarity formula
+# functionality changed from the  function because our dissimilarity formula
 # is impartial to the ordering of the nodes.
 #= Old:
 #Function dict_to_array
@@ -114,7 +114,7 @@ end
   return abs(σ)
 end
 
-#Function: getXYZ
+#Function: GetXYZ
 #Parameters: partitions, an array of dictionaries representing network partitions
 #            A -- MatrixNetwork representation of a network
 #            NumOriginalNodes -- the number of nodes in A, which should be the same as the number
@@ -123,34 +123,36 @@ end
 #            Default model is linear_model.
 #Purpose: To get the xyz coordinates representing the loss landscape of a range of partitions
 #Return value: x,y,z vectors
-function getXYZ(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; modelType::Function=linear_model)
+function GetXYZ(partitions::Vector{Dict{Integer, Integer}}, A::MatrixNetwork, NumOriginalNodes::Integer; modelType::Function=linear_model)
   listModelArgs = Dict(:ϵ=>-3/NumOriginalNodes, :β=>0.5, :γ=>0.5, :ω=>rand(NumOriginalNodes), :K=>0.5, :d=>0.5, :c=>0.5, :b=>0.5)
-    #convert dictionary to an array
-    Arr = dict_to_array(partitions)
+  #convert dictionary to an array
+  Arr = dict_to_array(partitions)
+  #calculate distance matrix
+  num_par = length(partitions)
+  D = SharedArray{Float64}((num_par,num_par))
+  @sync @distributed for i in 1:num_par
+      for j in 1:num_par
+          # the dissimilarity matrix
+          D[i, j] = variation_of_information(Arr[i],Arr[j])
+      end
+  end
 
-    #calculate distance matrix
-    num_par = length(partitions)
-    D = SharedArray{Float64}((num_par,num_par))
-    @sync @distributed for i in 1:num_par
-        for j in 1:num_par
-            # the dissimilarity matrix
-            D[i, j] = variation_of_information(Arr[i],Arr[j])
-        end
-    end
+  D = Array(D)
+  #calculate MDS on disimilarity matrix
+  embedding = StatsBase.fit(MDS, D, distances=true, maxoutdim=2)
+  X_transformed = StatsBase.predict(embedding)
+  #Format data
+  x = X_transformed[1,:]
+  y = X_transformed[2,:]
 
-    D = Array(D)
-    #calculate MDS on disimilarity matrix
-    embedding = StatsBase.fit(MDS, D, distances=true, maxoutdim=2)
-    X_transformed = StatsBase.predict(embedding)
-    #Format data
-    x = X_transformed[1,:]
-    y = X_transformed[2,:]
-
-    # calculate z dimension
-    z = getLossBatch(A, partitions, rand(NumOriginalNodes), modelType, 10, 0.01; listModelArgs...)
-    return x,y,z
+  # calculate z dimension
+  z = getLossBatch(A, partitions, rand(NumOriginalNodes), modelType, 10, 0.01; listModelArgs...)
+  return x,y,z
 end
 
+function GetXYZ(partitions::Dict{Integer,Dict{Integer, Integer}}, A::MatrixNetwork, NumOriginalNodes::Integer; modelType::Function=linear_model)
+  return GetXYZ(collect(values(partitions)), A, NumOriginalNodes, modelType=modelType)
+end
 #Function: surfaceplots
 #Parameters: partitions, an array of dictionaries representing network partitions
 #            A -- MatrixNetwork representation of a network
@@ -163,8 +165,8 @@ end
 #Purpose: To plot a 3d surface representing the loss landscape of a range of partitions
 #Return value: none. Plots a graph and saves the (x, y, z) data in a CSV file if save_to_string
 #              is provided a value.
-function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; save_to_string="", modelType::Function=linear_model, plotting=false)
-    x,y,z = getXYZ(partitions, A, NumOriginalNodes, modelType=modelType)
+function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A::MatrixNetwork, NumOriginalNodes::Integer; save_to_string="", modelType::Function=linear_model, plotting=false)
+    x,y,z = GetXYZ(partitions, A, NumOriginalNodes, modelType=modelType)
 
     if !isempty(save_to_string)
       save_data(x,y,z,partitions, save_to_string)
@@ -180,6 +182,9 @@ function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginal
     return x,y,z
 end
 
+function surfaceplots(partitions::Dict{Integer,Dict{Integer, Integer}}, A::MatrixNetwork, NumOriginalNodes::Integer; save_to_string="", modelType::Function=linear_model, plotting=false)
+  return surfaceplots(collect(values(partitions)), A, NumOriginalNodes, save_to_string=save_to_string, modelType=modelType, plotting=plotting)
+end
 #function save_data
 #
 #Input: x,y,z, partition
@@ -206,8 +211,48 @@ end
 #
 #Input: x,y,z
 #Output: a CSV file with the x,y,z data
-function save_xyzp(x,y,z, partition, save_to_strings)
-  df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions])
+function save_xyzp(x,y,z, partitions, save_to_string)
+  df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions, "partitionArray" => dict_to_array(partitions)])
   loc = "./data/visualization_data/PART" * save_to_string * ".csv"
   CSV.write(loc, df)
+end
+
+
+#Input: A csv file which has been smoothed by the R function
+#Output: No output, just a plot
+function plot_smoothed_surface(data)
+  #Grab data from file
+  df = DataFrame(CSV.File(data))
+  x = df.x
+  y = df.y
+  z = df.z
+
+  # plot surface
+  pyplot()
+  pygui(true)
+  plt = Plots.plot(x, y, z, st=:surface, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis" => [0.85, 0.05, 0.05, 0.9])))
+  display(plt)
+end
+
+
+# function subplot_smoothed_surface
+# a subplot version of plot_smoothed_surface
+# Input: A csv file which has been smoothed by the R function, (optional) ax
+# Output: A subplot
+function subplot_smoothed_surface(data, fig, ax=None)
+  #Grab data from file
+  data = pd.read_csv(data)
+  x = data['x']
+  y = data['y']
+  z = data['z']
+
+  #Plot surface
+  triang = mtri.Triangulation(x,y)
+  if ax != None
+      ax = fig.add_subplot(1,2,ax,projection="3d")
+  else
+      ax = fig.add_subplot(1,2,1,projection="3d")
+  end
+  surf = ax.plot_trisurf(triang,z,cmap=plt.cm.CMRmap,antialiased=True)
+  return surf
 end

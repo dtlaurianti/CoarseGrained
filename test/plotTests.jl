@@ -5,7 +5,7 @@ times = []
 Part1 = generateRandomPartitions(100, 50, 500);
 GNP1 = gnp_graph(100;p=0.5)
 for i in 1:5
-    trash0 = @elapsed(getXYZ(Part1, GNP1, 100, modelType=linear_model))
+    trash0 = @elapsed(GetXYZ(Part1, GNP1, 100, modelType=linear_model))
 end
 
 println("Reduced Nodes Progress:")
@@ -36,7 +36,7 @@ y = []
 times = []
 
 for i in 1:5
-    trash2 = @elapsed(getXYZ(Part1, GNP1, 100, modelType=linear_model))
+    trash2 = @elapsed(GetXYZ(Part1, GNP1, 100, modelType=linear_model))
 end
 
 println("Original Nodes Progress:")
@@ -66,7 +66,7 @@ y = []
 times = []
 
 for i in 1:5
-    trash3 = @elapsed(getXYZ(Part1, GNP1, 100, modelType=linear_model))
+    trash3 = @elapsed(GetXYZ(Part1, GNP1, 100, modelType=linear_model))
 end
 
 println("Partitions Progress:")
@@ -77,7 +77,7 @@ for numPartitions in ProgressBar(200:200:20000)
     GNP = gnp_graph(20;p=0.5)
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
     for i in 1:4
-        push!(times, @elapsed(getXYZ(Part, GNP, 20, modelType=linear_model)))
+        push!(times, @elapsed(GetXYZ(Part, GNP, 20, modelType=linear_model)))
     end
     push!(y, median(times))
 end

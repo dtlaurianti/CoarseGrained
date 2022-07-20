@@ -273,7 +273,7 @@ end
 @everywhere function cleanPartition(partition::Dict{Integer,Integer})
     cleanedPartition = Dict()
     maxv = 1
-    for (node, supernode) in partition
+    for (node, supernode) in sort(collect(partition))
         if haskey(cleanedPartition, supernode)
             partition[node] = cleanedPartition[supernode]
         else

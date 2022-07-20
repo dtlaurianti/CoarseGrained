@@ -17,25 +17,26 @@ end
     display(variation_of_information(Arr[1], Arr[2]))
 end
 =#
-#=
+
 @testset "surfaceplots" begin
-    #=
-    numOriginalNodes = 10
-    Part = generateRandomPartitions(numOriginalNodes, 5, 1000)
+    numOriginalNodes = 100
+    Part = generateRandomPartitions(numOriginalNodes, 50, 1000)
     #LG = line_graph(numOriginalNodes)
-    GNP = gnp_graph(numOriginalNodes;p=0.1)
+    #GNP = gnp_graph(numOriginalNodes;p=0.1)
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
+    SBM = MatrixNetwork(sparse(stochastic_block_model(40, 20, [50, 50])))
     dt = now()
 
     DT = Dates.format(dt, "mm-dd_HH-MM-SS")
     timeString = "test" * DT
     #Uncomment one of the following depending on if you want the results to be saved
     #to a CSV file or not
-    surfaceplots(Part, GNP, numOriginalNodes, modelType=linear_model, save_to_string=timeString)
-    =#
+    surfaceplots(Part, SBM, numOriginalNodes, modelType=linear_model, save_to_string=timeString)
+    
     #=In normal terminal, (with R installed)
     call Rscript --vanilla ~/Documents/GitHub/CoarseGrained/src/make_smoothdata.R string"
     to make smooth data. Then plot it with the function invokation below (justreplace the name)=#
+    #=
     plt = plot_smoothed_surface("./data/visualization_data/test07-14_10-20-00.csv")
     df = DataFrame(CSV.File("./data/visualization_data/PARTtest07-14_10-20-00.csv"))
     x = df.x
@@ -44,17 +45,19 @@ end
     parts = df.partition
     println(x, y, z, parts)
     plot!(plt, )
+    =#
+end
+
+
+#=
+@testset "optimization plots" begin
+    numOriginalNodes = 8
+    numReducedNodes = 4
+    partitions = kPartition(numOriginalNodes, numReducedNodes)
+    SBM = sbm_graph(numOriginalNodes)
+    x,y,z = surfaceplots(partitions, SBM, numOriginalNodes, save_to_string="8_4_full_space", plotting=true)
 end
 =#
-@testset "optimization plots" begin
-    numOriginalNodes = 10
-    numReducedNodes = 5
-    numPartitions = 100
-    partitions = generateRandomPartitions(numOriginalNodes, numReducedNodes, numPartitions)
-    SBM = sbm_graph(numOriginalNodes)
-    x,y,z = getXYZ(partitions, SBM, 10)
-    plt = plot_surface(x,y,z)
-end
 #=
 @testset "Efficiency Testing" begin
     #display(@benchmark generateRandomPartitions(15, 10, 500))
