@@ -165,11 +165,7 @@ end
 #Purpose: To plot a 3d surface representing the loss landscape of a range of partitions
 #Return value: none. Plots a graph and saves the (x, y, z) data in a CSV file if save_to_string
 #              is provided a value.
-<<<<<<< Updated upstream
 function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A, NumOriginalNodes; save_to_string="", modelType::Function=linear_model, plotting=false)
-=======
-function surfaceplots(partitions::Vector{Dict{Integer, Integer}}, A::MatrixNetwork, NumOriginalNodes::Integer; save_to_string="", modelType::Function=linear_model, plotting=false)
->>>>>>> Stashed changes
     x,y,z = getXYZ(partitions, A, NumOriginalNodes, modelType=modelType)
 
     if !isempty(save_to_string)
@@ -216,7 +212,7 @@ end
 #Input: x,y,z
 #Output: a CSV file with the x,y,z data
 function save_xyzp(x,y,z, partitions, save_to_string)
-  df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions])
+  df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions, "partitionArray" => dict_to_array(partitions)])
   loc = "./data/visualization_data/PART" * save_to_string * ".csv"
   CSV.write(loc, df)
 end
