@@ -212,7 +212,7 @@ end
 #Input: x,y,z
 #Output: a CSV file with the x,y,z data
 function save_xyzp(x,y,z, partitions, save_to_string)
-  df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions])
+  df = DataFrame(["x" => x, "y" => y, "z" => z, "partition" => partitions, "partitionArray" => dict_to_array(partitions)])
   loc = "./data/visualization_data/PART" * save_to_string * ".csv"
   CSV.write(loc, df)
 end

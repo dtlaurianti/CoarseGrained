@@ -40,6 +40,7 @@ end
 
 @testset "other_sbm_tests" begin
     display(Matrix(sparse(stochastic_block_model(150, 50, [500, 500]))))
+    display(Matrix(sparse(stochastic_block_model(100, 30, [200, 200]))))
 end
 #=
 @testset "cm_graph_tests" begin
