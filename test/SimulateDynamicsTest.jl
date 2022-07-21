@@ -60,8 +60,10 @@ display(Plots.plot(plt7, gplt4))
 =#
 
 @testset "efficiency_testing" begin
-    G = gnp_graph(1000)
-    x = rand(1000)
+    n=5
+    G = gnp_graph(n)
+    x = rand(n)
     @time simulateODEonGraph(G, x)
-    @time simulateODEonGraphFast(G, x)
+    @time simulateODEonGraphMap(G, x)
+    #@time simulateODEonGraphStatic(G, x)
 end

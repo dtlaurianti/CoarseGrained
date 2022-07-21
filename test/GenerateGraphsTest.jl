@@ -1,4 +1,4 @@
-using Profile, PProf, Plots
+#using Profile, PProf, Plots
 #=
 @testset "line_graph_tests" begin
     @test norm(sparse(line_graph(5))) - norm(sparse(MatrixNetwork{Float64}(5, [1, 2, 3, 4, 5, 5], [2, 3, 4, 5], [1.0, 1.0, 1.0, 1.0]))) ≈ 0
@@ -37,11 +37,12 @@ end
     display(Matrix(sparse(sbm_graph(27, communities = 1))))
 end
 =#
-
+#=
 @testset "other_sbm_tests" begin
     display(Matrix(sparse(stochastic_block_model(150, 50, [500, 500]))))
     display(Matrix(sparse(stochastic_block_model(100, 30, [200, 200]))))
 end
+=#
 #=
 @testset "cm_graph_tests" begin
     display((cm_graph(10, [1, 1, 2, 2, 3, 3, 4, 4, 5, 5])))
@@ -71,3 +72,105 @@ end
     #pprof(;webport=58698)
 end
 =#
+#=
+@testset "layout_tests" begin
+    n = 10
+    c = trunc(Int64, n/2)
+    #scale = 1/log(n, 10)
+    G = gnp_graph(n, p=0.25, directed=false)
+    #display(sparse(G))
+    u = rand(n)
+
+    avgd = sum(sparse(G))/n
+    nodeds = [sum(sparse(G)[i,:]) for i=1:n]
+    list_central = filter(x->nodeds[x] > avgd, 1:n)
+    layout = NetworkLayout.shell(sparse(G), nlist=[list_central, ])
+    #display(layout)
+
+    x,y=Vector{Float64}(),Vector{Float64}()
+    max_dist = 0
+    for point in layout
+        append!(x, point[1])
+        append!(y, point[2])
+        dist = sqrt(point[1]^2 + point[2]^2)
+        if max_dist < dist
+            max_dist = dist
+        end
+    end
+    nodesize = max_dist/2
+
+
+    gplt = graphplot(sparse(G), x=x, y=y, markercolor = Vector(1:n), nodesize=nodesize, node_weights=u, palette=distinguishable_colors(n), title="Original Network")
+
+    Ps = generateRandomPartitions(n,c,2)
+
+    G1 = compressAdjacencyMatrix(G, Ps[1])
+    colors1 = collect(values(sort(Ps[1])))
+    gplt1 = graphplot(sparse(G), x=x, y=y, markercolor = colors1, nodesize=nodesize, node_weights=u, palette=distinguishable_colors(n), title="Random Compression")
+
+    G2 = compressAdjacencyMatrix(G, Ps[2])
+    colors2 = collect(values(sort(Ps[2])))
+    gplt2 = graphplot(sparse(G), x=x, y=y, markercolor = colors2, nodesize=nodesize, node_weights=u, palette=distinguishable_colors(n), title="Random Compression")
+
+    Pa = agglomerationReduction(G, c)
+
+    G3 = compressAdjacencyMatrix(G, Pa)
+    colors3 = collect(values(sort(Pa)))
+    gplt3 = graphplot(sparse(G), x=x, y=y, markercolor = colors3, nodesize=nodesize, node_weights=u, palette=distinguishable_colors(n), title = "Agglomeration Reduction")
+
+    plt = Plots.plot(gplt, gplt3, gplt2, gplt1)
+    display(plt)
+end
+=#
+@testset "animation_tests" begin
+    n = 16
+    c = trunc(Int64, n/2)
+    #scale = 1/log(n, 10)
+    G = gnp_graph(n, p=0.25, directed=false)
+    #G = grid_graph(n, directed=false)
+    #display(sparse(G))
+    u = rand(n)
+
+    avgd = sum(sparse(G))/n
+    nodeds = [sum(sparse(G)[i,:]) for i=1:n]
+    list_central = filter(x->nodeds[x] > avgd, 1:n)
+    layout = NetworkLayout.shell(sparse(G), nlist=[list_central, ])
+    #display(layout)
+
+    x,y=Vector{Float64}(),Vector{Float64}()
+    max_dist = 0
+    for point in layout
+        append!(x, point[1])
+        append!(y, point[2])
+        dist = sqrt(point[1]^2 + point[2]^2)
+        if max_dist < dist
+            max_dist = dist
+        end
+    end
+    nodesize = max_dist/2
+
+    sol = simulateODEonGraph(G, u)
+    #display(sol)
+    Pa = agglomerationReduction(G, c)
+    CG = compressAdjacencyMatrix(G, Pa)
+    cu = compressInitialCondition(u, Pa)
+    csol = simulateODEonGraph(CG, cu)
+    colors = collect(values(sort(Pa)))
+
+    gplt = graphplot(sparse(G), x=x, y=y, markercolor = colors, nodesize=nodesize, node_weights=u, palette=distinguishable_colors(n), title="Original Network")
+
+
+    cx,cy = compressNodeCoordinates(x,y,Pa)
+
+    cgplt = graphplot(sparse(CG), x=cx, y=cy, markercolor = 1:c, nodesize=nodesize, node_weights=cu, palette=distinguishable_colors(n), title="Agglomeration Reduction")
+
+    anim = @animate for i=1:1000
+        gplt = graphplot(sparse(G), x=x, y=y, markercolor = Vector(1:n), nodesize=nodesize, node_weights=sol[i], palette=distinguishable_colors(n), title="Original Network")
+        cgplt = graphplot(sparse(CG), x=cx, y=cy, markercolor = 1:c, nodesize=nodesize, node_weights=csol[i], palette=distinguishable_colors(cn), title="Agglomeration Reduction")
+        plt = Plots.plot(gplt, cgplt)
+    end every 10
+    display(gif(anim))
+end
+
+#idea to prevent scaling of nodes all increasing together, something like this
+#log(mean(sol[i]./u))

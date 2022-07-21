@@ -13,6 +13,7 @@ end
 @everywhere using StatsBase
 @everywhere using CSV
 @everywhere using DataFrames
+@everywhere using StaticArrays
 
 include("../src/SimulateDynamics.jl")
 include("../src/GenerateGraphs.jl")
@@ -33,3 +34,4 @@ using Dates
 using ProgressBars
 using CSV
 using DataFrames
+using NetworkLayout

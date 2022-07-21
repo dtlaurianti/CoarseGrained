@@ -30,7 +30,20 @@ end
 @everywhere function linear_model(du::Vector, u::Vector, p::Model_Parameters, t::Number)
   du .= (p.ϵ.*p.A-I)*u
 end
-
+#=
+#Function: linear_model_static
+#Parameters: du, passed by the ODESolver, modified in place
+#            u, passed by the ODESolver, our initial_conditions on first pass, then whatever they become
+#            p, the struct which we will use A and ϵ from
+#            t, the time variable ODESolver will use
+#            n, the number of variables
+#Purpose: to simulate a linear model with the given inputs
+#Return value: Modifies out of place, returns a StaticArray of the du
+@everywhere function linear_model_static(u::StaticVector, p::Model_Parameters, t::Number)
+  n = length(u)
+  return SVector{n}((p.ϵ.*p.A-I)*u)
+end
+=#
 #=
 function SIS_model(t, x, A, gamma, beta)
   n = np.size(A, axis=0)
@@ -154,13 +167,17 @@ end
   # time_series = solve_ivp(t, x -> dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
   return sol
 end
-
-@everywhere function simulateODEonGraphFast(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+#=
+@everywhere function simulateODEonGraphStatic(A::MatrixNetwork, initial_condition::Vector; dynamical_function::Function=linear_model_static, tmax::Number=10, dt::Number=0.01, function_args...)
+  @show dynamical_function
   tspan = (0, tmax)
   # splat the MatrixNetwork and additional parameters into one parameters Tuple
   p = Model_Parameters(A=sparse(A); function_args...)
+  n = length(initial_condition)
+  initial_condition = SVector{n}(initial_condition)
   prob = ODEProblem(dynamical_function, initial_condition, tspan, p)
   sol = solve(prob, saveat=dt)
   # time_series = solve_ivp(t, x -> dynamical_function(t, x, A, function_args), (0, tmax), initial_condition, t_eval=t)
   return sol
 end
+=#

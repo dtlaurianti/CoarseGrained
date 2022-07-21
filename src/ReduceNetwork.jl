@@ -66,3 +66,22 @@ end
     end
     return MatrixNetwork(sparse(K*A*R))
 end
+
+#Function: compressNodeCoordinates
+#Parameters: x, y, coordinates
+#            partition, the partition that specifies the supernodes in the created network
+#Purpose: To compress the coordinates of nodes according to a partition
+#Return value: A new, compressed coordinate system
+@everywhere function compressNodeCoordinates(x::Vector,y::Vector, partition::Dict{Integer,Integer})
+    supernodeSizes = getSupernodeSizes(partition)
+    n = length(partition)
+    c = length(supernodeSizes)
+    cx = Vector{Float64}()
+    cy = Vector{Float64}()
+    # each supernodes new x, y values are just an average of its nodes
+    for supernode=1:c
+        append!(cx, mean([x[n] for (n,sn) in partition if sn==supernode]))
+        append!(cy, mean([y[n] for (n,sn) in partition if sn==supernode]))
+    end
+    return cx, cy
+end
