@@ -72,7 +72,7 @@ end
     #pprof(;webport=58698)
 end
 =#
-#=
+
 @testset "layout_tests" begin
     n = 10
     c = trunc(Int64, n/2)
@@ -121,10 +121,11 @@ end
     plt = Plots.plot(gplt, gplt3, gplt2, gplt1)
     display(plt)
 end
-=#
+
+#=
 @testset "animation_tests" begin
     n = 16
-    c = trunc(Int64, n/2)
+    cn = trunc(Int64, n/2)
     #scale = 1/log(n, 10)
     G = gnp_graph(n, p=0.25, directed=false)
     #G = grid_graph(n, directed=false)
@@ -151,26 +152,27 @@ end
 
     sol = simulateODEonGraph(G, u)
     #display(sol)
-    Pa = agglomerationReduction(G, c)
+    Pa = agglomerationReduction(G, cn)
     CG = compressAdjacencyMatrix(G, Pa)
     cu = compressInitialCondition(u, Pa)
     csol = simulateODEonGraph(CG, cu)
     colors = collect(values(sort(Pa)))
+
 
     gplt = graphplot(sparse(G), x=x, y=y, markercolor = colors, nodesize=nodesize, node_weights=u, palette=distinguishable_colors(n), title="Original Network")
 
 
     cx,cy = compressNodeCoordinates(x,y,Pa)
 
-    cgplt = graphplot(sparse(CG), x=cx, y=cy, markercolor = 1:c, nodesize=nodesize, node_weights=cu, palette=distinguishable_colors(n), title="Agglomeration Reduction")
+    cgplt = graphplot(sparse(CG), x=cx, y=cy, markercolor = Vector(1:cn), nodesize=nodesize, node_weights=cu, palette=distinguishable_colors(cn), title="Agglomeration Reduction")
 
-    anim = @animate for i=1:1000
-        gplt = graphplot(sparse(G), x=x, y=y, markercolor = Vector(1:n), nodesize=nodesize, node_weights=sol[i], palette=distinguishable_colors(n), title="Original Network")
-        cgplt = graphplot(sparse(CG), x=cx, y=cy, markercolor = 1:c, nodesize=nodesize, node_weights=csol[i], palette=distinguishable_colors(cn), title="Agglomeration Reduction")
+    anim = @animate for i=1:250
+        gplt = graphplot(sparse(G), x=x, y=y, markercolor = colors, nodesize=nodesize, node_weights=sol[i], palette=distinguishable_colors(n), title="Original Network")
+        cgplt = graphplot(sparse(CG), x=cx, y=cy, markercolor = Vector(1:cn), nodesize=nodesize, node_weights=csol[i], palette=distinguishable_colors(cn), title="Agglomeration Reduction")
         plt = Plots.plot(gplt, cgplt)
-    end every 10
+    end every 5
     display(gif(anim))
 end
-
+=#
 #idea to prevent scaling of nodes all increasing together, something like this
 #log(mean(sol[i]./u))

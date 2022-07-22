@@ -13,7 +13,6 @@ end
 @everywhere using StatsBase
 @everywhere using CSV
 @everywhere using DataFrames
-@everywhere using StaticArrays
 
 include("../src/SimulateDynamics.jl")
 include("../src/GenerateGraphs.jl")
@@ -22,6 +21,7 @@ include("../src/ReduceNetwork.jl")
 include("../src/EvaluateError.jl")
 include("../src/LocalSearch.jl")
 include("../src/VisualizeLandscape.jl")
+include("../src/DataVis.jl")
 include("../src/PyPlot.jl")
 
 

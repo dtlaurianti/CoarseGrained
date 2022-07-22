@@ -53,7 +53,7 @@ end
 #            partition, the partition that specifies the supernodes in the created network
 #Purpose: To compress a network according to a partition
 #Return value: A new, compressed MatrixNetwork
-@everywhere function compressAdjacencyMatrix(A::MatrixNetwork, partition::Dict{Integer,Integer})
+@everywhere function compressAdjacencyMatrix(A::MatrixNetwork, partition::Dict{Integer,Integer}; directed=true)
     A = sparse(A)
     #Reduce matrix using spectral method from Gfeller et al. (2008).
     numGroups = length(unique(values(partition)))
@@ -64,7 +64,15 @@ end
         R[i,partition[i]] = 1
         K[partition[i],i] = 1/groupSizes[partition[i]]
     end
-    return MatrixNetwork(sparse(K*A*R))
+    # compute compression
+    G = sparse(K*A*R)
+    # remove self edges
+    G[diagind(G)] .= 0.0
+    # make compression undirected if original is undirected
+    if directed && issymmetric(sparse(A))
+        G = G + G'
+    end
+    return MatrixNetwork(G)
 end
 
 #Function: compressNodeCoordinates
