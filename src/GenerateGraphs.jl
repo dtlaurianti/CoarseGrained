@@ -128,21 +128,27 @@ end
 #Purpose: To generate a random graph using a user-specified probability that nodes will be connected to each other.
 #         This is basically the Erdos-Renyi model.
 #Return value: MatrixNetwork representation of a gnp graph
-function gnp_graph(n::Int; p::AbstractFloat=0.1, directed::Bool=true, edge_weight::Number=1.0, self_edge::Bool=false)
+function gnp_graph(n::Int; p::AbstractFloat=0.1, directed::Bool=true, edge_weight::Number=1.0, self_edge::Bool=false, connected::Bool=true)
   Random.seed!(trunc(Int, time() * 1000000))
-  if directed
-    G = sprand(n,n,p,bitrand).*edge_weight
-    if !self_edge
-      G[diagind(G)] .= 0.0
+  while true
+    if directed
+      G = sprand(n,n,p,bitrand).*edge_weight
+      if !self_edge
+        G[diagind(G)] .= 0.0
+      end
+      G = MatrixNetwork(G)
+    else
+      G = sprand(n,n,p,bitrand)
+      if !self_edge
+        G[diagind(G)] .= 0.0
+      end
+      # Mirroring Upper and Lower triangles to make the network undirected
+      G = MatrixNetwork(max.(G, G').*edge_weight)
     end
-    return MatrixNetwork(G)
-  else
-    G = sprand(n,n,p,bitrand)
-    if !self_edge
-      G[diagind(G)] .= 0.0
+    # make sure network meets connectedness requirement, otherwise generate again
+    if !connected || isConnected(G)
+      return G
     end
-    # Mirroring Upper and Lower triangles to make the network undirected
-    return MatrixNetwork(max.(G, G').*edge_weight)
   end
 end
 
@@ -158,73 +164,78 @@ end
 #Purpose: To generate a random stochastic block model graph with n nodes and communities communities
 #         using the user-specified probabilities of within and between community connections.
 #Return value: MatrixNetwork representation of an sbm graph
-function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, edge_weight=1.0, directed=true)
+function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, edge_weight=1.0, directed=true, connected::Bool=true)
   Random.seed!(trunc(Int, time() * 1000000))
-  if directed
-    if communities == 1
-      G = gnp_graph(n, p=p_within)
-      return G
-    end
-    G = sparse(gnp_graph(n÷communities, p=p_within))
-    i = 1
-    while i != communities
-      if (i + 1) == communities
-        G = blockdiag(G, sparse(gnp_graph(n÷communities + n%communities, p=p_within)))
-        i += 1
-      else
-        G = blockdiag(G, sparse(gnp_graph(n÷communities, p=p_within)))
-        i += 1
+    while true
+    if directed
+      if communities == 1
+        G = gnp_graph(n, p=p_within)
+        return G
       end
-    end
-  else
-    if communities == 1
-      G = gnp_graph(n, p=p_within, directed=false)
-      return G
-    end
-    G = sparse(gnp_graph(n÷communities, p=p_within, directed=false))
-    i = 1
-    while i != communities
-      if (i + 1) == communities
-        G = blockdiag(G, sparse(gnp_graph(n÷communities + n%communities, p=p_within, directed=false)))
-        i += 1
-      else
-        G = blockdiag(G, sparse(gnp_graph(n÷communities, p=p_within, directed=false)))
-        i += 1
+      G = sparse(gnp_graph(n÷communities, p=p_within))
+      i = 1
+      while i != communities
+        if (i + 1) == communities
+          G = blockdiag(G, sparse(gnp_graph(n÷communities + n%communities, p=p_within)))
+          i += 1
+        else
+          G = blockdiag(G, sparse(gnp_graph(n÷communities, p=p_within)))
+          i += 1
+        end
       end
-    end
-  end
-  i = 1
-  mask = sparse(ones(n÷communities, n÷communities))
-  while i != communities
-    if (i + 1) == communities
-      mask = blockdiag(mask, sparse(ones(n÷communities + n%communities, n÷communities + n%communities)))
-      i+= 1
     else
-      mask = blockdiag(mask, sparse(ones(n÷communities, n÷communities)))
-      i+= 1
-    end
-  end
-  G = Matrix(G)
-  mask = Matrix(mask)
-  num_rows = n
-  num_columns = n
-  for i in 1:num_rows
-    for j in 1:num_columns
-      if G[i, j] == 0 || G[i, j] == 0.0 && mask[i, j] == 0 || mask[i, j] == 0.0
-        portion = p_between * 10000
-        if rand(big.(1:10000)) <= portion
-          G[i, j] = 1
+      if communities == 1
+        G = gnp_graph(n, p=p_within, directed=false)
+        return G
+      end
+      G = sparse(gnp_graph(n÷communities, p=p_within, directed=false))
+      i = 1
+      while i != communities
+        if (i + 1) == communities
+          G = blockdiag(G, sparse(gnp_graph(n÷communities + n%communities, p=p_within, directed=false)))
+          i += 1
+        else
+          G = blockdiag(G, sparse(gnp_graph(n÷communities, p=p_within, directed=false)))
+          i += 1
         end
       end
     end
+    i = 1
+    mask = sparse(ones(n÷communities, n÷communities))
+    while i != communities
+      if (i + 1) == communities
+        mask = blockdiag(mask, sparse(ones(n÷communities + n%communities, n÷communities + n%communities)))
+        i+= 1
+      else
+        mask = blockdiag(mask, sparse(ones(n÷communities, n÷communities)))
+        i+= 1
+      end
+    end
+    G = Matrix(G)
+    mask = Matrix(mask)
+    num_rows = n
+    num_columns = n
+    for i in 1:num_rows
+      for j in 1:num_columns
+        if G[i, j] == 0 || G[i, j] == 0.0 && mask[i, j] == 0 || mask[i, j] == 0.0
+          portion = p_between * 10000
+          if rand(big.(1:10000)) <= portion
+            G[i, j] = 1
+          end
+        end
+      end
+    end
+    G = MatrixNetwork(sparse(G))
+    if !connected || isConnected(G)
+      return G
+    end
   end
-  return MatrixNetwork(sparse(G))
 end
 
 #Function: cm_graph
 #Parameters: n, integer number of nodes
 #            degreeArray, an array of integers specifying the degree of each node in the graph.
-#            degreeArray must not contain any number greater than or equal to n, degreeArray
+#            degreeArray must not contain any number greater than or equal to n or less than one, degreeArray
 #            must be of length n, and the sum of all elements in degreeArray must be an even number
 #Purpose: To generate a random configuration model graph with n nodes each having degree specified in degreeArray
 #Return value: MatrixNetwork representation of a configuration model network

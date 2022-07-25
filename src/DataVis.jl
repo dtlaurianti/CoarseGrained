@@ -4,6 +4,7 @@
 #Purpose: To create a layout for the given network
 #Return value: two vectors x and y of the node coordinates
 function getLayout(A::MatrixNetwork, layout_func=NetworkLayout.shell)
+    n = size(sparse(A), 1)
     if layout_func==NetworkLayout.shell
         avgd = sum(sparse(A))/n
         nodeds = [sum(sparse(A)[i,:]) for i=1:n]
@@ -25,6 +26,7 @@ end
 #Purpose: To create a layout for the given network
 #Return value: two vectors x and y of the node coordinates
 function getNodeSize(x, y; scale=0.5)
+    max_dist = 0
     for i=1:length(x)
         dist = sqrt(x[i]^2 + y[i]^2)
         if max_dist < dist
@@ -42,7 +44,7 @@ end
 #            colors, the colors of the nodes
 #Purpose: To create a basic graph plot of the input network
 #Return value: a graphplot
-function plotNetwork(A::MatrixNetwork; u::Vector{Number}=nothing, title::String="", layout_func=NetworkLayout.shell, colors::Vector=nothing)
+function plotNetwork(A::MatrixNetwork; u=nothing, title::String="", layout_func=NetworkLayout.shell, colors::Vector=Vector())
     if layout_func==NetworkLayout.shell
         avgd = sum(sparse(A))/n
         nodeds = [sum(sparse(A)[i,:]) for i=1:n]
@@ -64,7 +66,7 @@ function plotNetwork(A::MatrixNetwork; u::Vector{Number}=nothing, title::String=
     end
     nodesize = max_dist/2
 
-    if colors==nothing
+    if colors==Vector()
         colors = Vector(1:n)
     end
 
@@ -85,12 +87,12 @@ end
 #            title, the plot title
 #            layout_func, the function to choose the location of the nodes
 #            colors, the colors of the nodes
-function plotNetwork(A::MatrixNetwork, x::Vector, y::Vector; nodesize::Number=0, u=nothing, title::String="", colors::Vector=nothing)
+function plotNetwork(A::MatrixNetwork, x::Vector, y::Vector; nodesize::Number=0, u=nothing, title::String="", colors::Vector=Vector())
     if nodesize==0
         nodesize=getNodeSize(x, y)
     end
 
-    if colors==nothing
+    if colors==Vector()
         colors = Vector(1:n)
     end
     gplt = graphplot(
@@ -114,15 +116,17 @@ end
 #            title, the plot title
 #Purpose: To create a plot of a network both before and after partitioning, showing the nodes that are combined into supernodes
 #Return value: Two graphplots
-function plotPartition(A::MatrixNetwork, P::Dict{Integer,Integer}, u::Vector, x::Vector, y::Vector; nodesize::Number=0, colors::Vector=nothing, title::String="")
+function plotPartition(A::MatrixNetwork, P::Dict{Integer,Integer}, u::Vector, x::Vector, y::Vector; nodesize::Number=0, colors::Vector=Vector(), title::String="")
     n = length(u)
+    scale = 1/log(n, 10)
     # create the post-compression network, variables, and layout
     CA = compressAdjacencyMatrix(A, P)
     cu = compressInitialCondition(u, P)
     cx, cy = compressNodeCoordinates(x, y, P)
     cn = length(cu)
+    cscale = 1/log(cn, 10)
     # compute the colors of the nodes in the original network to match the colors of nodes in the same supernode
-    if colors==nothing
+    if colors==Vector()
         colors = Vector(1:n)
     end
     colorInd = collect(values(sort(OrderedDict(P))))
@@ -139,7 +143,8 @@ function plotPartition(A::MatrixNetwork, P::Dict{Integer,Integer}, u::Vector, x:
         markercolor=ccolors,
         nodesize=nodesize, node_weights=u,
         palette=distinguishable_colors(n),
-        title=title+" Precompression")
+        thickness_scaling=scale,
+        title=title*" Pre")
     # generate the postcompression network graphplot
     cgplt = graphplot(
         sparse(CA),
@@ -147,20 +152,42 @@ function plotPartition(A::MatrixNetwork, P::Dict{Integer,Integer}, u::Vector, x:
         markercolor=colors,
         nodesize=cnodesize, node_weights=cu,
         palette=distinguishable_colors(cn),
-        title=title+" Postcompression")
+        thickness_scaling=scale,
+        title=title*" Post")
 
     return gplt, cgplt
 end
 
 
-
-function plotPartitions(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}; titles::Vector{String}=nothing, layout_func::Function=NetworkLayout.shell)
-    if titles==nothing
+#Function: plotPartition
+#Parameters: A, the network to plot
+#            partitions, the partitions to compress the network with
+#            u, initial condition vector to scale the nodes
+#            titles, the plot titles
+#            layout_func, the function to compute the layout with
+#Purpose: To create a plot of a network both before and after partitioning, showing the nodes that are combined into supernodes
+#Return value: a list of graphplots of before and after partitioning for each partition
+function plotPartitions(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}, u::Vector; titles::Vector{String}=Vector{String}(), layout_func::Function=NetworkLayout.shell)
+    if titles==Vector{String}()
         titles = ["" for _=1:length(partitions)]
     end
-    layout = getLayout(A, layout_func)
-    return
+    x,y = getLayout(A, layout_func)
+    if titles==Vector{String}()
+        for i = 1:length(partitions)
+            push!(titles, "P$i")
+        end
+    end
+    gplts = []
+    cgplts = []
+    titles = copy(titles)
+    for partition in partitions
+        gplt, cgplt = plotPartition(A, partition, u, x, y, title=popfirst!(titles))
+        push!(gplts, gplt)
+        push!(cgplts, cgplt)
+    end
+    return gplts, cgplts
 end
+
 
 #Function: plotDynamics
 #Parameters: n, the number of variables
@@ -181,6 +208,36 @@ end
 #            dt, the length of the time steps
 #            function_args, a var-kwargs of the inputs to the model
 function plotDynamics(A::MatrixNetwork, initial_condition::Vector; title="", dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+    function_args = Dict(function_args)
+    n = size(A, 1)
     sol = simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
     return Plots.plot(sol, title=title, palette = distinguishable_colors(n))
+end
+
+#Function: plotPartitionsDynamics
+#Parameters: A, the network to plot
+#            partitions, the partitions to compress the network with
+#            u, initial condition vector to scale the nodes
+#            titles, the plot titles
+#            layout_func, the function to compute the layout with
+#            dynamical_function, the method that we will use to calculate the dynamics on the network and it's compressed version
+#            tmax, the final t value to compute up to
+#            dt, the length of the time steps
+#            function_args, a var-kwargs of the inputs to the model
+#Purpose: To create a plot of a network both before and after partitioning, showing the nodes that are combined into supernodes, as well as the dynamics of the network
+#Return value: a list of graphplots of before and after partitioning for each partition
+function plotPartitionsDynamics(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}, u::Vector; titles::Vector{String}=Vector{String}(), layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+    if titles==Vector{String}()
+        titles = ["P$i" for i=1:length(partitions)]
+    end
+    titles = copy(titles)
+    gplts, cgplts = plotPartitions(A, partitions, u, titles=titles, layout_func=layout_func)
+    dplts = []
+    for partition in partitions
+        CA = compressAdjacencyMatrix(A, partition)
+        cu = compressInitialCondition(u, partition)
+        function_args = compressArguments(partition, function_args...)
+        push!(dplts, plotDynamics(CA, cu, title=popfirst!(titles)*" Dyn", dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...))
+    end
+    return gplts, cgplts, dplts
 end
