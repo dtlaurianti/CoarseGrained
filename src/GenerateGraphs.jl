@@ -128,13 +128,21 @@ end
 #Purpose: To generate a random graph using a user-specified probability that nodes will be connected to each other.
 #         This is basically the Erdos-Renyi model.
 #Return value: MatrixNetwork representation of a gnp graph
-function gnp_graph(n::Int; p::AbstractFloat=0.1, directed::Bool=true, edge_weight::Number=1.0)
+function gnp_graph(n::Int; p::AbstractFloat=0.1, directed::Bool=true, edge_weight::Number=1.0, self_edge::Bool=false)
+  Random.seed!(trunc(Int, time() * 1000000))
   if directed
-    return MatrixNetwork(sprand(n,n,p,bitrand).*edge_weight)
+    G = sprand(n,n,p,bitrand).*edge_weight
+    if !self_edge
+      G[diagind(G)] .= 0.0
+    end
+    return MatrixNetwork(G)
   else
     G = sprand(n,n,p,bitrand)
+    if !self_edge
+      G[diagind(G)] .= 0.0
+    end
     # Mirroring Upper and Lower triangles to make the network undirected
-    return max.(G, G').*edge_weight
+    return MatrixNetwork(max.(G, G').*edge_weight)
   end
 end
 
@@ -151,6 +159,7 @@ end
 #         using the user-specified probabilities of within and between community connections.
 #Return value: MatrixNetwork representation of an sbm graph
 function sbm_graph(n; communities=4, p_within=0.2, p_between=0.05, edge_weight=1.0, directed=true)
+  Random.seed!(trunc(Int, time() * 1000000))
   if directed
     if communities == 1
       G = gnp_graph(n, p=p_within)

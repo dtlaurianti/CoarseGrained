@@ -21,6 +21,7 @@ include("../src/ReduceNetwork.jl")
 include("../src/EvaluateError.jl")
 include("../src/LocalSearch.jl")
 include("../src/VisualizeLandscape.jl")
+include("../src/DataVis.jl")
 include("../src/PyPlot.jl")
 
 
@@ -33,3 +34,4 @@ using Dates
 using ProgressBars
 using CSV
 using DataFrames
+using NetworkLayout

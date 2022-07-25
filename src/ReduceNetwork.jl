@@ -53,7 +53,7 @@ end
 #            partition, the partition that specifies the supernodes in the created network
 #Purpose: To compress a network according to a partition
 #Return value: A new, compressed MatrixNetwork
-@everywhere function compressAdjacencyMatrix(A::MatrixNetwork, partition::Dict{Integer,Integer})
+@everywhere function compressAdjacencyMatrix(A::MatrixNetwork, partition::Dict{Integer,Integer}; directed=true)
     A = sparse(A)
     #Reduce matrix using spectral method from Gfeller et al. (2008).
     numGroups = length(unique(values(partition)))
@@ -64,5 +64,32 @@ end
         R[i,partition[i]] = 1
         K[partition[i],i] = 1/groupSizes[partition[i]]
     end
-    return MatrixNetwork(sparse(K*A*R))
+    # compute compression
+    G = sparse(K*A*R)
+    # remove self edges
+    G[diagind(G)] .= 0.0
+    # make compression undirected if original is undirected
+    if directed && issymmetric(sparse(A))
+        G = G + G'
+    end
+    return MatrixNetwork(G)
+end
+
+#Function: compressNodeCoordinates
+#Parameters: x, y, coordinates
+#            partition, the partition that specifies the supernodes in the created network
+#Purpose: To compress the coordinates of nodes according to a partition
+#Return value: A new, compressed coordinate system
+@everywhere function compressNodeCoordinates(x::Vector,y::Vector, partition::Dict{Integer,Integer})
+    supernodeSizes = getSupernodeSizes(partition)
+    n = length(partition)
+    c = length(supernodeSizes)
+    cx = Vector{Float64}()
+    cy = Vector{Float64}()
+    # each supernodes new x, y values are just an average of its nodes
+    for supernode=1:c
+        append!(cx, mean([x[n] for (n,sn) in partition if sn==supernode]))
+        append!(cy, mean([y[n] for (n,sn) in partition if sn==supernode]))
+    end
+    return cx, cy
 end
