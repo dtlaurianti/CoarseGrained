@@ -167,6 +167,7 @@ function countcsvlines(file)
 end
 
 function findLocalMinimum(xyzpData::String, xradius::Number, yradius::Number; startingPartition::String="")
+    Random.seed!(trunc(Int, time() * 1000000))
     save = []
     save2 = []
     minSoFar = ""
