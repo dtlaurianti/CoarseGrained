@@ -11,7 +11,7 @@ end
 println("Reduced Nodes Progress:")
 R = 200:200:10000
 O = 400:200:10200
-for numReducedNodes, numOriginal in R, O
+for numReducedNodes in R, numOriginal in O
     numOriginal = 400
     GNP = gnp_graph(numOriginal; p=0.5)
     Part = generateRandomPartitions(numOriginal, numReducedNodes, 10);
