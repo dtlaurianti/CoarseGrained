@@ -20,6 +20,7 @@ function getLayout(A::MatrixNetwork, layout_func=NetworkLayout.shell)
     end
     return x, y
 end
+
 #Function: getNodeSize
 #Parameters: x, y, the coordinates of the nodes
 #            scale, a scaling factor for bigger or smaller nodes
@@ -217,7 +218,7 @@ end
 #Function: plotPartitionsDynamics
 #Parameters: A, the network to plot
 #            partitions, the partitions to compress the network with
-#            u, initial condition vector to scale the nodes
+#            u, the variable vector to scale the nodes
 #            titles, the plot titles
 #            layout_func, the function to compute the layout with
 #            dynamical_function, the method that we will use to calculate the dynamics on the network and it's compressed version
@@ -240,4 +241,37 @@ function plotPartitionsDynamics(A::MatrixNetwork, partitions::Vector{Dict{Intege
         push!(dplts, plotDynamics(CA, cu, title=popfirst!(titles)*" Dyn", dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...))
     end
     return gplts, cgplts, dplts
+end
+
+#Function: animatePartitionsDynamics
+#Parameters: A, the network to plot
+#            partition, the partition to compress the network with
+#            u, the variable vector to scale the nodes
+#            titles, the plot titles
+#            layout_func, the function to compute the layout with
+#            dynamical_function, the method that we will use to calculate the dynamics on the network and it's compressed version
+#            tmax, the final t value to compute up to
+#            dt, the length of the time steps
+#            function_args, a var-kwargs of the inputs to the model
+#Purpose: To create an animation of a network both before and after partitioning, showing the nodes that are combined into supernodes, as well as the dynamics of the network
+#Return value: a gif showing the three plots of the precompression network, postcompression network, and dynamics
+function animatePartitionDynamics(A::MatrixNetwork, partition::Dict{Integer, Integer}, u::Vector; title::String="", layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+    x, y = getLayout(A, layout_func)
+    cn = size(unique(keys(partition)),1)
+    CA = compressAdjacencyMatrix(A, partition)
+    cu = compressInitialCondition(u, partition)
+    cfunction_args = compressArguments(partition, function_args...)
+    sol = simulateODEonGraph(A, u; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
+    csol = simulateODEonGraph(CA, cu; dynamical_function=dynamical_function, tmax=tmax, dt=dt, cfunction_args...)
+    tsteps = trunc(Int64, tmax/dt)
+    ymax = maximum(maximum(csol.u))
+    scale = 1/(2*log(cn, 10))
+    dplt = Plots.plot(cn, xlim=(0, tsteps), ylim=(0, ymax), title=title*" Dyn", palette=distinguishable_colors(cn))
+    anim = @animate for i=1:tsteps
+        gplt, cgplt = plotPartition(A, partition, sol[i], x, y, title=title)
+        subplt = Plots. plot(gplt, cgplt, layout=(2,1))
+        push!(dplt, csol[i])
+        plt = Plots.plot(subplt, dplt, layout=(1,2), thickness_scaling=scale)
+    end every 10
+    return gif(anim)
 end
