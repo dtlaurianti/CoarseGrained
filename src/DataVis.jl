@@ -277,7 +277,7 @@ function animatePartitionDynamics(A::MatrixNetwork, partition::Dict{Integer, Int
         gplt, cgplt = plotPartition(A, partition, sol[i], x, y, title=title)
         subplt = Plots. plot(gplt, cgplt, layout=(2,1))
         dplt = Plots.plot(sol[1:i], xlim=(0, tmax), ylim=(0, ymax), title=title*" Pre Dyn", palette=cpalette, leg=false)
-        cdplt = Plots.plot(csol[1:i], xlim=(0, tmax), ylim=(0, ymax), title=title*" Post Dyn", palette=palette, leg=false)
+        cdplt = Plots.plot(csol[1:i], xlim=(0, tmax), ylim=(0, cymax), title=title*" Post Dyn", palette=palette, leg=false)
         plt = Plots.plot(gplt, dplt, cgplt, cdplt, layout=(2,2), thickness_scaling=scale)
     end every 10
     return gif(anim)
