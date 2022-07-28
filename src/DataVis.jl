@@ -255,14 +255,16 @@ end
 #            function_args, a var-kwargs of the inputs to the model
 #Purpose: To create an animation of a network both before and after partitioning, showing the nodes that are combined into supernodes, as well as the dynamics of the network
 #Return value: a gif showing the three plots of the precompression network, postcompression network, and dynamics
-function animatePartitionDynamics(A::MatrixNetwork, partition::Dict{Integer, Integer}, u::Vector; title::String="", layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+function animatePartitionDynamics(A::MatrixNetwork, partition::Dict{Integer, Integer}, u::Vector; sol=nothing, title::String="", layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
     x, y = getLayout(A, layout_func)
     n = size(A, 1)
     CA = compressAdjacencyMatrix(A, partition)
     cn = size(CA,1)
     cu = compressInitialCondition(u, partition)
     cfunction_args = compressArguments(partition, function_args...)
-    sol = simulateODEonGraph(A, u; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
+    if sol==nothing
+        sol = simulateODEonGraph(A, u; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
+    end
     csol = simulateODEonGraph(CA, cu; dynamical_function=dynamical_function, tmax=tmax, dt=dt, cfunction_args...)
     tsteps = trunc(Int64, tmax/dt)
     ymax = maximum(maximum(sol.u))
@@ -283,8 +285,9 @@ end
 
 function animatePartitionsDynamics(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}, u::Vector; title::String="", layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
     anims = []
+    sol = simulateODEonGraph(A, u; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
     for partition in partitions
-        push!(anims, animatePartitionDynamics(A, partition, u, title=title, layout_func=layout_func, dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...))
+        push!(anims, animatePartitionDynamics(A, partition, u, sol=sol, title=title, layout_func=layout_func, dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...))
     end
     return anims
 end

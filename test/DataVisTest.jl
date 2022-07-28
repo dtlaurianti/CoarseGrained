@@ -19,6 +19,7 @@ end
     #scale = 1/(2*log(c, 10))
 
     anims = animatePartitionsDynamics(G, Ps, u)
+    @show anims
     for anim in anims
         display(anim)
     end
