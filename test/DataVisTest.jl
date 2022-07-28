@@ -11,16 +11,17 @@
 end
 =#
 @testset "Dynamics_tests" begin
-    #c = 4
+    c = 4
     G = gnp_graph(10, p=0.25, directed=true)
     #G = cycle_graph(10)
-    #Ps = generateRandomPartitions(10, 5, c)
-    P = generateRandomPartitions(10, 5, 1)[1]
+    Ps = generateRandomPartitions(10, 5, c)
     u = rand(10)
     #scale = 1/(2*log(c, 10))
 
-    anim = animatePartitionDynamics(G, P, u)
-    display(anim)
+    anims = animatePartitionsDynamics(G, Ps, u)
+    for anim in anims
+        display(anim)
+    end
     #=
     gplts, cgplts, dplts = plotPartitionsDynamics(G, Ps, u)
     plt = Plots.plot(gplts..., cgplts..., dplts..., layout=(3, c), thickness_scaling=scale)

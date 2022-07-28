@@ -257,21 +257,34 @@ end
 #Return value: a gif showing the three plots of the precompression network, postcompression network, and dynamics
 function animatePartitionDynamics(A::MatrixNetwork, partition::Dict{Integer, Integer}, u::Vector; title::String="", layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
     x, y = getLayout(A, layout_func)
-    cn = size(unique(keys(partition)),1)
+    n = size(A, 1)
     CA = compressAdjacencyMatrix(A, partition)
+    cn = size(CA,1)
     cu = compressInitialCondition(u, partition)
     cfunction_args = compressArguments(partition, function_args...)
     sol = simulateODEonGraph(A, u; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
     csol = simulateODEonGraph(CA, cu; dynamical_function=dynamical_function, tmax=tmax, dt=dt, cfunction_args...)
     tsteps = trunc(Int64, tmax/dt)
-    ymax = maximum(maximum(csol.u))
+    ymax = maximum(maximum(sol.u))
+    cymax = maximum(maximum(csol.u))
     scale = 1/(2*log(cn, 10))
-    dplt = Plots.plot(cn, xlim=(0, tsteps), ylim=(0, ymax), title=title*" Dyn", palette=distinguishable_colors(cn))
+    palette = distinguishable_colors(cn)
+    colorInd = collect(values(sort(OrderedDict(partition))))
+    cpalette = [palette[colorInd[i]] for i=1:n]
     anim = @animate for i=1:tsteps
         gplt, cgplt = plotPartition(A, partition, sol[i], x, y, title=title)
         subplt = Plots. plot(gplt, cgplt, layout=(2,1))
-        push!(dplt, csol[i])
-        plt = Plots.plot(subplt, dplt, layout=(1,2), thickness_scaling=scale)
+        dplt = Plots.plot(sol[1:i], xlim=(0, tmax), ylim=(0, ymax), title=title*" Pre Dyn", palette=cpalette, leg=false)
+        cdplt = Plots.plot(csol[1:i], xlim=(0, tmax), ylim=(0, ymax), title=title*" Post Dyn", palette=palette, leg=false)
+        plt = Plots.plot(gplt, dplt, cgplt, cdplt, layout=(2,2), thickness_scaling=scale)
     end every 10
     return gif(anim)
+end
+
+function animatePartitionsDynamics(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}, u::Vector; title::String="", layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+    anims = []
+    for partition in partitions
+        push!(anims, animatePartitionDynamics(A, partition, u, title=title, layout_func=layout_func, dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...))
+    end
+    return anims
 end
