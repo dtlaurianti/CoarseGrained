@@ -12,13 +12,13 @@ end
 =#
 @testset "Dynamics_tests" begin
     c = 4
-    G = gnp_graph(10, p=0.25, directed=true)
+    G = gnp_graph(20, p=0.25, directed=true)
     #G = cycle_graph(10)
-    Ps = generateRandomPartitions(10, 5, c)
-    u = rand(10)
+    Ps = generateRandomPartitions(20, 10, c)
+    u = rand(20)
     #scale = 1/(2*log(c, 10))
 
-    anims = animatePartitionsDynamics(G, Ps, u)
+    anims = animatePartitionsDynamics(G, Ps, u, layout_func=NetworkLayout.spectral)
     @show anims
     for anim in anims
         display(anim)

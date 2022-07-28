@@ -26,7 +26,7 @@ end
 #            scale, a scaling factor for bigger or smaller nodes
 #Purpose: To create a layout for the given network
 #Return value: two vectors x and y of the node coordinates
-function getNodeSize(x, y; scale=0.5)
+function getNodeSize(x, y; scale=0.25)
     max_dist = 0
     for i=1:length(x)
         dist = sqrt(x[i]^2 + y[i]^2)
