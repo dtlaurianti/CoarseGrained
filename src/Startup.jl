@@ -14,6 +14,18 @@ end
 @everywhere using CSV
 @everywhere using DataFrames
 
+include("../src/SimulateDynamics.jl")
+include("../src/GenerateGraphs.jl")
+include("../src/Partition.jl")
+include("../src/ReduceNetwork.jl")
+include("../src/EvaluateError.jl")
+include("../src/LocalSearch.jl")
+include("../src/VisualizeLandscape.jl")
+include("../src/DataVis.jl")
+include("../src/PyPlot.jl")
+include("../src/AnalyzeLandscape.jl")
+
+
 using Test
 using BenchmarkTools
 using Plots
@@ -24,13 +36,3 @@ using ProgressBars
 using CSV
 using DataFrames
 using NetworkLayout
-
-include("../src/SimulateDynamics.jl")
-include("../src/GenerateGraphs.jl")
-include("../src/Partition.jl")
-include("../src/ReduceNetwork.jl")
-include("../src/EvaluateError.jl")
-include("../src/LocalSearch.jl")
-include("../src/VisualizeLandscape.jl")
-include("../src/DataVis.jl")
-include("../src/PyPlot.jl")

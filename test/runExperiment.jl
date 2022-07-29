@@ -35,7 +35,8 @@ plot=false
 #Radius-based search parameters:
 xRadius = 1.0
 yRadius = 0.5
-
+#leave as empty string if you want a random starting partition to be used
+startingPartition = ""
 
 #That's it! Don't modify anything below the line
 #============================================================================================#
@@ -65,4 +66,8 @@ timeString = "test" * DT
 dataString = "PART" * timeString
 localMinPath = "data/visualization_data/" * dataString * ".csv"
 surfaceplots(Part, Network, numOriginalNodes, modelType=model, save_to_string=timeString, plotting=plot)
-findLocalMinimum(localMinPath, xRadius, yRadius)
+if startingPartition != ""
+    findLocalMinimum(localMinPath, xRadius, yRadius, startingPartition=startingPartition)
+else
+    findLocalMinimum(localMinPath, xRadius, yRadius)
+end
