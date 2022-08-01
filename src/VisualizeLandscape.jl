@@ -100,12 +100,12 @@ end
     # p = the ratio of nodes in the supernode x to nodes in the graph
     p = size(x,1) / n
     for y in Y
-      # q = the ratio of nodes in the supernode y to nodes in the graph
-      q = size(y,1) / n
       # r = the ratio of nodes in both x & y to nodes in the graph
       r = (length(intersect(x,y)) / n)
       # if x & y share at least one node they are seen as comparable supernodes
       if r > 0.0
+        # q = the ratio of nodes in the supernode y to nodes in the graph
+        q = size(y,1) / n
         # add to the distance between partitions
         σ += r * (log(2, r / p) + log(2, r / q))
       end

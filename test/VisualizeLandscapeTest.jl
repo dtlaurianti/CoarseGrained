@@ -21,7 +21,7 @@ end
 @testset "surfaceplots" begin
     
     numOriginalNodes = 200
-    Part = generateRandomPartitions(numOriginalNodes, 100, 2000)
+    Part = generateRandomPartitions(numOriginalNodes, 100, 1000)
     #LG = line_graph(numOriginalNodes)
     #GNP = gnp_graph(numOriginalNodes;p=0.1)
     #CM = cm_graph(numOriginalNodes, [1, 1, 1, 1, 2, 2, 2, 3, 3, 4])
