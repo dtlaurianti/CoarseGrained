@@ -284,10 +284,7 @@ end
 end
 
 function animatePartitionsDynamics(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}, u::Vector; title::String="", layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
-    anims = Vector{Plots.AnimatedGif}(undef, length(partitions))
     sol = simulateODEonGraph(A, u; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
-    @sync @distributed for i=1:length(partitions)
-        anims[i] = animatePartitionDynamics(A, partitions[i], u, sol=sol, title=title, layout_func=layout_func, dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
-    end
+    anims = pmap(partition->animatePartitionDynamics(A, partition, u, sol=sol,  title=title, layout_func=layout_func, dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...), partitions)
     return anims
 end
