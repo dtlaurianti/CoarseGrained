@@ -13,17 +13,17 @@ end
 @everywhere using StatsBase
 @everywhere using CSV
 @everywhere using DataFrames
+@everywhere using NetworkLayout
+@everywhere using Plots
+@everywhere using GraphRecipes
 
 using Test
 using BenchmarkTools
-using Plots
 using StatsPlots
-using GraphRecipes
 using Dates
 using ProgressBars
 using CSV
 using DataFrames
-using NetworkLayout
 
 include("../src/SimulateDynamics.jl")
 include("../src/GenerateGraphs.jl")

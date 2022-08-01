@@ -103,7 +103,7 @@ end
       # q = the ratio of nodes in the supernode y to nodes in the graph
       q = size(y,1) / n
       # r = the ratio of nodes in both x & y to nodes in the graph
-      r = (length(unique(vcat(x,y))) / n)
+      r = (length(intersect(x,y)) / n)
       # if x & y share at least one node they are seen as comparable supernodes
       if r > 0.0
         # add to the distance between partitions

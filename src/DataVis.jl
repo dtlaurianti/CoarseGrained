@@ -3,7 +3,7 @@
 #            layout_func, the function to choose the location of the nodes
 #Purpose: To create a layout for the given network
 #Return value: two vectors x and y of the node coordinates
-function getLayout(A::MatrixNetwork, layout_func=NetworkLayout.shell)
+@everywhere function getLayout(A::MatrixNetwork, layout_func=NetworkLayout.shell)
     n = size(sparse(A), 1)
     if layout_func==NetworkLayout.shell
         avgd = sum(sparse(A))/n
@@ -26,7 +26,7 @@ end
 #            scale, a scaling factor for bigger or smaller nodes
 #Purpose: To create a layout for the given network
 #Return value: two vectors x and y of the node coordinates
-function getNodeSize(x, y; scale=0.25)
+@everywhere function getNodeSize(x, y; scale=0.25)
     max_dist = 0
     for i=1:length(x)
         dist = sqrt(x[i]^2 + y[i]^2)
@@ -45,7 +45,7 @@ end
 #            colors, the colors of the nodes
 #Purpose: To create a basic graph plot of the input network
 #Return value: a graphplot
-function plotNetwork(A::MatrixNetwork; u=nothing, title::String="", layout_func=NetworkLayout.shell, colors::Vector=Vector())
+@everywhere function plotNetwork(A::MatrixNetwork; u=nothing, title::String="", layout_func=NetworkLayout.shell, colors::Vector=Vector())
     if layout_func==NetworkLayout.shell
         avgd = sum(sparse(A))/n
         nodeds = [sum(sparse(A)[i,:]) for i=1:n]
@@ -88,7 +88,7 @@ end
 #            title, the plot title
 #            layout_func, the function to choose the location of the nodes
 #            colors, the colors of the nodes
-function plotNetwork(A::MatrixNetwork, x::Vector, y::Vector; nodesize::Number=0, u=nothing, title::String="", colors::Vector=Vector())
+@everywhere function plotNetwork(A::MatrixNetwork, x::Vector, y::Vector; nodesize::Number=0, u=nothing, title::String="", colors::Vector=Vector())
     if nodesize==0
         nodesize=getNodeSize(x, y)
     end
@@ -117,7 +117,7 @@ end
 #            title, the plot title
 #Purpose: To create a plot of a network both before and after partitioning, showing the nodes that are combined into supernodes
 #Return value: Two graphplots
-function plotPartition(A::MatrixNetwork, P::Dict{Integer,Integer}, u::Vector, x::Vector, y::Vector; nodesize::Number=0, colors::Vector=Vector(), title::String="")
+@everywhere function plotPartition(A::MatrixNetwork, P::Dict{Integer,Integer}, u::Vector, x::Vector, y::Vector; nodesize::Number=0, colors::Vector=Vector(), title::String="")
     n = length(u)
     scale = 1/log(n, 10)
     # create the post-compression network, variables, and layout
@@ -168,7 +168,7 @@ end
 #            layout_func, the function to compute the layout with
 #Purpose: To create a plot of a network both before and after partitioning, showing the nodes that are combined into supernodes
 #Return value: a list of graphplots of before and after partitioning for each partition
-function plotPartitions(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}, u::Vector; titles::Vector{String}=Vector{String}(), layout_func::Function=NetworkLayout.shell)
+@everywhere function plotPartitions(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}, u::Vector; titles::Vector{String}=Vector{String}(), layout_func::Function=NetworkLayout.shell)
     if titles==Vector{String}()
         titles = ["" for _=1:length(partitions)]
     end
@@ -196,7 +196,7 @@ end
 #            title, the plot title
 #Purpose: To create a plot of the input network
 #Return value: a graphplot
-function plotDynamics(n, sol; title="")
+@everywhere function plotDynamics(n, sol; title="")
     return Plots.plot(sol, title=title, palette = distinguishable_colors(n))
 end
 
@@ -208,7 +208,7 @@ end
 #            tmax, the final t value to compute up to
 #            dt, the length of the time steps
 #            function_args, a var-kwargs of the inputs to the model
-function plotDynamics(A::MatrixNetwork, initial_condition::Vector; title="", dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+@everywhere function plotDynamics(A::MatrixNetwork, initial_condition::Vector; title="", dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
     function_args = Dict(function_args)
     n = size(A, 1)
     sol = simulateODEonGraph(A, initial_condition; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
@@ -227,7 +227,7 @@ end
 #            function_args, a var-kwargs of the inputs to the model
 #Purpose: To create a plot of a network both before and after partitioning, showing the nodes that are combined into supernodes, as well as the dynamics of the network
 #Return value: a list of graphplots of before and after partitioning for each partition
-function plotPartitionsDynamics(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}, u::Vector; titles::Vector{String}=Vector{String}(), layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+@everywhere function plotPartitionsDynamics(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}, u::Vector; titles::Vector{String}=Vector{String}(), layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
     if titles==Vector{String}()
         titles = ["P$i" for i=1:length(partitions)]
     end
@@ -255,7 +255,7 @@ end
 #            function_args, a var-kwargs of the inputs to the model
 #Purpose: To create an animation of a network both before and after partitioning, showing the nodes that are combined into supernodes, as well as the dynamics of the network
 #Return value: a gif showing the three plots of the precompression network, postcompression network, and dynamics
-function animatePartitionDynamics(A::MatrixNetwork, partition::Dict{Integer, Integer}, u::Vector; sol=nothing, title::String="", layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
+@everywhere function animatePartitionDynamics(A::MatrixNetwork, partition::Dict{Integer, Integer}, u::Vector; sol=nothing, title::String="", layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
     x, y = getLayout(A, layout_func)
     n = size(A, 1)
     CA = compressAdjacencyMatrix(A, partition)
@@ -284,10 +284,10 @@ function animatePartitionDynamics(A::MatrixNetwork, partition::Dict{Integer, Int
 end
 
 function animatePartitionsDynamics(A::MatrixNetwork, partitions::Vector{Dict{Integer, Integer}}, u::Vector; title::String="", layout_func::Function=NetworkLayout.shell, dynamical_function::Function=linear_model, tmax::Number=10, dt::Number=0.01, function_args...)
-    anims = []
+    anims = Vector{Plots.AnimatedGif}(undef, length(partitions))
     sol = simulateODEonGraph(A, u; dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
-    for partition in partitions
-        push!(anims, animatePartitionDynamics(A, partition, u, sol=sol, title=title, layout_func=layout_func, dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...))
+    @sync @distributed for i=1:length(partitions)
+        anims[i] = animatePartitionDynamics(A, partitions[i], u, sol=sol, title=title, layout_func=layout_func, dynamical_function=dynamical_function, tmax=tmax, dt=dt, function_args...)
     end
     return anims
 end
