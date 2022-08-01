@@ -17,6 +17,18 @@ end
 @everywhere using Plots
 @everywhere using GraphRecipes
 
+include("../src/SimulateDynamics.jl")
+include("../src/GenerateGraphs.jl")
+include("../src/Partition.jl")
+include("../src/ReduceNetwork.jl")
+include("../src/EvaluateError.jl")
+include("../src/LocalSearch.jl")
+include("../src/VisualizeLandscape.jl")
+include("../src/DataVis.jl")
+include("../src/PyPlot.jl")
+include("../src/AnalyzeLandscape.jl")
+
+
 using Test
 using BenchmarkTools
 using StatsPlots

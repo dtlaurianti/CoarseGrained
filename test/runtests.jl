@@ -9,6 +9,7 @@ println("Beginning Testing...")
 #include("RunMultiModelsTest.jl")
 #include("LocalSearchTest.jl")
 #include("plotTests.jl")
-include("DataVisTest.jl")
+#include("DataVisTest.jl")
+include("AnalyzeLandscapeTest.jl")
 
 println("Testing Complete.")

@@ -1,0 +1,6 @@
+show(intersect(getDictSet("./data/localMin_data/07-26_10-30-32.csv", 1), getDictSet("./data/localMin_data/07-26_10-30-32.csv", 2)))
+println('\n')
+show(intersect(getPartArraySet("./data/localMin_data/07-26_10-30-32.csv", 1), getPartArraySet("./data/localMin_data/07-26_10-30-32.csv", 2)))
+println('\n')
+#println("Starting batch intersect\n")
+#show(batchIntersect("./data/localMin_data/07-26_10-30-32.csv"))
