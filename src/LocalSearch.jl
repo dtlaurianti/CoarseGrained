@@ -170,6 +170,9 @@ function findLocalMinimum(xyzpData::String, xradius::Number, yradius::Number; st
     Random.seed!(trunc(Int, time() * 1000000))
     save = []
     save2 = []
+    lossDifference = []
+    z1 = 0
+    z2 = 0
     minSoFar = ""
     csv_reader = CSV.File(xyzpData)
     if !isempty(startingPartition)
@@ -192,6 +195,9 @@ function findLocalMinimum(xyzpData::String, xradius::Number, yradius::Number; st
             x = row.x; y = row.y; z = row.z; part = row.partition; partArray = row.partitionArray
             push!(save, part)
             push!(save2, partArray)
+            z1 = z
+            z2 = z
+            push!(lossDifference, (z1 - z2))
             break
         end
     end
@@ -215,13 +221,17 @@ function findLocalMinimum(xyzpData::String, xradius::Number, yradius::Number; st
             if row.partition != minSoFar
                 x = row.x; y = row.y; z = row.z; part = row.partition; partArray = row.partitionArray
                 minSoFar = part
+                z2 = z
                 push!(save, part)
                 push!(save2, partArray)
+                push!(lossDifference, (z1 - z2))
                 @goto start
             else
+                z2 = z
+                push!(lossDifference, (z1 - z2))
                 dt = now()
                 DT = Dates.format(dt, "mm-dd_HH-MM-SS")
-                df = DataFrame(["partition" => save, "partArray" => save2])
+                df = DataFrame(["partition" => save, "partArray" => save2, "lossDifference" => lossDifference])
                 loc = "./data/localMin_data/" * DT * ".csv"
                 CSV.write(loc, df)
                 return row.partition
@@ -231,7 +241,7 @@ function findLocalMinimum(xyzpData::String, xradius::Number, yradius::Number; st
     end
     dt = now()
     DT = Dates.format(dt, "mm-dd_HH-MM-SS")
-    df = DataFrame(["partition" => save, "partArray" => save2])
+    df = DataFrame(["partition" => save, "partArray" => save2, "lossDifference" => lossDifference])
     loc = "./data/localMin_data/" * DT * ".csv"
     CSV.write(loc, df)
     return part

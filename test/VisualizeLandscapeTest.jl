@@ -19,7 +19,7 @@ end
 =#
 
 @testset "surfaceplots" begin
-    
+    #=
     numOriginalNodes = 200
     Part = generateRandomPartitions(numOriginalNodes, 100, 1000)
     #LG = line_graph(numOriginalNodes)
@@ -33,13 +33,13 @@ end
     #Uncomment one of the following depending on if you want the results to be saved
     #to a CSV file or not
     surfaceplots(Part, SBM, numOriginalNodes, modelType=SIS_model, save_to_string=timeString, plotting=true)
-    
+    =#
     #=In normal terminal, (with R installed)
     call Rscript --vanilla ~/Documents/GitHub/CoarseGrained/src/make_smoothdata.R string"
     to make smooth data. Then plot it with the function invokation below (justreplace the name)=#
-    #=
-    plt = plot_smoothed_surface("./data/visualization_data/test07-19_15-47-54.csv")
     
+    plt = plot_smoothed_surface("./data/visualization_data/test08-01_13-56-42.csv")
+    #=
     df = DataFrame(CSV.File("./data/visualization_data/PARTtest07-14_10-20-00.csv"))
     x = df.x
     y = df.y
