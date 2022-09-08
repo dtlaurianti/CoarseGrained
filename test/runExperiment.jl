@@ -30,7 +30,7 @@ cext = 4
 degreeArray = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
 
 #true if you'd like to plot, false if not:
-plot=false
+plot=true
 
 #Radius-based search parameters:
 xRadius = 1.0
